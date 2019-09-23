@@ -1,0 +1,583 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Filters &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="index.html"/>
+        <link rel="next" title="Models" href="model.html"/>
+        <link rel="prev" title="2D Robot SLAM - Benchmark" href="auto_benchmark/slam2d.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Filters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ukf">UKF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#jukf">JUKF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ekf">EKF</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry.html">Lie Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Filters</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/filter.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="filters">
+<h1>Filters<a class="headerlink" href="#filters" title="Permalink to this headline">¶</a></h1>
+<p>This page describes the base class for designed an UKF (<a class="reference internal" href="#ukfm.UKF" title="ukfm.UKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">UKF()</span></code></a>) and a
+Jacobian UKF, <a class="reference internal" href="#ukfm.JUKF" title="ukfm.JUKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">JUKF()</span></code></a>, which is well adapted when the dimension of
+the state is important. <a class="reference internal" href="#ukfm.JUKF" title="ukfm.JUKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">JUKF()</span></code></a> infers numerical Jacobian, is
+relatively less intuitive and gets exactly the same results as
+<a class="reference internal" href="#ukfm.UKF" title="ukfm.UKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">UKF()</span></code></a>. We finally add a base class for an Extended Kalman Filter
+(<a class="reference internal" href="#ukfm.EKF" title="ukfm.EKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">EKF()</span></code></a>) that requires analytical Jacobian computation.</p>
+<div class="section" id="ukf">
+<h2>UKF<a class="headerlink" href="#ukf" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.UKF">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">UKF</code><span class="sig-paren">(</span><em class="sig-param">f</em>, <em class="sig-param">h</em>, <em class="sig-param">phi</em>, <em class="sig-param">phi_inv</em>, <em class="sig-param">Q</em>, <em class="sig-param">R</em>, <em class="sig-param">alpha</em>, <em class="sig-param">state0</em>, <em class="sig-param">P0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#UKF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.UKF" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Unscented Kalman Filter on (parallelizable) Manifolds.</p>
+<p>This filter is the implementation described in <a class="reference internal" href="bibliography.html#brossardcode2019" id="id1">[BBB19]</a>
+. It is well adapted to relatively small systems and
+for understanding the methodology of <strong>UKF-M</strong>, otherwise see
+<a class="reference internal" href="#ukfm.JUKF" title="ukfm.JUKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">JUKF()</span></code></a>. Noise covariance parameter are assumed static for
+convenience, i.e. <span class="math notranslate nohighlight">\(\mathbf{Q}_n = \mathbf{Q}\)</span>, and
+<span class="math notranslate nohighlight">\(\mathbf{R}_n = \mathbf{R}\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f</strong> – propagation function <span class="math notranslate nohighlight">\(f\)</span>.</p></li>
+<li><p><strong>h</strong> – observation function <span class="math notranslate nohighlight">\(h\)</span>.</p></li>
+<li><p><strong>phi</strong> – retraction <span class="math notranslate nohighlight">\(\boldsymbol{\varphi}\)</span>.</p></li>
+<li><p><strong>phi_inv</strong> – inverse retraction <span class="math notranslate nohighlight">\(\boldsymbol{\varphi}^{-1}\)</span>.</p></li>
+<li><p><strong>alpha</strong> – sigma point parameters. Must be 1D array with 3 values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>Q</strong> – propagation noise covariance matrix (static) <span class="math notranslate nohighlight">\(\mathbf{Q}\)</span>.</p></li>
+<li><p><strong>R</strong> – observation noise covariance matrix (static) <span class="math notranslate nohighlight">\(\mathbf{R}\)</span>.</p></li>
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}_n\)</span>, initialized at 
+<code class="docutils literal notranslate"><span class="pre">state0</span></code>.</p></li>
+<li><p><strong>P</strong> – state error covariance <span class="math notranslate nohighlight">\(\mathbf{P}_n\)</span>, initialized at
+<code class="docutils literal notranslate"><span class="pre">P0</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="class">
+<dt id="ukfm.UKF.WEIGHTS">
+<em class="property">class </em><code class="sig-name descname">WEIGHTS</code><span class="sig-paren">(</span><em class="sig-param">d</em>, <em class="sig-param">q</em>, <em class="sig-param">alpha</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#UKF.WEIGHTS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.UKF.WEIGHTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sigma point weights.</p>
+<p>Weights are computed as</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\lambda &amp;= (\alpha^2 - 1) \mathrm{dim} \\
+w_j &amp;= 1/(2(\mathrm{dim} + \lambda)) \\
+w_m &amp;= \lambda/(\lambda + \mathrm{dim}) \\
+w_0 &amp;= \lambda/(\lambda + \mathrm{dim}) + 3 - \alpha^2\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\alpha\)</span> is a parameter set between <span class="math notranslate nohighlight">\(10^{-3}\)</span> and 
+<span class="math notranslate nohighlight">\(1\)</span>, and <span class="math notranslate nohighlight">\(\mathrm{dim}\)</span> the dimension of the sigma-points 
+(<span class="math notranslate nohighlight">\(d\)</span> or <span class="math notranslate nohighlight">\(q\)</span>).</p>
+<p>This variable contains sigma point weights for propagation (w.r.t. 
+state error and noise) and for update.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.UKF.propagation">
+<code class="sig-name descname">propagation</code><span class="sig-paren">(</span><em class="sig-param">omega</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#UKF.propagation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.UKF.propagation" title="Permalink to this definition">¶</a></dt>
+<dd><p>UKF propagation step.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{\hat{\chi}}_{n} &amp;\leftarrow 
+\boldsymbol{\hat{\chi}}_{n+1} = 
+f\left(\boldsymbol{\hat{\chi}}_{n}, \boldsymbol{\omega}_{n}, 
+\mathbf{0}\right) \\
+\mathbf{P}_{n} &amp;\leftarrow \mathbf{P}_{n+1} \\\end{split}\]</div>
+<p>Mean state and covariance are propagated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>omega</strong> – input <span class="math notranslate nohighlight">\(\boldsymbol{\omega}\)</span>.</p></li>
+<li><p><strong>dt</strong> – integration step <span class="math notranslate nohighlight">\(dt\)</span> (s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.UKF.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#UKF.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.UKF.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>UKF update step.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{\hat{\chi}}_{n} &amp;\leftarrow \boldsymbol{\hat{\chi}}
+_{n}^{+} \\
+\mathbf{P}_{n} &amp;\leftarrow \mathbf{P}_{n}^{+} \\\end{split}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>y</strong> – 1D array (vector) measurement <span class="math notranslate nohighlight">\(\mathbf{y}_n\)</span>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="jukf">
+<h2>JUKF<a class="headerlink" href="#jukf" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.JUKF">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">JUKF</code><span class="sig-paren">(</span><em class="sig-param">f</em>, <em class="sig-param">h</em>, <em class="sig-param">phi</em>, <em class="sig-param">Q</em>, <em class="sig-param">alpha</em>, <em class="sig-param">state0</em>, <em class="sig-param">P0</em>, <em class="sig-param">red_phi</em>, <em class="sig-param">red_phi_inv</em>, <em class="sig-param">red_idxs</em>, <em class="sig-param">up_phi</em>, <em class="sig-param">up_idxs</em>, <em class="sig-param">aug_z=None</em>, <em class="sig-param">aug_phi=None</em>, <em class="sig-param">aug_phi_inv=None</em>, <em class="sig-param">aug_idxs=array([0])</em>, <em class="sig-param">aug_q=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#JUKF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.JUKF" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Unscented Kalman Filter on (parallelizable) Manifolds, that infers 
+Jacobian.</p>
+<p>This filter is an alternative implementation to the method described in
+<a class="reference internal" href="bibliography.html#brossardcode2019" id="id2">[BBB19]</a>, with exactly the same results. It spares
+computational time for systems when only a part of the state is involved in
+a propagation or update step. It can also be used for state augmentation.
+Only noise covariance parameter for propagation is assumed static for
+convenience, i.e. <span class="math notranslate nohighlight">\(\mathbf{Q}_n = \mathbf{Q}\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f</strong> – propagation function <span class="math notranslate nohighlight">\(f\)</span>.</p></li>
+<li><p><strong>h</strong> – observation function <span class="math notranslate nohighlight">\(h\)</span>.</p></li>
+<li><p><strong>phi</strong> – retraction <span class="math notranslate nohighlight">\(\boldsymbol{\varphi}\)</span>.</p></li>
+<li><p><strong>alpha</strong> – sigma point parameters. Must be 1D array with 5 values.</p></li>
+<li><p><strong>red_phi</strong> – reduced retraction for propagation.</p></li>
+<li><p><strong>red_phi_inv</strong> – reduced inverse retraction for propagation.</p></li>
+<li><p><strong>red_idxs</strong> – indices corresponding to the reduced uncertainty.</p></li>
+<li><p><strong>up_phi</strong> – retraction for update.</p></li>
+<li><p><strong>up_idxs</strong> – indices corresponding to the state uncertainty for update.</p></li>
+<li><p><strong>aug_z</strong> – augmentation function <span class="math notranslate nohighlight">\(z\)</span>. (optional)</p></li>
+<li><p><strong>aug_phi</strong> – retraction for augmenting state. (optional)</p></li>
+<li><p><strong>aug_phi_inv</strong> – inverse retraction for augmenting state. (optional)</p></li>
+<li><p><strong>aug_idxs</strong> – indices corresponding to the state uncertainty for state
+augmentation. (optional)</p></li>
+<li><p><strong>aug_q</strong> – state uncertainty dimension for augmenting state. (optional)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>Q</strong> – propagation noise covariance matrix (static) <span class="math notranslate nohighlight">\(\mathbf{Q}\)</span>.</p></li>
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}_n\)</span>, initialized at 
+<code class="docutils literal notranslate"><span class="pre">state0</span></code>.</p></li>
+<li><p><strong>P</strong> – state error covariance <span class="math notranslate nohighlight">\(\mathbf{P}_n\)</span>, initialized at
+<code class="docutils literal notranslate"><span class="pre">P0</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="class">
+<dt id="ukfm.JUKF.WEIGHTS">
+<em class="property">class </em><code class="sig-name descname">WEIGHTS</code><span class="sig-paren">(</span><em class="sig-param">red_d</em>, <em class="sig-param">q</em>, <em class="sig-param">up_d</em>, <em class="sig-param">aug_d</em>, <em class="sig-param">aug_q</em>, <em class="sig-param">alpha</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#JUKF.WEIGHTS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.JUKF.WEIGHTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sigma point weights.</p>
+<p>Weights are computed as</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\lambda &amp;= (\alpha^2 - 1) \mathrm{dim} \\
+w_j &amp;= 1/(2(\mathrm{dim} + \lambda)) \\
+w_m &amp;= \lambda/(\lambda + \mathrm{dim}) \\
+w_0 &amp;= \lambda/(\lambda + \mathrm{dim}) + 3 - \alpha^2\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\alpha\)</span> is a parameter set between <span class="math notranslate nohighlight">\(10^{-3}\)</span> and 
+<span class="math notranslate nohighlight">\(1\)</span>, and <span class="math notranslate nohighlight">\(\mathrm{dim}\)</span> the dimension of the sigma-points 
+(<span class="math notranslate nohighlight">\(d\)</span> or <span class="math notranslate nohighlight">\(q\)</span>).</p>
+<p>This variable contains sigma point weights for propagation (w.r.t. 
+state error and noise), update and state augmentation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.JUKF.F_num">
+<code class="sig-name descname">F_num</code><span class="sig-paren">(</span><em class="sig-param">omega</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#JUKF.F_num"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.JUKF.F_num" title="Permalink to this definition">¶</a></dt>
+<dd><p>Numerical Jacobian computation of <span class="math notranslate nohighlight">\(\mathbf{F}\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>omega</strong> – input <span class="math notranslate nohighlight">\(\boldsymbol{\omega}\)</span>.</p></li>
+<li><p><strong>dt</strong> – integration step <span class="math notranslate nohighlight">\(dt\)</span> (s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.JUKF.propagation">
+<code class="sig-name descname">propagation</code><span class="sig-paren">(</span><em class="sig-param">omega</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#JUKF.propagation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.JUKF.propagation" title="Permalink to this definition">¶</a></dt>
+<dd><p>UKF propagation step.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{\hat{\chi}}_{n} &amp;\leftarrow \boldsymbol{\hat{\chi}}_{n+1} = f\left(\boldsymbol{\hat{\chi}}_{n}, \boldsymbol{\omega}_{n}, \mathbf{0}\right) \\
+\mathbf{P}_{n} &amp;\leftarrow \mathbf{P}_{n+1} = \mathbf{F} \mathbf{P}_{n} \mathbf{F}^T + \mathbf{G} \mathbf{Q} \mathbf{G}^T  \\\end{split}\]</div>
+<p>Mean state and covariance are propagated. Covariance is propagated as an EKF, where Jacobian <span class="math notranslate nohighlight">\(\mathbf{F}\)</span> and <span class="math notranslate nohighlight">\(\mathbf{G}\)</span> are <em>numerically</em> inferred.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>omega</strong> – input <span class="math notranslate nohighlight">\(\boldsymbol{\omega}\)</span>.</p></li>
+<li><p><strong>dt</strong> – integration step <span class="math notranslate nohighlight">\(dt\)</span> (s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.JUKF.state_propagation">
+<code class="sig-name descname">state_propagation</code><span class="sig-paren">(</span><em class="sig-param">omega</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#JUKF.state_propagation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.JUKF.state_propagation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagate mean state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>omega</strong> – input <span class="math notranslate nohighlight">\(\boldsymbol{\omega}\)</span>.</p></li>
+<li><p><strong>dt</strong> – integration step <span class="math notranslate nohighlight">\(dt\)</span> (s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.JUKF.G_num">
+<code class="sig-name descname">G_num</code><span class="sig-paren">(</span><em class="sig-param">omega</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#JUKF.G_num"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.JUKF.G_num" title="Permalink to this definition">¶</a></dt>
+<dd><p>Numerical Jacobian computation of <span class="math notranslate nohighlight">\(\mathbf{G}\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>omega</strong> – input <span class="math notranslate nohighlight">\(\boldsymbol{\omega}\)</span>.</p></li>
+<li><p><strong>dt</strong> – integration step <span class="math notranslate nohighlight">\(dt\)</span> (s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.JUKF.cov_propagation">
+<code class="sig-name descname">cov_propagation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#JUKF.cov_propagation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.JUKF.cov_propagation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Covariance propagation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>omega</strong> – input <span class="math notranslate nohighlight">\(\boldsymbol{\omega}\)</span>.</p></li>
+<li><p><strong>dt</strong> – integration step <span class="math notranslate nohighlight">\(dt\)</span> (s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.JUKF.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">y</em>, <em class="sig-param">R</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#JUKF.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.JUKF.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>State update, where Jacobian is computed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y</strong> – 1D array (vector) measurement <span class="math notranslate nohighlight">\(\mathbf{y}_n\)</span>.</p></li>
+<li><p><strong>R</strong> – measurement covariance <span class="math notranslate nohighlight">\(\mathbf{R}_n\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.JUKF.H_num">
+<code class="sig-name descname">H_num</code><span class="sig-paren">(</span><em class="sig-param">y</em>, <em class="sig-param">idxs</em>, <em class="sig-param">R</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#JUKF.H_num"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.JUKF.H_num" title="Permalink to this definition">¶</a></dt>
+<dd><p>Numerical Jacobian computation of <span class="math notranslate nohighlight">\(\mathbf{H}\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y</strong> – 1D array (vector) measurement <span class="math notranslate nohighlight">\(\mathbf{y}_n\)</span>.</p></li>
+<li><p><strong>idxs</strong> – indices corresponding to the state uncertainty for update.</p></li>
+<li><p><strong>R</strong> – measurement covariance <span class="math notranslate nohighlight">\(\mathbf{R}_n\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.JUKF.state_update">
+<code class="sig-name descname">state_update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#JUKF.state_update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.JUKF.state_update" title="Permalink to this definition">¶</a></dt>
+<dd><p>State update, once Jacobian is computed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.JUKF.aug">
+<code class="sig-name descname">aug</code><span class="sig-paren">(</span><em class="sig-param">y</em>, <em class="sig-param">aug_idxs</em>, <em class="sig-param">R</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#JUKF.aug"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.JUKF.aug" title="Permalink to this definition">¶</a></dt>
+<dd><p>State augmentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y</strong> – 1D array (vector) measurement <span class="math notranslate nohighlight">\(\mathbf{y}_n\)</span>.</p></li>
+<li><p><strong>aug_idxs</strong> – indices corresponding to the state augmentation
+uncertainty.</p></li>
+<li><p><strong>R</strong> – measurement covariance <span class="math notranslate nohighlight">\(\mathbf{R}_n\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="ekf">
+<h2>EKF<a class="headerlink" href="#ekf" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.EKF">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">EKF</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">FG_ana</em>, <em class="sig-param">H_ana</em>, <em class="sig-param">phi</em>, <em class="sig-param">Q</em>, <em class="sig-param">R</em>, <em class="sig-param">state0</em>, <em class="sig-param">P0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ekf.html#EKF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.EKF" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Extended Kalman Filter on (parallelizable) manifolds.</p>
+<p>This is the counterpart of the UKF on (parallelizable) manifolds, where 
+functions for computed Jacobian need to be provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – model that contains propagation function <span class="math notranslate nohighlight">\(f\)</span> and 
+observation function <span class="math notranslate nohighlight">\(h\)</span>.</p></li>
+<li><p><strong>phi</strong> – retraction <span class="math notranslate nohighlight">\(\boldsymbol{\varphi}\)</span>.</p></li>
+<li><p><strong>FG_ana</strong> – function for computing Jacobian <span class="math notranslate nohighlight">\(\mathbf{F}\)</span> and 
+<span class="math notranslate nohighlight">\(\mathbf{G}\)</span> during propagation.</p></li>
+<li><p><strong>H_ana</strong> – function for computing Jacobian <span class="math notranslate nohighlight">\(\mathbf{H}\)</span> during 
+update.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>Q</strong> – propagation noise covariance matrix (static) <span class="math notranslate nohighlight">\(\mathbf{Q}\)</span>.</p></li>
+<li><p><strong>R</strong> – observation noise covariance matrix (static) <span class="math notranslate nohighlight">\(\mathbf{R}\)</span>.</p></li>
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}_n\)</span>, initialized at 
+<code class="docutils literal notranslate"><span class="pre">state0</span></code>.</p></li>
+<li><p><strong>P</strong> – state error covariance <span class="math notranslate nohighlight">\(\mathbf{P}_n\)</span>, initialized at 
+<code class="docutils literal notranslate"><span class="pre">P0</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="ukfm.EKF.propagation">
+<code class="sig-name descname">propagation</code><span class="sig-paren">(</span><em class="sig-param">omega</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ekf.html#EKF.propagation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.EKF.propagation" title="Permalink to this definition">¶</a></dt>
+<dd><p>UKF propagation step.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{\hat{\chi}}_{n} &amp;\leftarrow
+\boldsymbol{\hat{\chi}}_{n+1} =
+f\left(\boldsymbol{\hat{\chi}}_{n}, 
+\boldsymbol{\omega}_{n}, \mathbf{0}\right) \\
+\mathbf{P}_{n} &amp;\leftarrow \mathbf{P}_{n+1} = \mathbf{F} 
+\mathbf{P}_{n} \mathbf{F}^T 
++ \mathbf{G} \mathbf{Q} \mathbf{G}^T  \\\end{split}\]</div>
+<p>Mean state and covariance are propagated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>omega</strong> – input <span class="math notranslate nohighlight">\(\boldsymbol{\omega}\)</span>.</p></li>
+<li><p><strong>dt</strong> – integration step <span class="math notranslate nohighlight">\(dt\)</span> (s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.EKF.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ekf.html#EKF.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.EKF.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>EKF update step.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{\hat{\chi}}_{n} &amp;\leftarrow 
+\boldsymbol{\hat{\chi}}_{n}^{+} \\
+\mathbf{P}_{n} &amp;\leftarrow \mathbf{P}_{n}^{+} \\\end{split}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>y</strong> – 1D array (vector) measurement <span class="math notranslate nohighlight">\(\mathbf{y}_n\)</span>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="model.html" class="btn btn-neutral float-right" title="Models" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="auto_benchmark/slam2d.html" class="btn btn-neutral" title="2D Robot SLAM - Benchmark" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,282 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Unscented Kalman Filtering on (Parallelizable) Manifolds &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="#"/>
+        <link rel="next" title="Installation" href="install.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filter.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry.html">Lie Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="#">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="#">Docs</a> &raquo;</li>
+      
+    <li>Unscented Kalman Filtering on (Parallelizable) Manifolds</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="unscented-kalman-filtering-on-parallelizable-manifolds">
+<h1>Unscented Kalman Filtering on (Parallelizable) Manifolds<a class="headerlink" href="#unscented-kalman-filtering-on-parallelizable-manifolds" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="about">
+<h2>About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h2>
+<p><strong>UKF-M</strong>, for Unscented Kalman Filtering on (parallelizable) Manifolds, is a
+novel methodology for implementing unscented Kalman filter both  on manifold and
+Lie groups. Beyond <em>filtering performances</em>, the main interests of the approach
+are its <em>versatility</em>, as the method applies to numerous state estimation
+problems, and its <em>simplicity of implementation</em> for practitioners not being
+necessarily familiar with manifolds and Lie groups.</p>
+<p>This repo contains two independent Python and Matlab implementations - we
+recommend Python - for quickly implementing and testing the approach. If you use
+this project for your research, please cite:</p>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@article</span><span class="p">{</span><span class="nl">brossard2019Code</span><span class="p">,</span>
+    <span class="na">author</span><span class="p">=</span><span class="s">{Martin Brossard and Axel Barrau and Silvère Bonnabel}</span><span class="p">,</span>
+    <span class="na">title</span><span class="p">=</span><span class="s">{{A Code for Unscented Kalman Filtering on Manifolds (UKF-M)}}</span><span class="p">,</span>
+    <span class="na">year</span><span class="p">=</span><span class="s">{2019}</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="download">
+<h2>Download<a class="headerlink" href="#download" title="Permalink to this headline">¶</a></h2>
+<p>The repo contains tutorials, documentation and that can be downloaded from
+<a class="reference external" href="https://github.com/CAOR-MINES-ParisTech/ukfm">https://github.com/CAOR-MINES-ParisTech/ukfm</a>.</p>
+<p>The paper <em>A Code for Unscented Kalman Filtering on Manifolds (UKF-M)</em> related
+to this code is available at this <a class="reference external" href="https://cloud.mines-paristech.fr/index.php/s/uUjOhxaKp4v9yJT/download">url</a>.</p>
+</div>
+<div class="section" id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p>1. Download the latest source code from <a class="reference external" href="https://github.com/CAOR-MINES-ParisTech/ukfm">GitHub</a> (see <a class="reference internal" href="install.html#installation"><span class="std std-ref">Installation</span></a>).</p>
+<p>2. Follow  the <a class="reference internal" href="auto_examples/localization.html#localization-tutorial"><span class="std std-ref">Tutorial</span></a> for an introduction to
+the methodology.</p>
+<p>The rest of this documentation is build on and for Python usages. For the Matlab
+user, see the referred <a class="reference internal" href="matlab.html#matlab"><span class="std std-ref">Section</span></a>.</p>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Below is a list of examples from which the unscented Kalman filter on
+parallelizable manifolds has been implemented.</p>
+<ul class="simple">
+<li><p>2D robot localization (for introduction on simulated data and on real data).</p></li>
+<li><p>3D Attitude estimation with an Inertial Measurement Unit (IMU) equipped with
+gyros, accelerometers and magnetometers.</p></li>
+<li><p>3D Inertial navigation on flat Earth with observations of known landmarks.</p></li>
+<li><p>2D Simultaneous Localization And Mapping (SLAM).</p></li>
+<li><p>IMU-GNSS sensor-fusion for a vehicle on the KITTI dataset.</p></li>
+<li><p>Spherical pendulum example, where the state lives on the 2-sphere manifold.</p></li>
+</ul>
+<p>See more details in the <a class="reference internal" href="examples.html#examples"><span class="std std-ref">Examples</span></a> Section.</p>
+</div>
+<div class="section" id="support">
+<h2>Support<a class="headerlink" href="#support" title="Permalink to this headline">¶</a></h2>
+<p>Please, use the <a class="reference external" href="https://github.com/CAOR-MINES-ParisTech/ukfm">GitHub issue tracker</a> for questions, bug reports,
+feature requests/additions, etc.</p>
+</div>
+<div class="section" id="acknowledgments">
+<h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permalink to this headline">¶</a></h2>
+<p>The library was written by <a class="reference external" href="mailto:martin&#46;brossard&#37;&#52;&#48;mines-paristech&#46;fr">Martin Brossard</a> ^, <a class="reference external" href="mailto:axel&#46;barrau&#37;&#52;&#48;safrangroup&#46;com">Axel Barrau</a> ^ and <a class="reference external" href="mailto:silvere&#46;bonnabel&#37;&#52;&#48;mines-paristech&#46;fr">Silvère Bonnabel</a> ^.</p>
+<p>^ <a class="reference external" href="http://www.mines-paristech.eu/">MINES ParisTech</a> , PSL Research University,
+Centre for Robotics, 60 Boulevard Saint-Michel, 75006 Paris, France.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="install.html" class="btn btn-neutral float-right" title="Installation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

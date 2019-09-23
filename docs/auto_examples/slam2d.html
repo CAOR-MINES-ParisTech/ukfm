@@ -1,0 +1,516 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>2D Robot SLAM - Example &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="../index.html"/>
+        <link rel="up" title="Examples" href="../examples.html"/>
+        <link rel="next" title="IMU-GNSS Sensor-Fusion on the KITTI Dataset" href="imugnss.html"/>
+        <link rel="prev" title="Navigation on Flat Earth - Example" href="inertial_navigation.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="../_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../filter.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../geometry.html">Lie Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../examples.html">Examples</a> &raquo;</li>
+      
+    <li>2D Robot SLAM - Example</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/auto_examples/slam2d.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-auto-examples-slam2d-py"><span class="std std-ref">here</span></a> to download the full example code</p>
+</div>
+<div class="sphx-glr-example-title section" id="d-robot-slam-example">
+<span id="sphx-glr-auto-examples-slam2d-py"></span><h1>2D Robot SLAM - Example<a class="headerlink" href="#d-robot-slam-example" title="Permalink to this headline">¶</a></h1>
+<p>Goals of this script:</p>
+<ul class="simple">
+<li><p>apply the UKF for performing 2D SLAM (Simultaneous Localization And Mapping).</p></li>
+<li><p>discover a computationally alternative way for performing UKF insipred from
+<a class="reference internal" href="../bibliography.html#huanga2013" id="id1">[HMR13]</a>. This alternative leads to computational speed
+improvement when only a part of the state is involved in a propagation or in
+update step.</p></li>
+<li><p>augment the state when a new landmark is observed in a UKF derivative-free
+way.</p></li>
+</ul>
+<p><em>We assume the reader is already familiar with the approach described in the
+tutorial.</em></p>
+<p>This script considers the 2D robot SLAM problem where the robot is equipped with
+wheel odometry and observes unknown landmark measurements. The robot state is
+propagated through the odometry model and landmark observations are used in the
+UKF measurement step. Landmarks are static and we assume no error coming from
+data association. We reproduce the simulations that are described in
+<a class="reference internal" href="../bibliography.html#huangobservability2010" id="id2">[HMR10]</a> , <a class="reference internal" href="../bibliography.html#huanga2013" id="id3">[HMR13]</a>.</p>
+<div class="section" id="import">
+<h2>Import<a class="headerlink" href="#import" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ukfm</span>
+<span class="kn">from</span> <span class="nn">ukfm</span> <span class="k">import</span> <span class="n">SLAM2D</span> <span class="k">as</span> <span class="n">MODEL</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="n">ukfm</span><span class="o">.</span><span class="n">set_matplotlib_config</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="model-and-simulation">
+<h2>Model and Simulation<a class="headerlink" href="#model-and-simulation" title="Permalink to this headline">¶</a></h2>
+<p>This script uses the <code class="docutils literal notranslate"><span class="pre">SLAM2D</span></code> model class that requires requires sequence
+time and odometry frequency to create an instance of the model.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sequence time (s)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mi">2500</span>
+<span class="c1"># odometry frequency (Hz)</span>
+<span class="n">odo_freq</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1"># create the model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">MODEL</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">odo_freq</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The trajectory of the robot consists of turning at constant speed.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># true speed of robot (m/s)</span>
+<span class="n">v</span> <span class="o">=</span> <span class="mf">0.25</span>
+<span class="c1"># true angular velocity (rad/s)</span>
+<span class="n">gyro</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+<span class="c1"># odometry noise standard deviation</span>
+<span class="n">odo_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.05</span><span class="o">*</span><span class="n">v</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>     <span class="c1"># speed (v/m)</span>
+                    <span class="mf">0.05</span><span class="o">*</span><span class="n">v</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="p">])</span>  <span class="c1"># angular speed (rad/s)</span>
+</pre></div>
+</div>
+<p>When simulating data, we generate a map. The map consists of landmarks
+constantly spaced on a circle with slightly higher radius than the radius of
+the robot trajectory.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># simulate true trajectory and noisy input</span>
+<span class="n">states</span><span class="p">,</span> <span class="n">omegas</span><span class="p">,</span> <span class="n">ldks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simu_f</span><span class="p">(</span><span class="n">odo_std</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">gyro</span><span class="p">)</span>
+
+<span class="c1"># observation noise standard deviation (m)</span>
+<span class="n">obs_std</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+<span class="c1"># plot the map</span>
+<span class="n">model</span><span class="o">.</span><span class="n">plot_traj</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">ldks</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../_images/sphx_glr_slam2d_0011.png" class="sphx-glr-single-img" src="../_images/sphx_glr_slam2d_0011.png" />
+<p>The state and the input contain the following variables:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span>      <span class="c1"># orientation (matrix)</span>
+<span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">p</span>        <span class="c1"># robot position</span>
+<span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">p_l</span>      <span class="c1"># landmark positions</span>
+<span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">gyro</span>     <span class="c1"># robot angular velocity</span>
+<span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">v</span>        <span class="c1"># robot speed</span>
+</pre></div>
+</div>
+<p>Landmark positions is a 2D array where we get the k-th landmark as
+<code class="docutils literal notranslate"><span class="pre">states[n].p_l[k]</span></code>. The number of landmarks in the state starts from zero
+and increases when the robot observe a new landmark.</p>
+<p>We compute noisy landmark measurements based on the true state sequence.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ys</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simu_h</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">obs_std</span><span class="p">,</span> <span class="n">ldks</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A measurement contains the observations of all visible landmarks as:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">y_n</span> <span class="o">=</span> <span class="n">ys</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>    <span class="c1"># measurement at timestamp n</span>
+<span class="n">y_n_k</span> <span class="o">=</span> <span class="n">y_n</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="c1"># k-th observed landmark at instant n, where y_n_k[2] is the</span>
+               <span class="c1"># landmark index (-1 if the landmark is not observed)</span>
+</pre></div>
+</div>
+<div class="section" id="filter-design-and-initialization">
+<h3>Filter Design and Initialization<a class="headerlink" href="#filter-design-and-initialization" title="Permalink to this headline">¶</a></h3>
+<p>We choose to embed the robot state in <span class="math notranslate nohighlight">\(SO(2) \times \mathbb{R}^2\)</span> and
+each landmark position in <span class="math notranslate nohighlight">\(\mathbb{R}^2\)</span>, such that:</p>
+<ul class="simple">
+<li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(2)\)</span> exponential map for
+orientation, i.e. and the standard vector addition for robot and landmark
+positions.</p></li>
+<li><p>the inverse retraction <span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(2)\)</span>
+logarithm for orientation and the standard vector subtraction for robot and
+landmark positions.</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># propagation noise matrix</span>
+<span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">odo_std</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="c1"># measurement noise matrix</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">obs_std</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="c1"># initial error matrix</span>
+<span class="n">P0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>  <span class="c1"># The state is perfectly initialized without</span>
+</pre></div>
+</div>
+<p>Regarding implementation, we use the Jacobian UKF (JUKF) that is adapted to
+the problem, as it spare some time when only a part of the space is involved
+in a propagation or update step.</p>
+<p><strong>How it works ?</strong> Consider the propagation of the covariance in an extended
+Kalman filter as</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{P}_{n+1} = \mathbf{F} \mathbf{P}_{n} \mathbf{T}^T +
+\mathbf{G} \mathbf{Q} \mathbf{G}^T,\]</div>
+<p>where the robot state uncertainty is put in the first indices of the
+covariance matrix <span class="math notranslate nohighlight">\(\mathbf{P}_{n}\)</span>. As landmarks are statics, the
+Jacobian take the forms</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{F} = \begin{bmatrix}  \mathbf{F}^R &amp; \mathbf{0} \\
+\mathbf{0}  &amp; \mathbf{I}  \end{bmatrix}, \mathbf{G} = \begin{bmatrix}
+\mathbf{G}^R &amp; \mathbf{0} \\ \mathbf{0}  &amp; \mathbf{0}  \end{bmatrix}.\end{split}\]</div>
+<p>The JUKF allows to compute <span class="math notranslate nohighlight">\(\mathbf{F}^R\)</span> and <span class="math notranslate nohighlight">\(\mathbf{G}^R\)</span> by
+only using the required sigma points. Here it corresponds to the sigma points
+of the robot state. This requires to set the reduced retraction <code class="docutils literal notranslate"><span class="pre">red_phi</span></code>
+and inverse retraction <code class="docutils literal notranslate"><span class="pre">red_phi_inv</span></code> that compute the required  subpart of
+the full retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> and inverse retraction
+<span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span>, and to define corresponding indices <code class="docutils literal notranslate"><span class="pre">red_idx</span></code> in
+<span class="math notranslate nohighlight">\(\mathbf{P}_n\)</span>.</p>
+<p>Similarly for the observation of a landmark, e.g. the first landmark, the
+observation matrix has the form</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{H} = \begin{bmatrix}  \mathbf{H}^1 &amp; \mathbf{0} \end{bmatrix}.\]</div>
+<p>The JUKF computes <span class="math notranslate nohighlight">\(\mathbf{H}^1\)</span> by only using the required sigma points
+of the robot state and the observed landmark. This requires to set another
+function <code class="docutils literal notranslate"><span class="pre">up_phi</span></code> using during update to compute a subpart of the retraction
+<span class="math notranslate nohighlight">\(\varphi(.,.)\)</span>, as corresponding indices <code class="docutils literal notranslate"><span class="pre">up_idx</span></code> in
+<span class="math notranslate nohighlight">\(\mathbf{P}_n\)</span>.</p>
+<p>Finally, we require to define a new function <span class="math notranslate nohighlight">\(z(.,.)\)</span> to augment the
+state such that</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\chi}_n^{\mathrm{aug}} = z(\boldsymbol{\chi}_{n}, \mathbf{y}_n),\]</div>
+<p>where <span class="math notranslate nohighlight">\(\boldsymbol{\chi}_n^{\mathrm{aug}}\)</span> is the augmented state and
+the <span class="math notranslate nohighlight">\(\mathbf{y}_n\)</span> the measurement used to augment the state. Here this
+measurement is a landmark observation. To make the augmentation efficient we
+need to compute sigma points for only the state involved in <span class="math notranslate nohighlight">\(z(.,.)\)</span>,
+<code class="docutils literal notranslate"><span class="pre">aug_phi</span></code> is thus only a subpart of <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> and
+<code class="docutils literal notranslate"><span class="pre">aug_inv_phi</span></code> is the inverse retraction of <span class="math notranslate nohighlight">\(\varphi(.,.)^{-1}\)</span>
+corresponding to the novel part of the state only.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sigma point parameters</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">])</span>
+
+<span class="c1"># reduced weights during propagation</span>
+<span class="n">red_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>  <span class="c1"># indices corresponding to the robot state in P</span>
+<span class="c1"># weights during update</span>
+<span class="n">aug_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>  <span class="c1"># indices corresponding to the robot state in P</span>
+
+<span class="n">state0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
+    <span class="n">Rot</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span><span class="p">,</span>
+    <span class="n">p</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">p</span><span class="p">,</span>
+    <span class="n">p_l</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+
+<span class="n">ukf</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">JUKF</span><span class="p">(</span>
+    <span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span>
+    <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>
+    <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span>
+    <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
+    <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
+    <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+    <span class="n">red_phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">red_phi</span><span class="p">,</span>
+    <span class="n">red_phi_inv</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">red_phi_inv</span><span class="p">,</span>
+    <span class="n">red_idxs</span><span class="o">=</span><span class="n">red_idxs</span><span class="p">,</span>
+    <span class="n">up_phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">up_phi</span><span class="p">,</span>
+    <span class="n">up_idxs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>  <span class="c1"># this variable changes during the sequence</span>
+    <span class="n">aug_z</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">aug_z</span><span class="p">,</span>
+    <span class="n">aug_phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">aug_phi</span><span class="p">,</span>
+    <span class="n">aug_phi_inv</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">aug_phi_inv</span><span class="p">,</span>
+    <span class="n">aug_idxs</span><span class="o">=</span><span class="n">aug_idxs</span><span class="p">,</span>
+    <span class="n">aug_q</span><span class="o">=</span><span class="mi">2</span>
+<span class="p">)</span>
+
+<span class="c1"># set variables for recording estimates along the full trajectory</span>
+<span class="n">ukf_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+<span class="n">ukf_Ps</span> <span class="o">=</span> <span class="p">[</span><span class="n">P0</span><span class="p">]</span>
+
+<span class="c1"># indices of already observed landmarks</span>
+<span class="n">ukf_lmk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="filtering">
+<h2>Filtering<a class="headerlink" href="#filtering" title="Permalink to this headline">¶</a></h2>
+<p>The UKF proceeds as a standard Kalman filter with a simple for loop.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+    <span class="c1"># propagation</span>
+    <span class="n">ukf</span><span class="o">.</span><span class="n">propagation</span><span class="p">(</span><span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">model</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+
+    <span class="n">y_n</span> <span class="o">=</span> <span class="n">ys</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+    <span class="c1"># observed landmarks</span>
+    <span class="n">idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y_n</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># update each landmark already in the filter</span>
+    <span class="n">p_ls</span> <span class="o">=</span> <span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">p_l</span>
+    <span class="k">for</span> <span class="n">idx0</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ukf_lmk</span> <span class="o">==</span> <span class="n">y_n</span><span class="p">[</span><span class="n">idx0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># indices of the robot and observed landmark in P</span>
+        <span class="n">up_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">idx</span><span class="p">,</span> <span class="mi">4</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">idx</span><span class="p">])</span>
+        <span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">p_l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">p_ls</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="c1"># compute observability matrices and residual</span>
+        <span class="n">ukf</span><span class="o">.</span><span class="n">H_num</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">y_n</span><span class="p">[</span><span class="n">idx0</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]),</span> <span class="n">up_idxs</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+    <span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">p_l</span> <span class="o">=</span> <span class="n">p_ls</span>
+
+    <span class="c1"># update only if some landmarks have been observed</span>
+    <span class="k">if</span> <span class="n">ukf</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">ukf</span><span class="o">.</span><span class="n">state_update</span><span class="p">()</span>
+
+    <span class="c1"># augment the state with new landmark</span>
+    <span class="k">for</span> <span class="n">idx0</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ukf_lmk</span> <span class="o">==</span> <span class="n">y_n</span><span class="p">[</span><span class="n">idx0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># augment the landmark state</span>
+        <span class="n">ukf_lmk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">ukf_lmk</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">y_n</span><span class="p">[</span><span class="n">idx0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])])</span>
+        <span class="c1"># indices of the new landmark</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">ukf_lmk</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span>
+
+        <span class="c1"># new landmark position</span>
+        <span class="n">p_l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">p</span> <span class="o">+</span> <span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y_n</span><span class="p">[</span><span class="n">idx0</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">p_ls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">p_l</span><span class="p">,</span> <span class="n">p_l</span><span class="p">])</span>
+        <span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">p_l</span> <span class="o">=</span> <span class="n">p_l</span>
+
+        <span class="c1"># get Jacobian and then covariance following [2]</span>
+        <span class="n">R_n</span> <span class="o">=</span> <span class="n">obs_std</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">ukf</span><span class="o">.</span><span class="n">aug</span><span class="p">(</span><span class="n">y_n</span><span class="p">[</span><span class="n">idx0</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">aug_idxs</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+        <span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">p_l</span> <span class="o">=</span> <span class="n">p_ls</span>
+
+    <span class="c1"># save estimates</span>
+    <span class="n">ukf_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+    <span class="n">ukf_Ps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ukf</span><span class="o">.</span><span class="n">P</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="results">
+<h3>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">plot_results</span><span class="p">(</span><span class="n">ukf_states</span><span class="p">,</span> <span class="n">ukf_Ps</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">ldks</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="sphx-glr-horizontal">
+<li><img alt="../_images/sphx_glr_slam2d_0021.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_slam2d_0021.png" />
+</li>
+<li><img alt="../_images/sphx_glr_slam2d_0031.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_slam2d_0031.png" />
+</li>
+<li><img alt="../_images/sphx_glr_slam2d_0041.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_slam2d_0041.png" />
+</li>
+</ul>
+<p>As UKF estimates the covariance of the error, we have plotted the 95 %
+confident interval (<span class="math notranslate nohighlight">\(3\sigma\)</span>). We expect the error keeps behind this
+interval, and note note the confidence interval decreases along time.</p>
+</div>
+</div>
+<div class="section" id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
+<p>This script shows how the UKF on parallelizable manifolds can be used for 2D
+SLAM. By leveraging numerical Jacobian inference, one obtains a
+computationally more efficient filter. The UKF works apparently well for this
+example, but consistency issues happear at the end of the trajectory.</p>
+<p>You can now:</p>
+<ul class="simple">
+<li><p>consider non-linear range and bearing measurement.</p></li>
+<li><p>benchmark the UKF with different function error and compare it to the
+extended Kalman filter and invariant extended Kalman filter of
+<a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id4">[BB17]</a>.</p></li>
+</ul>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  15.281 seconds)</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-slam2d-py">
+<div class="sphx-glr-download docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/9b2606b93aa2b9afcac9056dc9a41e28/slam2d.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">slam2d.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/e2853d779465c1c4816e1c3084911d65/slam2d.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">slam2d.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="imugnss.html" class="btn btn-neutral float-right" title="IMU-GNSS Sensor-Fusion on the KITTI Dataset" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="inertial_navigation.html" class="btn btn-neutral" title="Navigation on Flat Earth - Example" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,598 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>3D Attitude Estimation - Benchmark &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="../index.html"/>
+        <link rel="up" title="Benchmarks" href="../benchmarks.html"/>
+        <link rel="next" title="Navigation on Flat Earth - Benchmark" href="inertial_navigation.html"/>
+        <link rel="prev" title="2D Robot Localization - Benchmark" href="localization.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="../_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../benchmarks.html">Benchmarks</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="localization.html">2D Robot Localization</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Attitude Estimation with an IMU</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#import">Import</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation-setting">Simulation Setting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#filter-design">Filter Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#monte-carlo-runs">Monte-Carlo Runs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#results">Results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conclusion">Conclusion</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="inertial_navigation.html">Navigation on Flat Earth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slam2d.html">2D Robot SLAM</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../filter.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../geometry.html">Lie Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../benchmarks.html">Benchmarks</a> &raquo;</li>
+      
+    <li>3D Attitude Estimation - Benchmark</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/auto_benchmark/attitude.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-auto-benchmark-attitude-py"><span class="std std-ref">here</span></a> to download the full example code</p>
+</div>
+<div class="sphx-glr-example-title section" id="d-attitude-estimation-benchmark">
+<span id="sphx-glr-auto-benchmark-attitude-py"></span><h1>3D Attitude Estimation - Benchmark<a class="headerlink" href="#d-attitude-estimation-benchmark" title="Permalink to this headline">¶</a></h1>
+<p>Goals of this script:</p>
+<ul class="simple">
+<li><p>implement two different UKFs on the 3D attitude estimation example.</p></li>
+<li><p>design the Extended Kalman Filter (EKF) for the given problem.</p></li>
+<li><p>compare the different algorithms with Monte-Carlo simulations.</p></li>
+</ul>
+<p><em>We assume the reader is already familiar with the considered problem described
+in the related example.</em></p>
+<p>For the given problem, two different UKFs emerge, defined respectively as:</p>
+<p>1- The state is embedded in <span class="math notranslate nohighlight">\(SO(3)\)</span> with left multiplication, i.e.</p>
+<ul class="simple">
+<li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(3)\)</span> exponential where
+uncertainty is multiplied on the left by the state.</p></li>
+<li><p>the inverse retraction <span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(3)\)</span>
+logarithm.</p></li>
+</ul>
+<p>2- The state is embedded in <span class="math notranslate nohighlight">\(SO(3)\)</span> with right multiplication, i.e.</p>
+<ul class="simple">
+<li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(3)\)</span> exponential where
+uncertainty is multiplied on the right by the state.</p></li>
+<li><p>the inverse retraction <span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(3)\)</span>
+logarithm.</p></li>
+</ul>
+<p>We tests the different with the same noise parameter setting and on simulation
+with moderate initial heading error. We will see how perform the filters
+compared to the extended Kalman filter.</p>
+<div class="section" id="import">
+<h2>Import<a class="headerlink" href="#import" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">block_diag</span>
+<span class="kn">from</span> <span class="nn">ukfm</span> <span class="k">import</span> <span class="n">SO3</span><span class="p">,</span> <span class="n">UKF</span><span class="p">,</span> <span class="n">EKF</span>
+<span class="kn">from</span> <span class="nn">ukfm</span> <span class="k">import</span> <span class="n">ATTITUDE</span> <span class="k">as</span> <span class="n">MODEL</span>
+<span class="kn">import</span> <span class="nn">ukfm</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="n">ukfm</span><span class="o">.</span><span class="n">set_matplotlib_config</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="simulation-setting">
+<h2>Simulation Setting<a class="headerlink" href="#simulation-setting" title="Permalink to this headline">¶</a></h2>
+<p>We compare the different filters on a large number of Monte-Carlo runs.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Monte-Carlo runs</span>
+<span class="n">N_mc</span> <span class="o">=</span> <span class="mi">100</span>
+</pre></div>
+</div>
+<p>This script uses the <code class="docutils literal notranslate"><span class="pre">ATTITUDE</span></code> model class that requires  the sequence time
+and the IMU frequency to create an instance of the model.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sequence time (s)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="c1"># IMU frequency (Hz)</span>
+<span class="n">imu_freq</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="c1"># IMU standard-deviation noise (noise is isotropic)</span>
+<span class="n">imu_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">5</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>  <span class="c1"># gyro (rad/s)</span>
+                    <span class="mf">0.4</span><span class="p">,</span>          <span class="c1"># accelerometer (m/s**2)</span>
+                    <span class="mf">0.3</span><span class="p">])</span>         <span class="c1"># magnetometer</span>
+<span class="c1"># create the model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">MODEL</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">imu_freq</span><span class="p">)</span>
+
+<span class="c1"># propagation noise matrix</span>
+<span class="n">Q</span> <span class="o">=</span> <span class="n">imu_std</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="c1"># measurement noise matrix</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">block_diag</span><span class="p">(</span><span class="n">imu_std</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">imu_std</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="c1"># initial error matrix</span>
+<span class="n">P0</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>  <span class="c1"># The state is perfectly initialized</span>
+
+<span class="c1"># sigma point parameters</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="filter-design">
+<h2>Filter Design<a class="headerlink" href="#filter-design" title="Permalink to this headline">¶</a></h2>
+<p>Additionally to the UKFs, we compare them to an EKF. The EKF has the same
+uncertainty representation as the UKF with right uncertainty representation.</p>
+<p>We set variables for recording metrics before launching Monte-Carlo
+simulations.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">left_ukf_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N_mc</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">right_ukf_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">left_ukf_err</span><span class="p">)</span>
+<span class="n">ekf_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">left_ukf_err</span><span class="p">)</span>
+
+<span class="n">left_ukf_nees</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N_mc</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">))</span>
+<span class="n">right_ukf_nees</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">left_ukf_nees</span><span class="p">)</span>
+<span class="n">ekf_nees</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">left_ukf_nees</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="monte-carlo-runs">
+<h2>Monte-Carlo Runs<a class="headerlink" href="#monte-carlo-runs" title="Permalink to this headline">¶</a></h2>
+<p>We run the Monte-Carlo through a for loop.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">n_mc</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_mc</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Monte-Carlo iteration(s): &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">n_mc</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">N_mc</span><span class="p">))</span>
+    <span class="c1"># simulate true trajectory and noised input</span>
+    <span class="n">states</span><span class="p">,</span> <span class="n">omegas</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simu_f</span><span class="p">(</span><span class="n">imu_std</span><span class="p">)</span>
+    <span class="c1"># simulate accelerometer and magnetometer measurements</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simu_h</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">imu_std</span><span class="p">)</span>
+
+    <span class="c1"># initial state with error</span>
+    <span class="n">state0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span><span class="n">Rot</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+        <span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">10</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">))))</span>
+
+    <span class="c1"># initialize filter with true state</span>
+    <span class="c1"># covariance need to be &quot;turned&quot;</span>
+    <span class="n">left_ukf_P</span> <span class="o">=</span> <span class="n">state0</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">P0</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">state0</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">right_ukf_P</span> <span class="o">=</span> <span class="n">P0</span>
+    <span class="n">ekf_P</span> <span class="o">=</span> <span class="n">P0</span>
+
+    <span class="c1"># variables for recording estimates of the Monte-Carlo run</span>
+    <span class="n">left_ukf_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">state0</span><span class="p">]</span>
+    <span class="n">right_ukf_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">state0</span><span class="p">]</span>
+    <span class="n">ekf_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">state0</span><span class="p">]</span>
+
+    <span class="n">left_ukf_Ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="n">right_ukf_Ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">left_ukf_Ps</span><span class="p">)</span>
+    <span class="n">ekf_Ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">left_ukf_Ps</span><span class="p">)</span>
+
+    <span class="n">left_ukf_Ps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">left_ukf_P</span>
+    <span class="n">right_ukf_Ps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">right_ukf_P</span>
+    <span class="n">ekf_Ps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">ekf_P</span>
+
+    <span class="n">left_ukf</span> <span class="o">=</span> <span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                   <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>
+                   <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span>
+                   <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
+                   <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
+                   <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
+                   <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi</span><span class="p">,</span>
+                   <span class="n">phi_inv</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi_inv</span><span class="p">,</span>
+                   <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+
+    <span class="n">right_ukf</span> <span class="o">=</span> <span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>
+                    <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span>
+                    <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
+                    <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
+                    <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
+                    <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">right_phi</span><span class="p">,</span>
+                    <span class="n">phi_inv</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">right_phi_inv</span><span class="p">,</span>
+                    <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+
+    <span class="n">ekf</span> <span class="o">=</span> <span class="n">EKF</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+              <span class="n">state0</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+              <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>
+              <span class="n">FG_ana</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">ekf_FG_ana</span><span class="p">,</span>
+              <span class="n">H_ana</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">ekf_H_ana</span><span class="p">,</span>
+              <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
+              <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
+              <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">right_phi</span><span class="p">)</span>
+
+    <span class="c1"># filtering loop</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+        <span class="c1"># propagation</span>
+        <span class="n">left_ukf</span><span class="o">.</span><span class="n">propagation</span><span class="p">(</span><span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">model</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">right_ukf</span><span class="o">.</span><span class="n">propagation</span><span class="p">(</span><span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">model</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">ekf</span><span class="o">.</span><span class="n">propagation</span><span class="p">(</span><span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">model</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+        <span class="c1"># update</span>
+        <span class="n">left_ukf</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ys</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+        <span class="n">right_ukf</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ys</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+        <span class="n">ekf</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ys</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+
+        <span class="c1"># save estimates</span>
+        <span class="n">left_ukf_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">left_ukf</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">right_ukf_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">right_ukf</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">ekf_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ekf</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+
+        <span class="n">left_ukf_Ps</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">left_ukf</span><span class="o">.</span><span class="n">P</span>
+        <span class="n">right_ukf_Ps</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">right_ukf</span><span class="o">.</span><span class="n">P</span>
+        <span class="n">ekf_Ps</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">ekf</span><span class="o">.</span><span class="n">P</span>
+
+    <span class="c1">#  get state</span>
+    <span class="n">Rots</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_states</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+    <span class="n">left_ukf_Rots</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_states</span><span class="p">(</span><span class="n">left_ukf_states</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+    <span class="n">right_ukf_Rots</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_states</span><span class="p">(</span><span class="n">right_ukf_states</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+    <span class="n">ekf_Rots</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_states</span><span class="p">(</span><span class="n">ekf_states</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+
+    <span class="c1"># record errors</span>
+    <span class="n">left_ukf_err</span><span class="p">[</span><span class="n">n_mc</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">errors</span><span class="p">(</span><span class="n">Rots</span><span class="p">,</span> <span class="n">left_ukf_Rots</span><span class="p">)</span>
+    <span class="n">right_ukf_err</span><span class="p">[</span><span class="n">n_mc</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">errors</span><span class="p">(</span><span class="n">Rots</span><span class="p">,</span> <span class="n">right_ukf_Rots</span><span class="p">)</span>
+    <span class="n">ekf_err</span><span class="p">[</span><span class="n">n_mc</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">errors</span><span class="p">(</span><span class="n">Rots</span><span class="p">,</span> <span class="n">ekf_Rots</span><span class="p">)</span>
+
+    <span class="c1"># record NEES</span>
+    <span class="n">left_ukf_nees</span><span class="p">[</span><span class="n">n_mc</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">nees</span><span class="p">(</span><span class="n">left_ukf_err</span><span class="p">[</span><span class="n">n_mc</span><span class="p">],</span> <span class="n">left_ukf_Ps</span><span class="p">,</span>
+        <span class="n">left_ukf_Rots</span><span class="p">,</span> <span class="s1">&#39;LEFT&#39;</span><span class="p">)</span>
+    <span class="n">right_ukf_nees</span><span class="p">[</span><span class="n">n_mc</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">nees</span><span class="p">(</span><span class="n">right_ukf_err</span><span class="p">[</span><span class="n">n_mc</span><span class="p">],</span> <span class="n">right_ukf_Ps</span><span class="p">,</span>
+        <span class="n">right_ukf_Rots</span><span class="p">,</span> <span class="s1">&#39;RIGHT&#39;</span><span class="p">)</span>
+    <span class="n">ekf_nees</span><span class="p">[</span><span class="n">n_mc</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">nees</span><span class="p">(</span><span class="n">ekf_err</span><span class="p">[</span><span class="n">n_mc</span><span class="p">],</span> <span class="n">ekf_Ps</span><span class="p">,</span> <span class="n">ekf_Rots</span><span class="p">,</span> <span class="s1">&#39;RIGHT&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Monte-Carlo iteration(s): 1/100
+Monte-Carlo iteration(s): 2/100
+Monte-Carlo iteration(s): 3/100
+Monte-Carlo iteration(s): 4/100
+Monte-Carlo iteration(s): 5/100
+Monte-Carlo iteration(s): 6/100
+Monte-Carlo iteration(s): 7/100
+Monte-Carlo iteration(s): 8/100
+Monte-Carlo iteration(s): 9/100
+Monte-Carlo iteration(s): 10/100
+Monte-Carlo iteration(s): 11/100
+Monte-Carlo iteration(s): 12/100
+Monte-Carlo iteration(s): 13/100
+Monte-Carlo iteration(s): 14/100
+Monte-Carlo iteration(s): 15/100
+Monte-Carlo iteration(s): 16/100
+Monte-Carlo iteration(s): 17/100
+Monte-Carlo iteration(s): 18/100
+Monte-Carlo iteration(s): 19/100
+Monte-Carlo iteration(s): 20/100
+Monte-Carlo iteration(s): 21/100
+Monte-Carlo iteration(s): 22/100
+Monte-Carlo iteration(s): 23/100
+Monte-Carlo iteration(s): 24/100
+Monte-Carlo iteration(s): 25/100
+Monte-Carlo iteration(s): 26/100
+Monte-Carlo iteration(s): 27/100
+Monte-Carlo iteration(s): 28/100
+Monte-Carlo iteration(s): 29/100
+Monte-Carlo iteration(s): 30/100
+Monte-Carlo iteration(s): 31/100
+Monte-Carlo iteration(s): 32/100
+Monte-Carlo iteration(s): 33/100
+Monte-Carlo iteration(s): 34/100
+Monte-Carlo iteration(s): 35/100
+Monte-Carlo iteration(s): 36/100
+Monte-Carlo iteration(s): 37/100
+Monte-Carlo iteration(s): 38/100
+Monte-Carlo iteration(s): 39/100
+Monte-Carlo iteration(s): 40/100
+Monte-Carlo iteration(s): 41/100
+Monte-Carlo iteration(s): 42/100
+Monte-Carlo iteration(s): 43/100
+Monte-Carlo iteration(s): 44/100
+Monte-Carlo iteration(s): 45/100
+Monte-Carlo iteration(s): 46/100
+Monte-Carlo iteration(s): 47/100
+Monte-Carlo iteration(s): 48/100
+Monte-Carlo iteration(s): 49/100
+Monte-Carlo iteration(s): 50/100
+Monte-Carlo iteration(s): 51/100
+Monte-Carlo iteration(s): 52/100
+Monte-Carlo iteration(s): 53/100
+Monte-Carlo iteration(s): 54/100
+Monte-Carlo iteration(s): 55/100
+Monte-Carlo iteration(s): 56/100
+Monte-Carlo iteration(s): 57/100
+Monte-Carlo iteration(s): 58/100
+Monte-Carlo iteration(s): 59/100
+Monte-Carlo iteration(s): 60/100
+Monte-Carlo iteration(s): 61/100
+Monte-Carlo iteration(s): 62/100
+Monte-Carlo iteration(s): 63/100
+Monte-Carlo iteration(s): 64/100
+Monte-Carlo iteration(s): 65/100
+Monte-Carlo iteration(s): 66/100
+Monte-Carlo iteration(s): 67/100
+Monte-Carlo iteration(s): 68/100
+Monte-Carlo iteration(s): 69/100
+Monte-Carlo iteration(s): 70/100
+Monte-Carlo iteration(s): 71/100
+Monte-Carlo iteration(s): 72/100
+Monte-Carlo iteration(s): 73/100
+Monte-Carlo iteration(s): 74/100
+Monte-Carlo iteration(s): 75/100
+Monte-Carlo iteration(s): 76/100
+Monte-Carlo iteration(s): 77/100
+Monte-Carlo iteration(s): 78/100
+Monte-Carlo iteration(s): 79/100
+Monte-Carlo iteration(s): 80/100
+Monte-Carlo iteration(s): 81/100
+Monte-Carlo iteration(s): 82/100
+Monte-Carlo iteration(s): 83/100
+Monte-Carlo iteration(s): 84/100
+Monte-Carlo iteration(s): 85/100
+Monte-Carlo iteration(s): 86/100
+Monte-Carlo iteration(s): 87/100
+Monte-Carlo iteration(s): 88/100
+Monte-Carlo iteration(s): 89/100
+Monte-Carlo iteration(s): 90/100
+Monte-Carlo iteration(s): 91/100
+Monte-Carlo iteration(s): 92/100
+Monte-Carlo iteration(s): 93/100
+Monte-Carlo iteration(s): 94/100
+Monte-Carlo iteration(s): 95/100
+Monte-Carlo iteration(s): 96/100
+Monte-Carlo iteration(s): 97/100
+Monte-Carlo iteration(s): 98/100
+Monte-Carlo iteration(s): 99/100
+Monte-Carlo iteration(s): 100/100
+</pre></div>
+</div>
+</div>
+<div class="section" id="results">
+<h2>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
+<p>We compare the algorithms by first visualizing the results averaged over
+Monte-Carlo sequences.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">benchmark_print</span><span class="p">(</span><span class="n">left_ukf_err</span><span class="p">,</span> <span class="n">right_ukf_err</span><span class="p">,</span> <span class="n">ekf_err</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../_images/sphx_glr_attitude_001.png" class="sphx-glr-single-img" src="../_images/sphx_glr_attitude_001.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Root Mean Square Error w.r.t. orientation (deg)
+    -left UKF    : 1.09
+    -right UKF   : 1.09
+    -EKF         : 1.09
+</pre></div>
+</div>
+<p>We compute the Root Mean Squared Error (RMSE) averaged over all the
+Monte-Carlo. All the curves have the same shape. Filters obtain the same
+performances.</p>
+<p>We finally compare the filters in term of consistency (Normalized Estimation
+Error Squared, NEES), as in the localization benchmark.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">nees_print</span><span class="p">(</span><span class="n">left_ukf_nees</span><span class="p">,</span> <span class="n">right_ukf_nees</span><span class="p">,</span> <span class="n">ekf_nees</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../_images/sphx_glr_attitude_002.png" class="sphx-glr-single-img" src="../_images/sphx_glr_attitude_002.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Normalized Estimation Error Squared (NEES) w.r.t. orientation
+   -left UKF    :  1.01
+   -right UKF   :  1.00
+   -EKF         :  1.01
+</pre></div>
+</div>
+<p>All the filters obtain the same NEES and are consistent.</p>
+<p><strong>Which filter is the best ?</strong> For the considered problem, <strong>left UKF</strong>,
+<strong>right UKF</strong>, and <strong>EKF</strong> obtain the same performances. This is expected as
+when the state consists of an orientation only, left and right UKF are the
+same. The EKF obtains similar results as it is also based on a retraction
+build on <span class="math notranslate nohighlight">\(SO(3)\)</span> (not with Euler angles). This does not hold when the
+state include orientation, velocity and position.</p>
+</div>
+<div class="section" id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
+<p>This script compares two UKFs and one EKF for the problem of attitude
+estimation. All the filters obtain similar performances as the state involves
+only the orientation of  the platform.</p>
+<p>You can now:</p>
+<ul class="simple">
+<li><p>compare the filter in different noise setting to see if filters still get
+the same performances.</p></li>
+<li><p>address the problem of 3D inertial navigation, where the state is defined as
+the oriention of the vehicle along with its velocity and its position, see
+the Examples section.</p></li>
+</ul>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 65 minutes  2.882 seconds)</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-benchmark-attitude-py">
+<div class="sphx-glr-download docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/ac45db17aad01022dc33fada400d80fd/attitude.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">attitude.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/7fd09808ce00fc32298b421d52032eaa/attitude.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">attitude.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="inertial_navigation.html" class="btn btn-neutral float-right" title="Navigation on Flat Earth - Benchmark" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="localization.html" class="btn btn-neutral" title="2D Robot Localization - Benchmark" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

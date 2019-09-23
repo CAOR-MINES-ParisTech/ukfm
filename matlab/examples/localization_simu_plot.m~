@@ -1,0 +1,13 @@
+function [] = localization_simu_plot(chi, y)
+state_table = struct2table(chi);
+
+x = cell2mat(state_table.x')';
+figure('Name', 'Localization example - simulated trajectory');
+title('Position in $xy$-plan','Interprete','latex')
+xlabel('$x$ (m)','Interprete','latex')
+ylabel('$y$ (m)','Interprete','latex')
+hold on;
+plot(x(:, 1), x(:, 2));
+scatter(y(1, :), y(2, :));
+end
+

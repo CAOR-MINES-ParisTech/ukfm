@@ -1,0 +1,323 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ukfm.geometry.so2 &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="../../../_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../filter.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../geometry.html">Lie Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>ukfm.geometry.so2</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for ukfm.geometry.so2</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="SO2"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO2">[docs]</a><span class="k">class</span> <span class="nc">SO2</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Rotation matrix in :math:`SO(2)`.</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        SO(2) &amp;= \\left\\{ \\mathbf{C} </span>
+<span class="sd">        \\in \\mathbb{R}^{2 \\times 2} ~\\middle|~ </span>
+<span class="sd">        \\mathbf{C}\\mathbf{C}^T = \\mathbf{1}, \\det \\mathbf{C} = </span>
+<span class="sd">        1 \\right\\} \\\\</span>
+<span class="sd">        \\mathfrak{so}(2) &amp;= \\left\\{ \\boldsymbol{\\Phi} = \\phi^\\wedge \\in </span>
+<span class="sd">        \\mathbb{R}^{2 \\times 2} ~\\middle|~ \\phi \\in \\mathbb{R} \\right\\}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">TOL</span> <span class="o">=</span> <span class="mf">1e-8</span>
+
+<div class="viewcode-block" id="SO2.exp"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO2.exp">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">exp</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Exponential map for :math:`SO(2)`, which computes a transformation </span>
+<span class="sd">        from a tangent vector:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\mathbf{C}(\\phi) =</span>
+<span class="sd">            \\exp(\\phi^\\wedge) =</span>
+<span class="sd">            \\cos \\phi \\mathbf{1} + \\sin \\phi 1^\\wedge =</span>
+<span class="sd">            \\begin{bmatrix}</span>
+<span class="sd">                \\cos \\phi  &amp; -\\sin \\phi  \\\\</span>
+<span class="sd">                \\sin \\phi &amp; \\cos \\phi</span>
+<span class="sd">            \\end{bmatrix}</span>
+
+<span class="sd">        This is the inverse operation to :meth:`~ukfm.SO2.log`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Rot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">Rot</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="n">Rot</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="n">Rot</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="n">Rot</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Rot</span></div>
+
+<div class="viewcode-block" id="SO2.inv_left_jacobian"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO2.inv_left_jacobian">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">inv_left_jacobian</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:math:`SO(2)` inverse left Jacobian.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\mathbf{J}^{-1}(\\phi) =</span>
+<span class="sd">            \\begin{cases}</span>
+<span class="sd">                \\mathbf{1} - \\frac{1}{2} \\phi^\wedge, &amp; \\text{if } \\phi </span>
+<span class="sd">                \\text{ is small} \\\\</span>
+<span class="sd">                \\frac{\\phi}{2} \\cot \\frac{\\phi}{2} \\mathbf{1} -</span>
+<span class="sd">                \\frac{\\phi}{2} 1^\\wedge, &amp; \\text{otherwise}</span>
+<span class="sd">            \\end{cases}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">cls</span><span class="o">.</span><span class="n">TOL</span><span class="p">:</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">cls</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">half_theta</span> <span class="o">=</span> <span class="n">phi</span><span class="o">/</span><span class="mi">2</span>
+            <span class="n">cot</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">half_theta</span><span class="p">)</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">half_theta</span> <span class="o">*</span> <span class="n">cot</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">half_theta</span> <span class="o">*</span> <span class="bp">cls</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">J</span></div>
+
+<div class="viewcode-block" id="SO2.left_jacobian"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO2.left_jacobian">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">left_jacobian</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:math:`SO(2)` left Jacobian.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\mathbf{J}(\\phi) =</span>
+<span class="sd">            \\begin{cases}</span>
+<span class="sd">                \\mathbf{1} + \\frac{1}{2} \\phi^\wedge, &amp; \\text{if } \\phi </span>
+<span class="sd">                \\text{ is small} \\\\</span>
+<span class="sd">                \\frac{\\sin \\phi}{\\phi} \\mathbf{1} -</span>
+<span class="sd">                \\frac{1 - \\cos \\phi}{\\phi} 1^\\wedge, &amp; \\text{otherwise}</span>
+<span class="sd">            \\end{cases}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">cls</span><span class="o">.</span><span class="n">TOL</span><span class="p">:</span>
+            <span class="c1"># Near |phi|==0, use first order Taylor expansion</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">cls</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">/</span><span class="n">phi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> \
+                <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">))</span><span class="o">/</span><span class="n">phi</span> <span class="o">*</span> <span class="bp">cls</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">J</span></div>
+
+<div class="viewcode-block" id="SO2.log"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO2.log">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">Rot</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Logarithmic map for :math:`SO(2)`, which computes a tangent vector </span>
+<span class="sd">        from a transformation:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\phi(\\mathbf{C}) =</span>
+<span class="sd">            \\ln(\\mathbf{C})^\\vee =</span>
+<span class="sd">            \\text{atan2}(C_{1,0}, C_{0,0})</span>
+
+<span class="sd">        This is the inverse operation to :meth:`~ukfm.SO2.exp`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">Rot</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">Rot</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">phi</span></div>
+
+<div class="viewcode-block" id="SO2.wedge"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO2.wedge">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">wedge</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:math:`SO(2)` wedge (skew-symmetric) operator.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\boldsymbol{\\Phi} =</span>
+<span class="sd">            \\phi^\\wedge =</span>
+<span class="sd">            \\begin{bmatrix}</span>
+<span class="sd">                0 &amp; -\\phi \\\\</span>
+<span class="sd">                \\phi &amp; 0</span>
+<span class="sd">            \\end{bmatrix}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">phi</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">phi</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+        <span class="k">return</span> <span class="n">Phi</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

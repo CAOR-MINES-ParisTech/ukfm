@@ -1,0 +1,654 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ukfm.model.imugnss &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="../../../_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../filter.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../geometry.html">Lie Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>ukfm.model.imugnss</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for ukfm.model.imugnss</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">ukfm</span> <span class="k">import</span> <span class="n">SO3</span><span class="p">,</span> <span class="n">SE3</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<div class="viewcode-block" id="IMUGNSS"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS">[docs]</a><span class="k">class</span> <span class="nc">IMUGNSS</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;IMU-GNSS Sensor-Fusion on the KITTI dataset. The model is the standard 3D</span>
+<span class="sd">    kinematics model based on inertial inputs and kinematics equations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">9.82</span><span class="p">])</span>
+    <span class="s2">&quot;gravity vector (m/s^2) :math:`</span><span class="se">\\</span><span class="s2">mathbf</span><span class="si">{g}</span><span class="s2">`.&quot;</span>
+
+    <span class="n">data_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;../../examples/data/&quot;</span><span class="p">)</span>
+
+    <span class="n">f_gps</span> <span class="o">=</span> <span class="s2">&quot;KittiGps_converted.txt&quot;</span>
+    <span class="n">f_imu</span> <span class="o">=</span> <span class="s2">&quot;KittiEquivBiasedImu.txt&quot;</span>
+
+<div class="viewcode-block" id="IMUGNSS.STATE"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.STATE">[docs]</a>    <span class="k">class</span> <span class="nc">STATE</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;State of the system.</span>
+
+<span class="sd">        It represents the state of a moving vehicle with IMU biases.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\boldsymbol{\\chi} \in \\mathcal{M} = \\left\\{ \\begin{matrix} </span>
+<span class="sd">           \\mathbf{C} \in SO(3),</span>
+<span class="sd">            \\mathbf{v} \in \\mathbb R^3,</span>
+<span class="sd">            \\mathbf{p} \in \\mathbb R^3,</span>
+<span class="sd">            \\mathbf{b}_g \in \\mathbb R^3,</span>
+<span class="sd">            \\mathbf{b}_a \in \\mathbb R^3</span>
+<span class="sd">           \\end{matrix} \\right\\}</span>
+
+<span class="sd">        :ivar Rot: rotation matrix :math:`\mathbf{C}`.</span>
+<span class="sd">        :ivar v: velocity vector :math:`\mathbf{v}`.</span>
+<span class="sd">        :ivar p: position vector :math:`\mathbf{p}`.</span>
+<span class="sd">        :ivar b_gyro: gyro bias :math:`\mathbf{b}_g`.</span>
+<span class="sd">        :ivar b_acc: accelerometer bias :math:`\mathbf{b}_a`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Rot</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">b_gyro</span><span class="p">,</span> <span class="n">b_acc</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Rot</span> <span class="o">=</span> <span class="n">Rot</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">p</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">b_gyro</span> <span class="o">=</span> <span class="n">b_gyro</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">b_acc</span> <span class="o">=</span> <span class="n">b_acc</span></div>
+
+<div class="viewcode-block" id="IMUGNSS.INPUT"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.INPUT">[docs]</a>    <span class="k">class</span> <span class="nc">INPUT</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Input of the propagation model.</span>
+
+<span class="sd">        The input is a measurement from an Inertial Measurement Unit (IMU).</span>
+
+<span class="sd">        .. math:: </span>
+<span class="sd">            \\boldsymbol{\\omega} \in \\mathcal{M} = \\left\\{ \\begin{matrix}</span>
+<span class="sd">            \\mathbf{u} \in \\mathbb R^3,</span>
+<span class="sd">            \\mathbf{a}_b \in \\mathbb R^3 </span>
+<span class="sd">            \\end{matrix} \\right\\}</span>
+
+<span class="sd">        :ivar gyro: 3D gyro :math:`\mathbf{u}`.</span>
+<span class="sd">        :ivar acc: 3D accelerometer (measurement in body frame)</span>
+<span class="sd">              :math:`\mathbf{a}_b`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gyro</span><span class="p">,</span> <span class="n">acc</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gyro</span> <span class="o">=</span> <span class="n">gyro</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">acc</span> <span class="o">=</span> <span class="n">acc</span></div>
+
+<div class="viewcode-block" id="IMUGNSS.f"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.f">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Propagation function.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\mathbf{C}_{n+1}  &amp;= \\mathbf{C}_{n} \\exp\\left(\\left(\\mathbf{u}</span>
+<span class="sd">          - \mathbf{b}_g + \\mathbf{w}^{(0:3)} \\right) dt\\right)  \\\\</span>
+<span class="sd">          \\mathbf{v}_{n+1}  &amp;= \\mathbf{v}_{n} + \\mathbf{a}  dt, \\\\</span>
+<span class="sd">          \\mathbf{p}_{n+1}  &amp;= \\mathbf{p}_{n} + \\mathbf{v}_{n} dt </span>
+<span class="sd">          + \mathbf{a} dt^2/2 \\\\</span>
+<span class="sd">          \\mathbf{b}_{g,n+1}  &amp;= \\mathbf{b}_{g,n} </span>
+<span class="sd">          + \\mathbf{w}^{(6:9)}dt \\\\</span>
+<span class="sd">          \\mathbf{b}_{a,n+1}  &amp;= \\mathbf{b}_{a,n} + </span>
+<span class="sd">          \\mathbf{w}^{(9:12)} dt</span>
+<span class="sd">           </span>
+
+<span class="sd">        where</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\mathbf{a}  = \\mathbf{C}_{n} </span>
+<span class="sd">            \\left( \\mathbf{a}_b -\mathbf{b}_a </span>
+<span class="sd">            + \\mathbf{w}^{(3:6)} \\right) + \\mathbf{g}</span>
+
+<span class="sd">        Ramdom-walk noises on biases are not added as the Jacobian w.r.t. these </span>
+<span class="sd">        noise are trivial. This spares some computations of the UKF.  </span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var omega: input :math:`\\boldsymbol{\\omega}`.</span>
+<span class="sd">        :var w: noise :math:`\\mathbf{w}`.</span>
+<span class="sd">        :var dt: integration step :math:`dt` (s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gyro</span> <span class="o">=</span> <span class="n">omega</span><span class="o">.</span><span class="n">gyro</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">b_gyro</span> <span class="o">+</span> <span class="n">w</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">acc</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">omega</span><span class="o">.</span><span class="n">acc</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">b_acc</span> <span class="o">+</span> <span class="n">w</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">])</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">g</span>
+        <span class="n">new_state</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
+            <span class="n">Rot</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">gyro</span><span class="o">*</span><span class="n">dt</span><span class="p">)),</span>
+            <span class="n">v</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">v</span> <span class="o">+</span> <span class="n">acc</span><span class="o">*</span><span class="n">dt</span><span class="p">,</span>
+            <span class="n">p</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">p</span> <span class="o">+</span> <span class="n">state</span><span class="o">.</span><span class="n">v</span><span class="o">*</span><span class="n">dt</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">acc</span><span class="o">*</span><span class="n">dt</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+            <span class="c1"># noise is not added on biases</span>
+            <span class="n">b_gyro</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">b_gyro</span><span class="p">,</span>
+            <span class="n">b_acc</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">b_acc</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_state</span></div>
+
+<div class="viewcode-block" id="IMUGNSS.h"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.h">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">h</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Observation function.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            h\\left(\\boldsymbol{\\chi}\\right)  = \\mathbf{p}</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">p</span>
+        <span class="k">return</span> <span class="n">y</span></div>
+
+<div class="viewcode-block" id="IMUGNSS.phi"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.phi">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">phi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">xi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retraction.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\varphi\\left(\\boldsymbol{\\chi}, </span>
+<span class="sd">          \\boldsymbol{\\xi}\\right) = \\left( \\begin{matrix}</span>
+<span class="sd">            \\mathbf{C} \\exp\\left(\\boldsymbol{\\xi}^{(0:3)}\\right) \\\\</span>
+<span class="sd">            \\mathbf{v} + \\boldsymbol{\\xi}^{(3:6)} \\\\</span>
+<span class="sd">            \\mathbf{p} + \\boldsymbol{\\xi}^{(6:9)} \\\\</span>
+<span class="sd">            \\mathbf{b}_g + \\boldsymbol{\\xi}^{(9:12)} \\\\</span>
+<span class="sd">            \\mathbf{b}_a + \\boldsymbol{\\xi}^{(12:15)}</span>
+<span class="sd">           \\end{matrix} \\right)</span>
+
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)</span>
+<span class="sd">        \\times \\mathbb R^{15}`.</span>
+
+<span class="sd">        Its corresponding inverse operation is :meth:`~ukfm.IMUGNSS.phi_inv`.</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var xi: state uncertainty :math:`\\boldsymbol{\\xi}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_state</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
+            <span class="n">Rot</span><span class="o">=</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">xi</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="p">),</span>
+            <span class="n">v</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">v</span> <span class="o">+</span> <span class="n">xi</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">],</span>
+            <span class="n">p</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">p</span> <span class="o">+</span> <span class="n">xi</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="mi">9</span><span class="p">],</span>
+            <span class="n">b_gyro</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">b_gyro</span> <span class="o">+</span> <span class="n">xi</span><span class="p">[</span><span class="mi">9</span><span class="p">:</span><span class="mi">12</span><span class="p">],</span>
+            <span class="n">b_acc</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">b_acc</span> <span class="o">+</span> <span class="n">xi</span><span class="p">[</span><span class="mi">12</span><span class="p">:</span><span class="mi">15</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_state</span></div>
+
+<div class="viewcode-block" id="IMUGNSS.phi_inv"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.phi_inv">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">phi_inv</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">hat_state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}</span>
+<span class="sd">          \\left(\\boldsymbol{\\chi}\\right) = \\left( \\begin{matrix}</span>
+<span class="sd">            \\log\\left(\\mathbf{C} \\mathbf{\\hat{C}}^T \\right)\\\\</span>
+<span class="sd">            \\mathbf{v} - \\mathbf{\\hat{v}} \\\\</span>
+<span class="sd">            \\mathbf{p} - \\mathbf{\\hat{p}} \\\\</span>
+<span class="sd">            \\mathbf{b}_g - \\mathbf{\\hat{b}}_g \\\\</span>
+<span class="sd">            \\mathbf{b}_a - \\mathbf{\\hat{b}}_a</span>
+<span class="sd">           \\end{matrix} \\right)</span>
+
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)</span>
+<span class="sd">        \\times \\mathbb R^{15}`.</span>
+
+<span class="sd">        Its corresponding retraction is :meth:`~ukfm.IMUGNSS.phi`.</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var hat_state: noise-free state :math:`\\boldsymbol{\hat{\\chi}}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">SO3</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">hat_state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="p">)),</span>
+                        <span class="n">hat_state</span><span class="o">.</span><span class="n">v</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">v</span><span class="p">,</span>
+                        <span class="n">hat_state</span><span class="o">.</span><span class="n">p</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">p</span><span class="p">,</span>
+                        <span class="n">hat_state</span><span class="o">.</span><span class="n">b_gyro</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">b_gyro</span><span class="p">,</span>
+                        <span class="n">hat_state</span><span class="o">.</span><span class="n">b_acc</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">b_acc</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">xi</span></div>
+
+<div class="viewcode-block" id="IMUGNSS.up_phi"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.up_phi">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">up_phi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">xi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retraction used for updated state and infer Jacobian.</span>
+
+<span class="sd">        The retraction :meth:`~ukfm.IMUGNSS.phi` applied on the position state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_state</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
+            <span class="n">Rot</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="p">,</span>
+            <span class="n">v</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">v</span><span class="p">,</span>
+            <span class="n">p</span><span class="o">=</span><span class="n">xi</span> <span class="o">+</span> <span class="n">state</span><span class="o">.</span><span class="n">p</span><span class="p">,</span>
+            <span class="n">b_gyro</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">b_gyro</span><span class="p">,</span>
+            <span class="n">b_acc</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">b_acc</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_state</span></div>
+
+<div class="viewcode-block" id="IMUGNSS.left_phi"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.left_phi">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">left_phi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">xi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retraction.</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">          \\varphi\\left(\\boldsymbol{\\chi}, </span>
+<span class="sd">          \\boldsymbol{\\xi}\\right) = \\left( \\begin{matrix}</span>
+<span class="sd">            \\mathbf{C} \\mathbf{C}_\\mathbf{T} \\\\</span>
+<span class="sd">            \\mathbf{v} + \\mathbf{C} \\mathbf{r_1} \\\\</span>
+<span class="sd">            \\mathbf{p} + \\mathbf{C} \\mathbf{r_2} \\\\</span>
+<span class="sd">            \\mathbf{b}_g + \\boldsymbol{\\xi}^{(9:12)} \\\\</span>
+<span class="sd">            \\mathbf{b}_a + \\boldsymbol{\\xi}^{(12:15)}</span>
+<span class="sd">          \\end{matrix} \\right)</span>
+
+<span class="sd">        where</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\mathbf{T} = \\exp\\left(\\boldsymbol{\\xi}^{(0:9)}\\right) </span>
+<span class="sd">            = \\begin{bmatrix}</span>
+<span class="sd">                \\mathbf{C}_\\mathbf{T} &amp; \\mathbf{r_1}  &amp;\\mathbf{r}_2 \\\\</span>
+<span class="sd">                \\mathbf{0}^T &amp; &amp; \\mathbf{I} </span>
+<span class="sd">            \\end{bmatrix}</span>
+
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SE_2(3)</span>
+<span class="sd">        \\times \\mathbb{R}^6` with left multiplication.</span>
+
+<span class="sd">        Its corresponding inverse operation is </span>
+<span class="sd">        :meth:`~ukfm.IMUGNSS.left_phi_inv`.</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var xi: state uncertainty :math:`\\boldsymbol{\\xi}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dR</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">xi</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">left_jacobian</span><span class="p">(</span><span class="n">xi</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">new_state</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
+            <span class="n">Rot</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dR</span><span class="p">),</span>
+            <span class="n">v</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">xi</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">]))</span> <span class="o">+</span> <span class="n">state</span><span class="o">.</span><span class="n">v</span><span class="p">,</span>
+            <span class="n">p</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">xi</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="mi">9</span><span class="p">]))</span> <span class="o">+</span> <span class="n">state</span><span class="o">.</span><span class="n">p</span><span class="p">,</span>
+            <span class="n">b_gyro</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">b_gyro</span> <span class="o">+</span> <span class="n">xi</span><span class="p">[</span><span class="mi">9</span><span class="p">:</span><span class="mi">12</span><span class="p">],</span>
+            <span class="n">b_acc</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">b_acc</span> <span class="o">+</span> <span class="n">xi</span><span class="p">[</span><span class="mi">12</span><span class="p">:</span><span class="mi">15</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_state</span></div>
+
+<div class="viewcode-block" id="IMUGNSS.left_phi_inv"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.left_phi_inv">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">left_phi_inv</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">hat_state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}</span>
+<span class="sd">          \\left(\\boldsymbol{\\chi}\\right) = \\left( \\begin{matrix}</span>
+<span class="sd">            \\log\\left(</span>
+<span class="sd">            \\boldsymbol{\chi}^{-1} \\boldsymbol{\\hat{\\chi}} </span>
+<span class="sd">            \\right) \\\\</span>
+<span class="sd">            \\mathbf{b}_g - \\mathbf{\\hat{b}}_g \\\\</span>
+<span class="sd">            \\mathbf{b}_a - \\mathbf{\\hat{b}}_a</span>
+<span class="sd">           \end{matrix} \\right)</span>
+
+<span class="sd">        The state is viewed as a element </span>
+<span class="sd">        :math:`\\boldsymbol{\chi} \\in SE_2(3)` with left multiplication.</span>
+
+<span class="sd">        Its corresponding retraction is :meth:`~ukfm.IMUGNSS.left_phi`.</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var hat_state: noise-free state :math:`\\boldsymbol{\hat{\\chi}}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dR</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">hat_state</span><span class="o">.</span><span class="n">Rot</span><span class="p">)</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">dR</span><span class="p">)</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">inv_left_jacobian</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="n">dv</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">hat_state</span><span class="o">.</span><span class="n">v</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">dp</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">hat_state</span><span class="o">.</span><span class="n">p</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">phi</span><span class="p">,</span>
+                        <span class="n">J</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dv</span><span class="p">),</span>
+                        <span class="n">J</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span>
+                        <span class="n">hat_state</span><span class="o">.</span><span class="n">b_gyro</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">b_gyro</span><span class="p">,</span>
+                        <span class="n">hat_state</span><span class="o">.</span><span class="n">b_acc</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">b_acc</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">xi</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">left_H_ana</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+        <span class="n">H</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">:</span><span class="mi">9</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">H</span>
+
+<div class="viewcode-block" id="IMUGNSS.right_phi"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.right_phi">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">right_phi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">xi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retraction.</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">          \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) </span>
+<span class="sd">          = \\left( \\begin{matrix}</span>
+<span class="sd">            \\mathbf{C}_\\mathbf{T} \\mathbf{C}  \\\\</span>
+<span class="sd">            \\mathbf{C}_\\mathbf{T}\\mathbf{v} +  \\mathbf{r_1} \\\\</span>
+<span class="sd">            \\mathbf{C}_\\mathbf{T}\\mathbf{p} +  \\mathbf{r_2} \\\\</span>
+<span class="sd">            \\mathbf{b}_g + \\boldsymbol{\\xi}^{(9:12)} \\\\</span>
+<span class="sd">            \\mathbf{b}_a + \\boldsymbol{\\xi}^{(12:15)}</span>
+<span class="sd">           \\end{matrix} \\right)</span>
+
+<span class="sd">        where</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\mathbf{T} = \\exp\\left(\\boldsymbol{\\xi}^{(0:9)}\\right)</span>
+<span class="sd">             = \\begin{bmatrix}</span>
+<span class="sd">                \\mathbf{C}_\\mathbf{T} &amp; \\mathbf{r_1}  &amp;\\mathbf{r}_2 \\\\</span>
+<span class="sd">                \\mathbf{0}^T &amp; &amp; \\mathbf{I} </span>
+<span class="sd">            \\end{bmatrix}</span>
+
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SE_2(3)</span>
+<span class="sd">        \\times \\mathbb{R}^6` with right multiplication.</span>
+
+<span class="sd">        Its corresponding inverse operation is </span>
+<span class="sd">        :meth:`~ukfm.IMUGNSS.right_phi_inv`.</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var xi: state uncertainty :math:`\\boldsymbol{\\xi}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dR</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">xi</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">left_jacobian</span><span class="p">(</span><span class="n">xi</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">new_state</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
+            <span class="n">Rot</span><span class="o">=</span><span class="n">dR</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="p">),</span>
+            <span class="n">v</span><span class="o">=</span><span class="n">dR</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="n">J</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">xi</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">]),</span>
+            <span class="n">p</span><span class="o">=</span><span class="n">dR</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="n">J</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">xi</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="mi">9</span><span class="p">]),</span>
+            <span class="n">b_gyro</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">b_gyro</span> <span class="o">+</span> <span class="n">xi</span><span class="p">[</span><span class="mi">9</span><span class="p">:</span><span class="mi">12</span><span class="p">],</span>
+            <span class="n">b_acc</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">b_acc</span> <span class="o">+</span> <span class="n">xi</span><span class="p">[</span><span class="mi">12</span><span class="p">:</span><span class="mi">15</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_state</span></div>
+
+<div class="viewcode-block" id="IMUGNSS.right_phi_inv"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.right_phi_inv">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">right_phi_inv</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">hat_state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}</span>
+<span class="sd">          \\left(\\boldsymbol{\\chi}\\right) = \\left( \\begin{matrix}</span>
+<span class="sd">            \\log\\left( \\boldsymbol{\\hat{\\chi}}^{-1} </span>
+<span class="sd">            \\boldsymbol{\\chi} \\right) \\\\</span>
+<span class="sd">            \\mathbf{b}_g - \\mathbf{\\hat{b}}_g \\\\</span>
+<span class="sd">            \\mathbf{b}_a - \\mathbf{\\hat{b}}_a</span>
+<span class="sd">          \\end{matrix} \\right)</span>
+
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SE_2(3)</span>
+<span class="sd">        \\times \\mathbb{R}^6` with right multiplication.</span>
+
+<span class="sd">        Its corresponding retraction is :meth:`~ukfm.IMUGNSS.right_phi`.</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var hat_state: noise-free state :math:`\\boldsymbol{\hat{\\chi}}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dR</span> <span class="o">=</span> <span class="n">hat_state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">dR</span><span class="p">)</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">inv_left_jacobian</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="n">dv</span> <span class="o">=</span> <span class="n">hat_state</span><span class="o">.</span><span class="n">v</span> <span class="o">-</span> <span class="n">dR</span><span class="o">*</span><span class="n">state</span><span class="o">.</span><span class="n">v</span>
+        <span class="n">dp</span> <span class="o">=</span> <span class="n">hat_state</span><span class="o">.</span><span class="n">p</span> <span class="o">-</span> <span class="n">dR</span><span class="o">*</span><span class="n">state</span><span class="o">.</span><span class="n">p</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">phi</span><span class="p">,</span>
+                        <span class="n">J</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dv</span><span class="p">),</span>
+                        <span class="n">J</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dp</span><span class="p">),</span>
+                        <span class="n">hat_state</span><span class="o">.</span><span class="n">b_gyro</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">b_gyro</span><span class="p">,</span>
+                        <span class="n">hat_state</span><span class="o">.</span><span class="n">b_acc</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">b_acc</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">xi</span></div>
+
+<div class="viewcode-block" id="IMUGNSS.right_up_phi"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.right_up_phi">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">right_up_phi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">xi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retraction used for updated state and infer Jacobian.</span>
+
+<span class="sd">        The retraction :meth:`~ukfm.IMUGNSS.right_phi` applied on the position </span>
+<span class="sd">        state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">chi</span> <span class="o">=</span> <span class="n">SE3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span>
+        <span class="n">new_state</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
+            <span class="n">Rot</span><span class="o">=</span><span class="n">chi</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="p">),</span>
+            <span class="n">v</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">v</span><span class="p">,</span>
+            <span class="n">p</span><span class="o">=</span><span class="n">chi</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">state</span><span class="o">.</span><span class="n">p</span><span class="p">,</span>
+            <span class="n">b_gyro</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">b_gyro</span><span class="p">,</span>
+            <span class="n">b_acc</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">b_acc</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_state</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">gps_freq</span><span class="p">):</span>
+        <span class="n">data_gps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">f_gps</span><span class="p">),</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">skip_header</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">data_imu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">f_imu</span><span class="p">),</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">skip_header</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">data_imu</span> <span class="o">=</span> <span class="n">data_imu</span><span class="p">[</span><span class="mi">120</span><span class="p">:]</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">data_imu</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">t</span> <span class="o">-</span> <span class="n">t0</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">omegaX</span> <span class="o">=</span> <span class="n">data_imu</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span>
+        <span class="n">omegaY</span> <span class="o">=</span> <span class="n">data_imu</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">]</span>
+        <span class="n">omegaZ</span> <span class="o">=</span> <span class="n">data_imu</span><span class="p">[:,</span> <span class="mi">7</span><span class="p">]</span>
+        <span class="n">accelX</span> <span class="o">=</span> <span class="n">data_imu</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">accelY</span> <span class="o">=</span> <span class="n">data_imu</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span>
+        <span class="n">accelZ</span> <span class="o">=</span> <span class="n">data_imu</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span>
+
+        <span class="n">omegas</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">omegas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">INPUT</span><span class="p">(</span>
+                <span class="n">gyro</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">omegaX</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">omegaY</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">omegaZ</span><span class="p">[</span><span class="n">n</span><span class="p">]]),</span>
+                <span class="n">acc</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">accelX</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">accelY</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">accelZ</span><span class="p">[</span><span class="n">n</span><span class="p">]])))</span>
+        <span class="n">t_gps</span> <span class="o">=</span> <span class="n">data_gps</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">t0</span>
+        <span class="n">N_gps</span> <span class="o">=</span> <span class="n">t_gps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># vector to know where GPS measurement happen</span>
+        <span class="n">one_hot_ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N_gps</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">t_gps</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">t</span><span class="p">[</span><span class="n">n</span><span class="p">]:</span>
+                <span class="n">ys</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_gps</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span>
+                <span class="n">one_hot_ys</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="n">N_gps</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">omegas</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">one_hot_ys</span><span class="p">,</span> <span class="n">t</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">plot_results</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">hat_states</span><span class="p">,</span> <span class="n">ys</span><span class="p">):</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">hat_states</span><span class="p">)</span>
+        <span class="n">hat_Rots</span><span class="p">,</span> <span class="n">hat_vs</span><span class="p">,</span> <span class="n">hat_ps</span><span class="p">,</span> <span class="n">hat_b_gyros</span><span class="p">,</span> <span class="n">hat_b_accs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_states</span><span class="p">(</span>
+            <span class="n">hat_states</span><span class="p">)</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$x$ (m)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;$y$ (m)&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Robot position&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">ys</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">ys</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">hat_ps</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">hat_ps</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s1">&#39;UKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;GPS measurements&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_states</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">states</span><span class="p">):</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span>
+        <span class="n">Rots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">vs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">b_gyros</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">b_accs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span>
+            <span class="n">vs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">v</span>
+            <span class="n">ps</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">p</span>
+            <span class="n">b_gyros</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">b_gyro</span>
+            <span class="n">b_accs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">b_acc</span>
+        <span class="k">return</span> <span class="n">Rots</span><span class="p">,</span> <span class="n">vs</span><span class="p">,</span> <span class="n">ps</span><span class="p">,</span> <span class="n">b_gyros</span><span class="p">,</span> <span class="n">b_accs</span></div>
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,783 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ukfm.ukf.ukf &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="../../../_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../filter.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../geometry.html">Lie Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>ukfm.ukf.ukf</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for ukfm.ukf.ukf</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">block_diag</span>
+
+<div class="viewcode-block" id="UKF"><a class="viewcode-back" href="../../../filter.html#ukfm.UKF">[docs]</a><span class="k">class</span> <span class="nc">UKF</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;The Unscented Kalman Filter on (parallelizable) Manifolds.</span>
+
+<span class="sd">    This filter is the implementation described in :cite:`brossardCode2019`</span>
+<span class="sd">    . It is well adapted to relatively small systems and</span>
+<span class="sd">    for understanding the methodology of **UKF-M**, otherwise see</span>
+<span class="sd">    :meth:`~ukfm.JUKF`. Noise covariance parameter are assumed static for</span>
+<span class="sd">    convenience, i.e. :math:`\\mathbf{Q}_n = \\mathbf{Q}`, and</span>
+<span class="sd">    :math:`\\mathbf{R}_n = \\mathbf{R}`.</span>
+
+<span class="sd">    :arg f: propagation function :math:`f`.</span>
+<span class="sd">    :arg h: observation function :math:`h`.</span>
+<span class="sd">    :arg phi: retraction :math:`\\boldsymbol{\\varphi}`.</span>
+<span class="sd">    :arg phi_inv: inverse retraction :math:`\\boldsymbol{\\varphi}^{-1}`.</span>
+<span class="sd">    :ivar Q: propagation noise covariance matrix (static) :math:`\\mathbf{Q}`.</span>
+<span class="sd">    :ivar R: observation noise covariance matrix (static) :math:`\\mathbf{R}`.</span>
+<span class="sd">    :arg alpha: sigma point parameters. Must be 1D array with 3 values.</span>
+<span class="sd">    :ivar state: state :math:`\\boldsymbol{\\hat{\\chi}}_n`, initialized at </span>
+<span class="sd">        ``state0``.</span>
+<span class="sd">    :ivar P: state error covariance :math:`\\mathbf{P}_n`, initialized at</span>
+<span class="sd">        ``P0``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">TOL</span> <span class="o">=</span> <span class="mf">1e-9</span> <span class="c1"># tolerance parameter (avoid numerical issue)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">phi_inv</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">state0</span><span class="p">,</span> <span class="n">P0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">h</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi_inv</span> <span class="o">=</span> <span class="n">phi_inv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q</span> <span class="o">=</span> <span class="n">Q</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R</span> <span class="o">=</span> <span class="n">R</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">state0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="n">P0</span>
+        
+        <span class="c1"># Cholesky decomposition of Q</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cholQ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        
+        <span class="c1"># variable dimensions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">P0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Id_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">)</span>
+        
+        <span class="c1"># sigma point weights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">WEIGHTS</span><span class="p">(</span><span class="n">P0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">alpha</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UKF.WEIGHTS"><a class="viewcode-back" href="../../../filter.html#ukfm.UKF.WEIGHTS">[docs]</a>    <span class="k">class</span> <span class="nc">WEIGHTS</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sigma point weights.</span>
+
+<span class="sd">        Weights are computed as</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\lambda &amp;= (\\alpha^2 - 1) \\mathrm{dim} \\\\</span>
+<span class="sd">          w_j &amp;= 1/(2(\\mathrm{dim} + \\lambda)) \\\\</span>
+<span class="sd">          w_m &amp;= \\lambda/(\\lambda + \\mathrm{dim}) \\\\</span>
+<span class="sd">          w_0 &amp;= \\lambda/(\\lambda + \\mathrm{dim}) + 3 - \\alpha^2</span>
+
+
+<span class="sd">        where :math:`\\alpha` is a parameter set between :math:`10^{-3}` and </span>
+<span class="sd">        :math:`1`, and :math:`\\mathrm{dim}` the dimension of the sigma-points </span>
+<span class="sd">        (:math:`d` or :math:`q`).</span>
+<span class="sd">        </span>
+<span class="sd">        This variable contains sigma point weights for propagation (w.r.t. </span>
+<span class="sd">        state error and noise) and for update.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+            <span class="c1"># propagation w.r.t. state</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="c1"># propagation w.r.t. noise</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1"># update w.r.t. state</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="k">class</span> <span class="nc">W</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="n">alpha</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">l</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sqrt_d_lambda</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">l</span> <span class="o">+</span> <span class="n">m</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wj</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">l</span> <span class="o">+</span> <span class="n">m</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wm</span> <span class="o">=</span> <span class="n">m</span><span class="o">/</span><span class="p">(</span><span class="n">m</span> <span class="o">+</span> <span class="n">l</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">w0</span> <span class="o">=</span> <span class="n">m</span><span class="o">/</span><span class="p">(</span><span class="n">m</span> <span class="o">+</span> <span class="n">l</span><span class="p">)</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">-</span> <span class="n">alpha</span><span class="o">**</span><span class="mi">2</span></div>
+
+
+        
+<div class="viewcode-block" id="UKF.propagation"><a class="viewcode-back" href="../../../filter.html#ukfm.UKF.propagation">[docs]</a>    <span class="k">def</span> <span class="nf">propagation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;UKF propagation step.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\boldsymbol{\\hat{\\chi}}_{n} &amp;\\leftarrow </span>
+<span class="sd">          \\boldsymbol{\\hat{\\chi}}_{n+1} = </span>
+<span class="sd">          f\\left(\\boldsymbol{\\hat{\\chi}}_{n}, \\boldsymbol{\\omega}_{n}, </span>
+<span class="sd">          \\mathbf{0}\\right) \\\\</span>
+<span class="sd">          \\mathbf{P}_{n} &amp;\\leftarrow \\mathbf{P}_{n+1} \\\\</span>
+
+<span class="sd">        Mean state and covariance are propagated.</span>
+
+<span class="sd">        :var omega: input :math:`\\boldsymbol{\\omega}`.</span>
+<span class="sd">        :var dt: integration step :math:`dt` (s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">TOL</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">Id_d</span>
+
+        <span class="c1"># update mean</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">)</span>
+        <span class="n">new_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+
+        <span class="c1"># compute covariance w.r.t. state error</span>
+        <span class="n">w_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">d</span>
+
+        <span class="c1"># set sigma points</span>
+        <span class="n">xis</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">sqrt_d_lambda</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">new_xis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">))</span>
+
+        <span class="c1"># retract sigma points onto manifold</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">):</span>
+            <span class="n">s_j_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">xis</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">s_j_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="o">-</span><span class="n">xis</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">new_s_j_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">s_j_p</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="n">new_s_j_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">s_j_m</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="n">new_xis</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi_inv</span><span class="p">(</span><span class="n">new_state</span><span class="p">,</span> <span class="n">new_s_j_p</span><span class="p">)</span>
+            <span class="n">new_xis</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi_inv</span><span class="p">(</span><span class="n">new_state</span><span class="p">,</span> <span class="n">new_s_j_m</span><span class="p">)</span>
+        
+        <span class="c1"># compute covariance</span>
+        <span class="n">new_xi</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">new_xis</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">new_xis</span> <span class="o">=</span> <span class="n">new_xis</span> <span class="o">-</span> <span class="n">new_xi</span>
+        <span class="n">new_P</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">new_xis</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">new_xis</span><span class="p">)</span> <span class="o">+</span> \
+            <span class="n">w_d</span><span class="o">.</span><span class="n">w0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">new_xi</span><span class="p">,</span> <span class="n">new_xi</span><span class="p">)</span>
+
+        <span class="c1"># compute covariance w.r.t. noise</span>
+        <span class="n">w_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">q</span>
+        <span class="n">new_xis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">))</span>
+
+        <span class="c1"># retract sigma points onto manifold</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">):</span>
+            <span class="n">w_p</span> <span class="o">=</span> <span class="n">w_q</span><span class="o">.</span><span class="n">sqrt_d_lambda</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cholQ</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">w_m</span> <span class="o">=</span> <span class="o">-</span><span class="n">w_q</span><span class="o">.</span><span class="n">sqrt_d_lambda</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cholQ</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">new_s_j_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">w_p</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="n">new_s_j_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">w_m</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="n">new_xis</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi_inv</span><span class="p">(</span><span class="n">new_state</span><span class="p">,</span> <span class="n">new_s_j_p</span><span class="p">)</span>
+            <span class="n">new_xis</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">q</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi_inv</span><span class="p">(</span><span class="n">new_state</span><span class="p">,</span> <span class="n">new_s_j_m</span><span class="p">)</span>
+
+        <span class="c1"># compute covariance</span>
+        <span class="n">new_xi</span> <span class="o">=</span> <span class="n">w_q</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">new_xis</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">new_xis</span> <span class="o">=</span> <span class="n">new_xis</span> <span class="o">-</span> <span class="n">new_xi</span>
+        <span class="n">Q</span> <span class="o">=</span> <span class="n">w_q</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">new_xis</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">new_xis</span><span class="p">)</span> <span class="o">+</span> <span class="n">w_q</span><span class="o">.</span><span class="n">w0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">new_xi</span><span class="p">,</span> <span class="n">new_xi</span><span class="p">)</span>
+
+        <span class="c1"># sum covariances</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="n">new_P</span> <span class="o">+</span> <span class="n">Q</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">new_state</span></div>
+
+<div class="viewcode-block" id="UKF.update"><a class="viewcode-back" href="../../../filter.html#ukfm.UKF.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;UKF update step.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\boldsymbol{\\hat{\\chi}}_{n} &amp;\\leftarrow \\boldsymbol{\\hat{\\chi}}</span>
+<span class="sd">          _{n}^{+} \\\\</span>
+<span class="sd">          \\mathbf{P}_{n} &amp;\\leftarrow \\mathbf{P}_{n}^{+} \\\\</span>
+
+<span class="sd">        :var y: 1D array (vector) measurement :math:`\\mathbf{y}_n`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">TOL</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">Id_d</span>
+
+        <span class="c1"># set sigma points</span>
+        <span class="n">w_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">d</span>
+        <span class="n">xis</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">sqrt_d_lambda</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># compute measurement sigma_points</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">l</span><span class="p">))</span>
+        <span class="n">hat_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">):</span>
+            <span class="n">s_j_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">xis</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">s_j_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="o">-</span><span class="n">xis</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">ys</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">s_j_p</span><span class="p">)</span>
+            <span class="n">ys</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">s_j_m</span><span class="p">)</span>
+
+        <span class="c1"># measurement mean</span>
+        <span class="n">y_bar</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">wm</span> <span class="o">*</span> <span class="n">hat_y</span> <span class="o">+</span> <span class="n">w_d</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ys</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># prune mean before computing covariance</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">ys</span> <span class="o">-</span> <span class="n">y_bar</span>
+        <span class="n">hat_y</span> <span class="o">=</span> <span class="n">hat_y</span> <span class="o">-</span> <span class="n">y_bar</span>
+
+        <span class="c1"># compute covariance and cross covariance matrices</span>
+        <span class="n">P_yy</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">w0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">hat_y</span><span class="p">,</span> <span class="n">hat_y</span><span class="p">)</span> <span class="o">+</span> <span class="n">w_d</span><span class="o">.</span><span class="n">wj</span><span class="o">*</span><span class="n">ys</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span>
+        <span class="n">P_xiy</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">wj</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">xis</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="o">-</span><span class="n">xis</span><span class="o">.</span><span class="n">T</span><span class="p">])</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span>
+
+        <span class="c1"># Kalman gain</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">P_yy</span><span class="p">,</span> <span class="n">P_xiy</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="c1"># update state</span>
+        <span class="n">xi_plus</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y_bar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">xi_plus</span><span class="p">)</span>
+
+        <span class="c1"># update covariance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="n">P</span> <span class="o">-</span> <span class="n">K</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">P_yy</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">K</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="c1"># avoid non-symmetric matrix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span></div></div>
+
+
+<div class="viewcode-block" id="JUKF"><a class="viewcode-back" href="../../../filter.html#ukfm.JUKF">[docs]</a><span class="k">class</span> <span class="nc">JUKF</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;The Unscented Kalman Filter on (parallelizable) Manifolds, that infers </span>
+<span class="sd">    Jacobian.</span>
+
+<span class="sd">    This filter is an alternative implementation to the method described in</span>
+<span class="sd">    :cite:`brossardCode2019`, with exactly the same results. It spares</span>
+<span class="sd">    computational time for systems when only a part of the state is involved in</span>
+<span class="sd">    a propagation or update step. It can also be used for state augmentation.</span>
+<span class="sd">    Only noise covariance parameter for propagation is assumed static for</span>
+<span class="sd">    convenience, i.e. :math:`\\mathbf{Q}_n = \\mathbf{Q}`.</span>
+
+<span class="sd">    :arg f: propagation function :math:`f`.</span>
+<span class="sd">    :arg h: observation function :math:`h`.</span>
+<span class="sd">    :arg phi: retraction :math:`\\boldsymbol{\\varphi}`.</span>
+<span class="sd">    :ivar Q: propagation noise covariance matrix (static) :math:`\\mathbf{Q}`.</span>
+<span class="sd">    :arg alpha: sigma point parameters. Must be 1D array with 5 values.</span>
+<span class="sd">    :ivar state: state :math:`\\boldsymbol{\\hat{\\chi}}_n`, initialized at </span>
+<span class="sd">        ``state0``.</span>
+<span class="sd">    :ivar P: state error covariance :math:`\\mathbf{P}_n`, initialized at</span>
+<span class="sd">        ``P0``.</span>
+<span class="sd">    :arg red_phi: reduced retraction for propagation.</span>
+<span class="sd">    :arg red_phi_inv: reduced inverse retraction for propagation.</span>
+<span class="sd">    :arg red_idxs: indices corresponding to the reduced uncertainty.</span>
+<span class="sd">    :arg up_phi: retraction for update.</span>
+<span class="sd">    :arg up_idxs: indices corresponding to the state uncertainty for update.</span>
+<span class="sd">    :arg aug_z: augmentation function :math:`z`. (optional)</span>
+<span class="sd">    :arg aug_phi: retraction for augmenting state. (optional)</span>
+<span class="sd">    :arg aug_phi_inv: inverse retraction for augmenting state. (optional)</span>
+<span class="sd">    :arg aug_idxs: indices corresponding to the state uncertainty for state</span>
+<span class="sd">        augmentation. (optional)</span>
+<span class="sd">    :arg aug_q: state uncertainty dimension for augmenting state. (optional)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span>  <span class="n">state0</span><span class="p">,</span> <span class="n">P0</span><span class="p">,</span> <span class="n">red_phi</span><span class="p">,</span> 
+        <span class="n">red_phi_inv</span><span class="p">,</span> <span class="n">red_idxs</span><span class="p">,</span> <span class="n">up_phi</span><span class="p">,</span> <span class="n">up_idxs</span><span class="p">,</span>
+        <span class="n">aug_z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">aug_phi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">aug_phi_inv</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">aug_idxs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]),</span> 
+        <span class="n">aug_q</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">state0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="n">P0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">h</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q</span> <span class="o">=</span> <span class="n">Q</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cholQ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">TOL</span> <span class="o">=</span> <span class="mf">1e-9</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">red_idxs</span> <span class="o">=</span> <span class="n">red_idxs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">red_d</span> <span class="o">=</span> <span class="n">red_idxs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up_idxs</span> <span class="o">=</span> <span class="n">up_idxs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up_d</span> <span class="o">=</span> <span class="n">up_idxs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># reducing state during propagation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">red_phi</span> <span class="o">=</span> <span class="n">red_phi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">red_phi_inv</span> <span class="o">=</span> <span class="n">red_phi_inv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">red_idxs</span> <span class="o">=</span> <span class="n">red_idxs</span>
+
+        <span class="c1"># reducing state during update</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up_idxs</span> <span class="o">=</span> <span class="n">up_idxs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">up_phi</span> <span class="o">=</span> <span class="n">up_phi</span>
+
+        <span class="c1"># for augmenting state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aug_z</span> <span class="o">=</span> <span class="n">aug_z</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aug_d</span> <span class="o">=</span> <span class="n">aug_idxs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aug_idxs</span> <span class="o">=</span> <span class="n">aug_idxs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aug_phi</span> <span class="o">=</span> <span class="n">aug_phi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aug_phi_inv</span> <span class="o">=</span> <span class="n">aug_phi_inv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aug_q</span> <span class="o">=</span> <span class="n">aug_q</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">WEIGHTS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">red_d</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_d</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">aug_d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_q</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+
+<div class="viewcode-block" id="JUKF.WEIGHTS"><a class="viewcode-back" href="../../../filter.html#ukfm.JUKF.WEIGHTS">[docs]</a>    <span class="k">class</span> <span class="nc">WEIGHTS</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sigma point weights.</span>
+
+<span class="sd">        Weights are computed as</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\lambda &amp;= (\\alpha^2 - 1) \\mathrm{dim} \\\\</span>
+<span class="sd">          w_j &amp;= 1/(2(\\mathrm{dim} + \\lambda)) \\\\</span>
+<span class="sd">          w_m &amp;= \\lambda/(\\lambda + \\mathrm{dim}) \\\\</span>
+<span class="sd">          w_0 &amp;= \\lambda/(\\lambda + \\mathrm{dim}) + 3 - \\alpha^2</span>
+
+
+<span class="sd">        where :math:`\\alpha` is a parameter set between :math:`10^{-3}` and </span>
+<span class="sd">        :math:`1`, and :math:`\\mathrm{dim}` the dimension of the sigma-points </span>
+<span class="sd">        (:math:`d` or :math:`q`).</span>
+<span class="sd">        </span>
+<span class="sd">        This variable contains sigma point weights for propagation (w.r.t. </span>
+<span class="sd">        state error and noise), update and state augmentation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">red_d</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">up_d</span><span class="p">,</span> <span class="n">aug_d</span><span class="p">,</span> <span class="n">aug_q</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">red_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">(</span><span class="n">red_d</span><span class="p">,</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">up_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">(</span><span class="n">up_d</span><span class="p">,</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aug_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">(</span><span class="n">aug_d</span><span class="p">,</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aug_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">(</span><span class="n">aug_q</span><span class="p">,</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+
+        <span class="k">class</span> <span class="nc">W</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="n">alpha</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">l</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sqrt_d_lambda</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">l</span> <span class="o">+</span> <span class="n">m</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wj</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">l</span> <span class="o">+</span> <span class="n">m</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wm</span> <span class="o">=</span> <span class="n">m</span><span class="o">/</span><span class="p">(</span><span class="n">m</span> <span class="o">+</span> <span class="n">l</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">w0</span> <span class="o">=</span> <span class="n">m</span><span class="o">/</span><span class="p">(</span><span class="n">m</span> <span class="o">+</span> <span class="n">l</span><span class="p">)</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">-</span> <span class="n">alpha</span><span class="o">**</span><span class="mi">2</span></div>
+
+<div class="viewcode-block" id="JUKF.F_num"><a class="viewcode-back" href="../../../filter.html#ukfm.JUKF.F_num">[docs]</a>    <span class="k">def</span> <span class="nf">F_num</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Numerical Jacobian computation of :math:`\mathbf{F}`.</span>
+
+<span class="sd">        :var omega: input :math:`\\boldsymbol{\\omega}`.</span>
+<span class="sd">        :var dt: integration step :math:`dt` (s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">red_idxs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_idxs</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="c1"># variable sizes</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">P</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">TOL</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">)</span>
+
+        <span class="n">w_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">red_d</span>
+
+        <span class="c1"># set sigma points</span>
+        <span class="n">xis</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">sqrt_d_lambda</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">new_xis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span>
+
+        <span class="c1"># retract sigma points onto manifold</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+            <span class="n">s_j_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">xis</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">s_j_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="o">-</span><span class="n">xis</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">new_s_j_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">s_j_p</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="n">new_s_j_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">s_j_m</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="n">new_xis</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_phi_inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_state</span><span class="p">,</span> <span class="n">new_s_j_p</span><span class="p">)</span>
+            <span class="n">new_xis</span><span class="p">[</span><span class="n">d</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_phi_inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_state</span><span class="p">,</span> <span class="n">new_s_j_m</span><span class="p">)</span>
+
+        <span class="c1"># compute covariance</span>
+        <span class="n">new_xi</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">new_xis</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">new_xis</span> <span class="o">=</span> <span class="n">new_xis</span> <span class="o">-</span> <span class="n">new_xi</span>
+
+        <span class="n">Xi</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">new_xis</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">xis</span><span class="p">,</span> <span class="o">-</span><span class="n">xis</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">red_idxs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_idxs</span><span class="p">)]</span> <span class="o">=</span> \
+             <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">Xi</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># Xi*P_red^{-1}</span></div>
+
+<div class="viewcode-block" id="JUKF.propagation"><a class="viewcode-back" href="../../../filter.html#ukfm.JUKF.propagation">[docs]</a>    <span class="k">def</span> <span class="nf">propagation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;UKF propagation step.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\boldsymbol{\\hat{\\chi}}_{n} &amp;\\leftarrow \\boldsymbol{\\hat{\\chi}}_{n+1} = f\\left(\\boldsymbol{\\hat{\\chi}}_{n}, \\boldsymbol{\\omega}_{n}, \\mathbf{0}\\right) \\\\</span>
+<span class="sd">          \\mathbf{P}_{n} &amp;\\leftarrow \\mathbf{P}_{n+1} = \\mathbf{F} \\mathbf{P}_{n} \\mathbf{F}^T + \\mathbf{G} \\mathbf{Q} \\mathbf{G}^T  \\\\</span>
+
+<span class="sd">        Mean state and covariance are propagated. Covariance is propagated as an EKF, where Jacobian :math:`\\mathbf{F}` and :math:`\\mathbf{G}` are *numerically* inferred.</span>
+
+<span class="sd">        :var omega: input :math:`\\boldsymbol{\\omega}`.</span>
+<span class="sd">        :var dt: integration step :math:`dt` (s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_propagation</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F_num</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G_num</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cov_propagation</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="JUKF.state_propagation"><a class="viewcode-back" href="../../../filter.html#ukfm.JUKF.state_propagation">[docs]</a>    <span class="k">def</span> <span class="nf">state_propagation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Propagate mean state.</span>
+<span class="sd">        </span>
+<span class="sd">        :var omega: input :math:`\\boldsymbol{\\omega}`.</span>
+<span class="sd">        :var dt: integration step :math:`dt` (s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="JUKF.G_num"><a class="viewcode-back" href="../../../filter.html#ukfm.JUKF.G_num">[docs]</a>    <span class="k">def</span> <span class="nf">G_num</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Numerical Jacobian computation of :math:`\mathbf{G}`.</span>
+
+<span class="sd">        :var omega: input :math:`\\boldsymbol{\\omega}`.</span>
+<span class="sd">        :var dt: integration step :math:`dt` (s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">w_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">q</span>
+        <span class="n">new_xis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_d</span><span class="p">))</span>
+
+        <span class="c1"># retract sigma points onto manifold</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">):</span>
+            <span class="n">w_p</span> <span class="o">=</span> <span class="n">w_q</span><span class="o">.</span><span class="n">sqrt_d_lambda</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cholQ</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">w_m</span> <span class="o">=</span> <span class="o">-</span><span class="n">w_q</span><span class="o">.</span><span class="n">sqrt_d_lambda</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cholQ</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">new_s_j_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">w_p</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="n">new_s_j_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">w_m</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="n">new_xis</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_phi_inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_state</span><span class="p">,</span> <span class="n">new_s_j_p</span><span class="p">)</span>
+            <span class="n">new_xis</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">q</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_phi_inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_state</span><span class="p">,</span> <span class="n">new_s_j_m</span><span class="p">)</span>
+
+        <span class="c1"># compute covariance</span>
+        <span class="n">new_xi</span> <span class="o">=</span> <span class="n">w_q</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">new_xis</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">new_xis</span> <span class="o">=</span> <span class="n">new_xis</span> <span class="o">-</span> <span class="n">new_xi</span>
+        <span class="n">Xi</span> <span class="o">=</span> <span class="n">w_q</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">new_xis</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">cholQ</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">cholQ</span><span class="p">]))</span> \
+            <span class="o">*</span><span class="n">w_q</span><span class="o">.</span><span class="n">sqrt_d_lambda</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">red_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">,</span> <span class="n">Xi</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># Xi*P_red^{-1}</span></div>
+
+<div class="viewcode-block" id="JUKF.cov_propagation"><a class="viewcode-back" href="../../../filter.html#ukfm.JUKF.cov_propagation">[docs]</a>    <span class="k">def</span> <span class="nf">cov_propagation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Covariance propagation.</span>
+
+<span class="sd">        :var omega: input :math:`\\boldsymbol{\\omega}`.</span>
+<span class="sd">        :var dt: integration step :math:`dt` (s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="p">(</span><span class="n">P</span><span class="o">+</span><span class="n">P</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_state</span></div>
+
+<div class="viewcode-block" id="JUKF.update"><a class="viewcode-back" href="../../../filter.html#ukfm.JUKF.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;State update, where Jacobian is computed.</span>
+
+<span class="sd">        :var y: 1D array (vector) measurement :math:`\\mathbf{y}_n`.</span>
+<span class="sd">        :var R:  measurement covariance :math:`\\mathbf{R}_n`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">H_num</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_idxs</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_update</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="JUKF.H_num"><a class="viewcode-back" href="../../../filter.html#ukfm.JUKF.H_num">[docs]</a>    <span class="k">def</span> <span class="nf">H_num</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">idxs</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Numerical Jacobian computation of :math:`\mathbf{H}`.</span>
+
+<span class="sd">        :var y: 1D array (vector) measurement :math:`\\mathbf{y}_n`.</span>
+<span class="sd">        :var idxs: indices corresponding to the state uncertainty for update.</span>
+<span class="sd">        :var R:  measurement covariance :math:`\\mathbf{R}_n`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">idxs</span><span class="p">,</span> <span class="n">idxs</span><span class="p">)]</span>
+        <span class="c1"># set variable size</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">P</span> <span class="o">=</span> <span class="n">P</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">TOL</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+        <span class="c1"># set sigma points</span>
+        <span class="n">w_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">up_d</span>
+        <span class="n">xis</span> <span class="o">=</span> <span class="n">w_u</span><span class="o">.</span><span class="n">sqrt_d_lambda</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># compute measurement sigma_points</span>
+        <span class="n">y_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="n">l</span><span class="p">))</span>
+        <span class="n">hat_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+            <span class="n">s_j_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">xis</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">s_j_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">up_phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="o">-</span><span class="n">xis</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">y_mat</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">s_j_p</span><span class="p">)</span>
+            <span class="n">y_mat</span><span class="p">[</span><span class="n">d</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">s_j_m</span><span class="p">)</span>
+
+        <span class="c1"># measurement mean</span>
+        <span class="n">y_bar</span> <span class="o">=</span> <span class="n">w_u</span><span class="o">.</span><span class="n">wm</span> <span class="o">*</span> <span class="n">hat_y</span> <span class="o">+</span> <span class="n">w_u</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_mat</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># prune mean before computing covariance</span>
+        <span class="n">y_mat</span> <span class="o">=</span> <span class="n">y_mat</span> <span class="o">-</span> <span class="n">y_bar</span>
+
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">w_u</span><span class="o">.</span><span class="n">wj</span><span class="o">*</span><span class="n">y_mat</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">xis</span><span class="p">,</span> <span class="o">-</span><span class="n">xis</span><span class="p">]))</span>
+        <span class="n">H_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">Y</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="c1"># Y*P_red^{-1}</span>
+
+        <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">H</span><span class="p">[:,</span> <span class="n">idxs</span><span class="p">]</span> <span class="o">=</span> <span class="n">H_idx</span>
+
+        <span class="c1"># compute residual</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">y_bar</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="p">,</span> <span class="n">H</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R</span> <span class="o">=</span> <span class="n">block_diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">R</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="JUKF.state_update"><a class="viewcode-back" href="../../../filter.html#ukfm.JUKF.state_update">[docs]</a>    <span class="k">def</span> <span class="nf">state_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;State update, once Jacobian is computed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span>
+        <span class="c1"># gain matrix</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># innovation</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="c1"># update state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">xi</span><span class="p">)</span>
+
+        <span class="c1"># update covariance</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">-</span><span class="n">K</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="p">))</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="p">(</span><span class="n">P</span><span class="o">+</span><span class="n">P</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+
+        <span class="c1"># init for next update</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="JUKF.aug"><a class="viewcode-back" href="../../../filter.html#ukfm.JUKF.aug">[docs]</a>    <span class="k">def</span> <span class="nf">aug</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">aug_idxs</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;State augmentation.</span>
+
+<span class="sd">        :var y: 1D array (vector) measurement :math:`\\mathbf{y}_n`.</span>
+<span class="sd">        :var aug_idxs: indices corresponding to the state augmentation</span>
+<span class="sd">            uncertainty.</span>
+<span class="sd">        :var R:  measurement covariance :math:`\\mathbf{R}_n`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">aug_idxs</span><span class="p">,</span> <span class="n">aug_idxs</span><span class="p">)]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">TOL</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aug_d</span><span class="p">)</span>
+
+        <span class="c1"># 1 - augment state mean</span>
+        <span class="n">aug_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_z</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># 2 - compute Jacobian and covariance from state</span>
+        <span class="c1"># set sigma points w.r.t. state</span>
+        <span class="n">w_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">aug_d</span>
+        <span class="n">xis</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">sqrt_d_lambda</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># compute measurement sigma_points</span>
+        <span class="n">zs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">aug_d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_q</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aug_d</span><span class="p">):</span>
+            <span class="n">s_j_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">xis</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">s_j_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_phi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="o">-</span><span class="n">xis</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">z_j_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_z</span><span class="p">(</span><span class="n">s_j_p</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">z_j_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_z</span><span class="p">(</span><span class="n">s_j_m</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">zs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_phi_inv</span><span class="p">(</span><span class="n">aug_state</span><span class="p">,</span> <span class="n">z_j_p</span><span class="p">)</span>
+            <span class="n">zs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">aug_d</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_phi_inv</span><span class="p">(</span><span class="n">aug_state</span><span class="p">,</span> <span class="n">z_j_m</span><span class="p">)</span>
+            
+        <span class="n">hat_z</span> <span class="o">=</span> <span class="mi">0</span><span class="o">*</span><span class="n">w_d</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">zs</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">zs</span> <span class="o">=</span> <span class="n">zs</span> <span class="o">-</span> <span class="n">hat_z</span>
+        <span class="c1"># measurement mean</span>
+        <span class="n">z_bar</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">wm</span> <span class="o">*</span> <span class="n">hat_z</span> <span class="o">+</span> <span class="n">w_d</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">zs</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># prune mean before computing covariance</span>
+        <span class="n">zs</span> <span class="o">=</span> <span class="n">zs</span> <span class="o">-</span> <span class="n">z_bar</span>
+        <span class="n">P_ss</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">zs</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">zs</span><span class="p">)</span> <span class="o">+</span> <span class="n">w_d</span><span class="o">.</span><span class="n">w0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">z_bar</span><span class="o">-</span><span class="n">hat_z</span><span class="p">,</span> <span class="n">z_bar</span><span class="o">-</span><span class="n">hat_z</span><span class="p">)</span>
+
+        <span class="n">Xi</span> <span class="o">=</span> <span class="n">w_d</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">zs</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">xis</span><span class="p">,</span> <span class="o">-</span><span class="n">xis</span><span class="p">]))</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">aug_q</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">H</span><span class="p">[:,</span> <span class="n">aug_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">Xi</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># Xi*P^{-1}</span>
+
+        <span class="c1"># 3 - compute covariance from measurement</span>
+        <span class="c1"># set sigma points w.r.t. noise</span>
+        <span class="n">w_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">aug_q</span>
+        <span class="n">y_mat</span> <span class="o">=</span> <span class="n">w_q</span><span class="o">.</span><span class="n">sqrt_d_lambda</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">R</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># compute measurement sigma_points</span>
+        <span class="n">zs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">R</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_q</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">y_j_p</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">y_mat</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">y_j_m</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">y_mat</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">z_j_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_z</span><span class="p">(</span><span class="n">aug_state</span><span class="p">,</span> <span class="n">y_j_p</span><span class="p">)</span>
+            <span class="n">z_j_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_z</span><span class="p">(</span><span class="n">aug_state</span><span class="p">,</span> <span class="n">y_j_m</span><span class="p">)</span>
+            <span class="n">zs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_phi_inv</span><span class="p">(</span><span class="n">aug_state</span><span class="p">,</span> <span class="n">z_j_p</span><span class="p">)</span>
+            <span class="n">zs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">aug_q</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aug_phi_inv</span><span class="p">(</span><span class="n">aug_state</span><span class="p">,</span> <span class="n">z_j_m</span><span class="p">)</span>
+
+        <span class="c1"># measurement mean</span>
+        <span class="n">z_bar</span> <span class="o">=</span> <span class="n">w_q</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">zs</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># prune mean before computing covariance</span>
+        <span class="n">zs</span> <span class="o">=</span> <span class="n">zs</span> <span class="o">-</span> <span class="n">z_bar</span>
+        <span class="n">P_zz</span> <span class="o">=</span> <span class="n">w_q</span><span class="o">.</span><span class="n">wj</span> <span class="o">*</span> <span class="n">zs</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">zs</span><span class="p">)</span> <span class="o">+</span> <span class="n">w_q</span><span class="o">.</span><span class="n">w0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">z_bar</span><span class="p">,</span> <span class="n">z_bar</span><span class="p">)</span>
+
+        <span class="c1"># 4 - compute augmented covariance</span>
+        <span class="n">P_sz</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">)</span>
+        <span class="n">P2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">P2</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span>
+        <span class="n">P2</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:]</span> <span class="o">=</span> <span class="n">P_sz</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">P2</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">P_sz</span>
+        <span class="n">P2</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:]</span> <span class="o">=</span> <span class="n">P_ss</span> <span class="o">+</span> <span class="n">P_zz</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="n">P2</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">aug_state</span>
+
+        <span class="c1"># init for next update</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

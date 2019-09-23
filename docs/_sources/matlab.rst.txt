@@ -1,0 +1,70 @@
+.. _matlab:
+
+Matlab
+================================================================================
+
+We provide the equivalent Matlab code for designing UKF on (parallelizable)
+manifolds, which is wholly independent from the python code.
+
+
+Installation
+--------------------------------------------------------------------------------
+
+The Matlab code has been tested with version R2019a without required particular
+toolbox. To install:
+
+1. Download the repo::
+
+    git clone https://github.com/CAOR-MINES-ParisTech/ukfm.git
+
+2. Go to /my/directory/ukfm/matlab at the Matlab prompt and execute
+``importukfm``.
+
+3. You may save this path for your next Matlab sessions (via ``savepath``).
+
+Get Started
+--------------------------------------------------------------------------------
+
+Follow the 2D robot localization example (tutorial): in the Matlab prompt
+execute::
+
+  main_localization
+
+Usage
+--------------------------------------------------------------------------------
+
+In contrast to Python, the code is implemented without class and has only
+functions. 
+
+The file for designed an UKF are given in the ``ukfm`` folder and useful
+geometry (Lie groups) functions are provided in the ``geometry`` folder.
+
+We provide scripts for reproducing the examples and benchmarks respectively in
+the  ``examples`` and ``benchmarks``. Models functions are organized in suborder
+of example: for e.g. the 2D robot localization model, see in
+``examples/localization``. You can use the Matlab publish tool for better
+rendering.
+
+Function naming mimics the dot operator of class. To get the exponential of
+:math:`SE(3)` or the propagation function of the localization example, call
+respectively ``se3_exp`` and ``localization_f``.
+
+Examples
+--------------------------------------------------------------------------------
+
+The unscented Kalman Filter on parallelizable manifolds has been implemented on
+the following examples, from which you can obtain published scripts:
+
+-  `2D Robot Localization - Tutorial <matlab/main_localization.html>`_
+-  `2D Robot Localization on Real Data <matlab/main_wifibot.html>`_
+-  `Attitude Estimation with an IMU <matlab/main_attitude.html>`_
+-  `Navigation on Flat Earth <matlab/main_inertial_navigation.html>`_
+-  `2D Robot SLAM <matlab/main_slam2d.html>`_
+-  `IMU-GNSS Sensor-Fusion on the KITTI Dataset <matlab/main_imugnss.html>`_
+-  `Pendulum Example <matlab/main_pendulum.html>`_
+
+Benchmarks
+--------------------------------------------------------------------------------
+
+We simulate Monte-Carlo data and benchmark UKFs and EKFs based on different choices of uncertainty representation through accuracy and consistency metrics on the following benchmark:
+

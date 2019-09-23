@@ -1,0 +1,388 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Attitude Estimation with an IMU - Example &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="../index.html"/>
+        <link rel="up" title="Examples" href="../examples.html"/>
+        <link rel="next" title="Navigation on Flat Earth - Example" href="inertial_navigation.html"/>
+        <link rel="prev" title="2D Robot Localization on Real Data" href="wifibot.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="../_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../filter.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../geometry.html">Lie Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../examples.html">Examples</a> &raquo;</li>
+      
+    <li>Attitude Estimation with an IMU - Example</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/auto_examples/attitude.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-auto-examples-attitude-py"><span class="std std-ref">here</span></a> to download the full example code</p>
+</div>
+<div class="sphx-glr-example-title section" id="attitude-estimation-with-an-imu-example">
+<span id="sphx-glr-auto-examples-attitude-py"></span><h1>Attitude Estimation with an IMU - Example<a class="headerlink" href="#attitude-estimation-with-an-imu-example" title="Permalink to this headline">¶</a></h1>
+<p>Goal of this script:</p>
+<ul class="simple">
+<li><p>applying the UKF for estimating 3D attitude from an IMU.</p></li>
+</ul>
+<p><em>We assume the reader is already familiar with the tutorial.</em></p>
+<p>Attitude estimation with an Inertial Measurement Unit (IMU). The filter fuses
+measurements coming from gyro, accelerometer and magnetometer. The IMU does not
+have any bias. We reproduce the simulation based on <a class="reference internal" href="../bibliography.html#kokusing2017" id="id1">[KHSchon17]</a>.</p>
+<div class="section" id="import">
+<h2>Import<a class="headerlink" href="#import" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">block_diag</span>
+<span class="kn">from</span> <span class="nn">ukfm</span> <span class="k">import</span> <span class="n">ATTITUDE</span> <span class="k">as</span> <span class="n">MODEL</span>
+<span class="kn">import</span> <span class="nn">ukfm</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="n">ukfm</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">set_matplotlib_config</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="model-and-simulation">
+<h2>Model and Simulation<a class="headerlink" href="#model-and-simulation" title="Permalink to this headline">¶</a></h2>
+<p>This script uses the <code class="docutils literal notranslate"><span class="pre">ATTITUDE</span></code> model class that requires  the sequence time
+and the IMU frequency to create an instance of the model.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sequence time (s)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="c1"># IMU frequency (Hz)</span>
+<span class="n">imu_freq</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="c1"># create the model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">MODEL</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">imu_freq</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The true trajectory is computed along with noisy inputs after we define the
+noise standard deviation affecting the (accurate) IMU, where the platform is 2
+s stationary and then have constant angular velocity around gravity.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># IMU standard-deviation noise (noise is isotropic)</span>
+<span class="n">imu_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">5</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>  <span class="c1"># gyro (rad/s)</span>
+                    <span class="mf">0.4</span><span class="p">,</span>          <span class="c1"># accelerometer (m/s**2)</span>
+                    <span class="mf">0.2</span><span class="p">])</span>         <span class="c1"># magnetometer</span>
+
+<span class="c1"># simulate true trajectory and noisy inputs</span>
+<span class="n">states</span><span class="p">,</span> <span class="n">omegas</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simu_f</span><span class="p">(</span><span class="n">imu_std</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The state and the input contain the following variables:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span>      <span class="c1"># 3d orientation (matrix)</span>
+<span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">gyro</span>     <span class="c1"># robot angular velocities</span>
+</pre></div>
+</div>
+<p>We compute noisy measurements based on the true state sequence.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ys</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simu_h</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">imu_std</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A measurement <code class="docutils literal notranslate"><span class="pre">ys[k]</span></code> contains accelerometer and magnetometer measurements.</p>
+<div class="section" id="filter-design-and-initialization">
+<h3>Filter Design and Initialization<a class="headerlink" href="#filter-design-and-initialization" title="Permalink to this headline">¶</a></h3>
+<p>We choose in this example to embed the state in <span class="math notranslate nohighlight">\(SO(3)\)</span> with left
+multiplication, such that:</p>
+<ul class="simple">
+<li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(3)\)</span> exponential map for
+orientation where the state multiplies the uncertainty on the left.</p></li>
+<li><p>the inverse retraction <span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(3)\)</span>
+logarithm for orientation.</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># propagation noise matrix</span>
+<span class="n">Q</span> <span class="o">=</span> <span class="n">imu_std</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="c1"># measurement noise matrix</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">block_diag</span><span class="p">(</span><span class="n">imu_std</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">imu_std</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="c1"># initial error matrix</span>
+<span class="n">P0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>  <span class="c1"># The state is perfectly initialized</span>
+<span class="c1"># sigma point parameters</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>We initialize the filter with the true state.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">state0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span><span class="n">Rot</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span><span class="p">)</span>
+
+<span class="n">ukf</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span>
+               <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>
+               <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span>
+               <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
+               <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
+               <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
+               <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi</span><span class="p">,</span>
+               <span class="n">phi_inv</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi_inv</span><span class="p">,</span>
+               <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+
+<span class="c1"># set variables for recording estimates along the full trajectory</span>
+<span class="n">ukf_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">state0</span><span class="p">]</span>
+<span class="n">ukf_Ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">ukf_Ps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">P0</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="filtering">
+<h2>Filtering<a class="headerlink" href="#filtering" title="Permalink to this headline">¶</a></h2>
+<p>The UKF proceeds as a standard Kalman filter with a simple for loop.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+    <span class="c1"># propagation</span>
+    <span class="n">ukf</span><span class="o">.</span><span class="n">propagation</span><span class="p">(</span><span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">model</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+    <span class="c1"># update</span>
+    <span class="n">ukf</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ys</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+    <span class="c1"># save estimates</span>
+    <span class="n">ukf_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+    <span class="n">ukf_Ps</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">ukf</span><span class="o">.</span><span class="n">P</span>
+</pre></div>
+</div>
+<div class="section" id="results">
+<h3>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h3>
+<p>We plot the orientation as function of time along with the orientation
+error.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">plot_results</span><span class="p">(</span><span class="n">ukf_states</span><span class="p">,</span> <span class="n">ukf_Ps</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">omegas</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="sphx-glr-horizontal">
+<li><img alt="../_images/sphx_glr_attitude_0011.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_attitude_0011.png" />
+</li>
+<li><img alt="../_images/sphx_glr_attitude_0021.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_attitude_0021.png" />
+</li>
+<li><img alt="../_images/sphx_glr_attitude_003.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_attitude_003.png" />
+</li>
+<li><img alt="../_images/sphx_glr_attitude_004.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_attitude_004.png" />
+</li>
+</ul>
+<p>We see the true trajectory starts by a small stationary step following
+by constantly turning around the gravity vector (only the yaw is
+increasing). As yaw is not observable with an accelerometer only, it is
+expected that yaw error would be stronger than roll or pitch errors.</p>
+<p>As UKF estimates the covariance of the error, we have plotted the 95%
+confident interval (<span class="math notranslate nohighlight">\(3\sigma\)</span>). We expect the error keeps behind this
+interval, and in this situation the filter covariance output matches
+especially well the error.</p>
+<p>A cruel aspect of these curves is the absence of comparision. Is the filter
+good ? It would be nice to compare it, e.g., to an extended Kalman filter.</p>
+</div>
+</div>
+<div class="section" id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
+<p>We have seen in this script how well works the UKF on parallelizable
+manifolds for estimating orientation from an IMU.</p>
+<p>You can now:</p>
+<ul class="simple">
+<li><p>address the UKF for the same problem with different noise parameters.</p></li>
+<li><p>add outliers in acceleration or magnetometer measurements.</p></li>
+<li><p>benchmark the UKF with different function errors and compare it to the
+extended Kalman filter in the Benchmarks section.</p></li>
+</ul>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  20.857 seconds)</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-attitude-py">
+<div class="sphx-glr-download docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/42ea2bc4b324e0b64825cf4d4521a1cc/attitude.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">attitude.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/d00156e2cf61ff9ff5cfbb3928542793/attitude.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">attitude.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="inertial_navigation.html" class="btn btn-neutral float-right" title="Navigation on Flat Earth - Example" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="wifibot.html" class="btn btn-neutral" title="2D Robot Localization on Real Data" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

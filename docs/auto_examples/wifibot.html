@@ -1,0 +1,407 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>2D Robot Localization on Real Data &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="../index.html"/>
+        <link rel="up" title="Examples" href="../examples.html"/>
+        <link rel="next" title="Attitude Estimation with an IMU - Example" href="attitude.html"/>
+        <link rel="prev" title="Examples" href="../examples.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="../_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../filter.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../geometry.html">Lie Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../examples.html">Examples</a> &raquo;</li>
+      
+    <li>2D Robot Localization on Real Data</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/auto_examples/wifibot.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-auto-examples-wifibot-py"><span class="std std-ref">here</span></a> to download the full example code</p>
+</div>
+<div class="sphx-glr-example-title section" id="d-robot-localization-on-real-data">
+<span id="sphx-glr-auto-examples-wifibot-py"></span><h1>2D Robot Localization on Real Data<a class="headerlink" href="#d-robot-localization-on-real-data" title="Permalink to this headline">¶</a></h1>
+<p>Goals of this script:</p>
+<ul class="simple">
+<li><p>apply the UKF for the 2D robot localization example with real data.</p></li>
+</ul>
+<p><em>We assume the reader is already familiar with the considered problem described
+in the tutorial.</em></p>
+<p>We address the same problem described in the 2D robot localization tutorial,
+with real data.</p>
+<div class="section" id="import">
+<h2>Import<a class="headerlink" href="#import" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ukfm</span> <span class="k">import</span> <span class="n">LOCALIZATION</span> <span class="k">as</span> <span class="n">MODEL</span>
+<span class="kn">import</span> <span class="nn">ukfm</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="n">ukfm</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">set_matplotlib_config</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="model-and-data">
+<h2>Model and Data<a class="headerlink" href="#model-and-data" title="Permalink to this headline">¶</a></h2>
+<p>This script uses the <code class="docutils literal notranslate"><span class="pre">LOCALIZATION</span></code> model class that requires  the sequence
+time and the odometry frequency to create an instance of the model.</p>
+<p>Instead of creating data, we load recorded data. We have recorded five
+sequences (sequence 2 and 3 are the more interesting).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sequence number</span>
+<span class="n">n_sequence</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="c1"># GPS frequency (Hz)</span>
+<span class="n">gps_freq</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="c1"># GPS noise standard deviation (m)</span>
+<span class="n">gps_std</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+<span class="c1"># load data</span>
+<span class="n">states</span><span class="p">,</span> <span class="n">omegas</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">one_hot_ys</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">MODEL</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">n_sequence</span><span class="p">,</span> <span class="n">gps_freq</span><span class="p">,</span> <span class="n">gps_std</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The real data have been obtained in an experiment conducted at the Centre for
+Robotics, MINES ParisTech. We used a so-called Wifibot, which is a small
+wheeled robot equipped with independent odometers on the left and right
+wheels, see figure. A set of seven highly precise cameras, the OptiTrack
+motion capture system, provide the reference trajectory (ground truth) with
+sub-millimeter precision at a rate of 120 Hz.</p>
+<div class="figure align-center" id="id3">
+<a class="reference internal image-reference" href="../_images/robot.jpg"><img alt="robot picture." src="../_images/robot.jpg" style="width: 420.40000000000003px; height: 509.40000000000003px;" /></a>
+<p class="caption"><span class="caption-text">Testing arena with Wifibot robot in the foreground of the picture. We can
+also see two of the seven Optitrack cameras in the background.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+<p>We define noise odometry standard deviation for the filter.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">odo_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.15</span><span class="p">,</span>   <span class="c1"># longitudinal speed</span>
+                    <span class="mf">0.05</span><span class="p">,</span>   <span class="c1"># transverse shift speed</span>
+                    <span class="mf">0.15</span><span class="p">])</span>  <span class="c1"># differential odometry</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="filter-design">
+<h2>Filter Design<a class="headerlink" href="#filter-design" title="Permalink to this headline">¶</a></h2>
+<p>We choose here to embed the state in <span class="math notranslate nohighlight">\(SE(2)\)</span> with left multiplication,
+i.e.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SE(2)\)</span> exponential, where
+the state multiplies on the left the error <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+<li><p>the inverse <span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SE(2)\)</span> logarithm.</p></li>
+</ul>
+</div></blockquote>
+<p>We define the UKF parameters based on the model parameters.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># propagation noise matrix</span>
+<span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">odo_std</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="c1"># measurement noise matrix</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">gps_std</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="c1"># sigma point parameters</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="section" id="filter-initialization">
+<h3>Filter Initialization<a class="headerlink" href="#filter-initialization" title="Permalink to this headline">¶</a></h3>
+<p>We initialize the filter with the true state plus an initial error heading of
+30°, and set corresponding initial covariance matrices.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># &quot;add&quot; orientation error to the initial state</span>
+<span class="n">SO2</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">SO2</span>
+<span class="n">state0</span> <span class="o">=</span> <span class="n">MODEL</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span><span class="n">Rot</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO2</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">30</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)),</span>
+                     <span class="n">p</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
+
+<span class="c1"># initial state-error covariance matrix</span>
+<span class="n">P0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="c1"># The state is not perfectly initialized</span>
+<span class="n">P0</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">30</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>We then define the filter as an instance  of the <code class="docutils literal notranslate"><span class="pre">UKF</span></code> class.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ukf</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span>               <span class="c1">#  initial state</span>
+               <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>                       <span class="c1"># initial covariance</span>
+               <span class="n">f</span><span class="o">=</span><span class="n">MODEL</span><span class="o">.</span><span class="n">f</span><span class="p">,</span>                   <span class="c1"># propagation model</span>
+               <span class="n">h</span><span class="o">=</span><span class="n">MODEL</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>                   <span class="c1"># observation model</span>
+               <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>                         <span class="c1"># process noise covariance</span>
+               <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>                         <span class="c1"># observation noise covariance</span>
+               <span class="n">phi</span><span class="o">=</span><span class="n">MODEL</span><span class="o">.</span><span class="n">left_phi</span><span class="p">,</span>          <span class="c1"># retraction function</span>
+               <span class="n">phi_inv</span><span class="o">=</span><span class="n">MODEL</span><span class="o">.</span><span class="n">left_phi_inv</span><span class="p">,</span>  <span class="c1"># inverse retraction function</span>
+               <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span>                  <span class="c1"># sigma point parameters</span>
+               <span class="p">)</span>
+</pre></div>
+</div>
+<p>Before launching the filter, we set a list for recording estimates along the
+full trajectory and a 3D array to record covariance estimates.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">N</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">ukf_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="p">]</span>
+<span class="n">ukf_Ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">ukf_Ps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">ukf</span><span class="o">.</span><span class="n">P</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="filtering">
+<h3>Filtering<a class="headerlink" href="#filtering" title="Permalink to this headline">¶</a></h3>
+<p>The UKF proceeds as a standard Kalman filter with a simple for loop.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># measurement iteration number (first measurement is for n == 0)</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+    <span class="c1"># propagation</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ukf</span><span class="o">.</span><span class="n">propagation</span><span class="p">(</span><span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dt</span><span class="p">)</span>
+    <span class="c1"># update only if a measurement is received</span>
+    <span class="k">if</span> <span class="n">one_hot_ys</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">ukf</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ys</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># save estimates</span>
+    <span class="n">ukf_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+    <span class="n">ukf_Ps</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">ukf</span><span class="o">.</span><span class="n">P</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="results">
+<h2>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
+<p>We plot the trajectory, GPS measurements and estimated trajectory. As UKF
+estimates the covariance of the error, we have plotted the 95% confident
+interval (<span class="math notranslate nohighlight">\(3\sigma\)</span>).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MODEL</span><span class="o">.</span><span class="n">plot_wifibot</span><span class="p">(</span><span class="n">ukf_states</span><span class="p">,</span> <span class="n">ukf_Ps</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="sphx-glr-horizontal">
+<li><img alt="../_images/sphx_glr_wifibot_001.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_wifibot_001.png" />
+</li>
+<li><img alt="../_images/sphx_glr_wifibot_002.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_wifibot_002.png" />
+</li>
+<li><img alt="../_images/sphx_glr_wifibot_003.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_wifibot_003.png" />
+</li>
+</ul>
+<p>All results seem coherent. This is convincing as the initial heading error is
+relatively high.</p>
+</div>
+<div class="section" id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
+<p>This script apply the UKF for localizing a robot on real data. The filter
+works apparently well on this localization problem on real data, with moderate
+initial heading error.</p>
+<p>You can now:</p>
+<ul class="simple">
+<li><p>test the UKF on different sequences and with a different choice of
+retraction.</p></li>
+<li><p>address the UKF for the same problem with  range and bearing measurements of
+known landmarks.</p></li>
+<li><p>enter more in depth with the theory, see <a class="reference internal" href="../bibliography.html#brossardcode2019" id="id1">[BBB19]</a>.</p></li>
+<li><p>benchmark the UKF with different function error and compare the new filters
+to both the extended Kalman filter and invariant extended Kalman filter of
+<a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id2">[BB17]</a> (see the benchmarks section).</p></li>
+</ul>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  6.879 seconds)</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-wifibot-py">
+<div class="sphx-glr-download docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/a9717a20744c72642124ac27881d4b84/wifibot.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">wifibot.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/aaa77ad3d3e37530154cb435abd12964/wifibot.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">wifibot.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="attitude.html" class="btn btn-neutral float-right" title="Attitude Estimation with an IMU - Example" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../examples.html" class="btn btn-neutral" title="Examples" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

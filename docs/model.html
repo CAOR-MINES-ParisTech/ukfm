@@ -1,0 +1,1802 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Models &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="index.html"/>
+        <link rel="next" title="Lie Groups" href="geometry.html"/>
+        <link rel="prev" title="Filters" href="filter.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filter.html">Filters</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#d-robot-localization">2D Robot Localization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#d-attitude-estimation-with-an-imu">3D Attitude Estimation with an IMU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#d-inertial-navigation-on-flat-earth">3D Inertial Navigation on Flat Earth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#d-robot-slam">2D Robot SLAM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#imu-gnss-fusion-on-the-kitti-dataset">IMU-GNSS Fusion on the KITTI Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pendulum-example">Pendulum Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="geometry.html">Lie Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Models</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/model.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="models">
+<h1>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h1>
+<p>This page contains the classes that describe the models considered in the
+examples. Each class contains propagation and measurement functions, different
+choices of retractions and their inverse retractions. You can also obtain in the
+source code useful functions specifically related to the problem, e.g. Jacobian
+for EKF, and helper functions.</p>
+<div class="section" id="d-robot-localization">
+<h2>2D Robot Localization<a class="headerlink" href="#d-robot-localization" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.LOCALIZATION">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">LOCALIZATION</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">odo_freq</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/localization.html#LOCALIZATION"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.LOCALIZATION" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D Robot localization based on odometry and GNSS (robot position) 
+measurements. You can have a text description in
+<a class="reference internal" href="bibliography.html#barrauinvariant2017" id="id1">[BB17]</a>, Section IV.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T</strong> – sequence time (s).</p></li>
+<li><p><strong>odo_freq</strong> – odometry frequency (Hz).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="class">
+<dt id="ukfm.LOCALIZATION.STATE">
+<em class="property">class </em><code class="sig-name descname">STATE</code><span class="sig-paren">(</span><em class="sig-param">Rot</em>, <em class="sig-param">p</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/localization.html#LOCALIZATION.STATE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.LOCALIZATION.STATE" title="Permalink to this definition">¶</a></dt>
+<dd><p>State of the system.</p>
+<p>It represents the orientation and position of the robot.</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\chi} \in \mathcal{M} = \left\{ \begin{matrix} 
+\mathbf{C} \in SO(2),
+ \mathbf{p} \in \mathbb R^2
+\end{matrix} \right\}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Rot</strong> – rotation matrix <span class="math notranslate nohighlight">\(\mathbf{C}\)</span>.</p></li>
+<li><p><strong>p</strong> – position vector <span class="math notranslate nohighlight">\(\mathbf{p}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="ukfm.LOCALIZATION.INPUT">
+<em class="property">class </em><code class="sig-name descname">INPUT</code><span class="sig-paren">(</span><em class="sig-param">v</em>, <em class="sig-param">gyro</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/localization.html#LOCALIZATION.INPUT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.LOCALIZATION.INPUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Input of the propagation model.</p>
+<p>The input are robot velocities that can be obtained from a differential
+wheel system.</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\omega} \in \mathcal{M} = \left\{ \begin{matrix}
+\mathbf{v} \in \mathbb R^2,
+\omega \in \mathbb R 
+\end{matrix} \right\}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v</strong> – robot forward and lateral velocities <span class="math notranslate nohighlight">\(\mathbf{v}\)</span>.</p></li>
+<li><p><strong>gyro</strong> – robot orientation velocity <span class="math notranslate nohighlight">\(\omega\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.LOCALIZATION.f">
+<em class="property">classmethod </em><code class="sig-name descname">f</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">omega</em>, <em class="sig-param">w</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/localization.html#LOCALIZATION.f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.LOCALIZATION.f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagation function.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{C}_{n+1}  &amp;= \mathbf{C}_{n} \exp\left(\left(\omega + 
+\mathbf{w}^{(2)} \right) dt\right)  \\
+\mathbf{p}_{n+1}  &amp;= \mathbf{p}_{n} + \left( \mathbf{v}_{n} + 
+\mathbf{w}^{(0:2)} \right) dt\end{split}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>omega</strong> – input <span class="math notranslate nohighlight">\(\boldsymbol{\omega}\)</span>.</p></li>
+<li><p><strong>w</strong> – noise <span class="math notranslate nohighlight">\(\mathbf{w}\)</span>.</p></li>
+<li><p><strong>dt</strong> – integration step <span class="math notranslate nohighlight">\(dt\)</span> (s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.LOCALIZATION.h">
+<em class="property">classmethod </em><code class="sig-name descname">h</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/localization.html#LOCALIZATION.h"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.LOCALIZATION.h" title="Permalink to this definition">¶</a></dt>
+<dd><p>Observation function.</p>
+<div class="math notranslate nohighlight">
+\[h\left(\boldsymbol{\chi}\right)  = \mathbf{p}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.LOCALIZATION.phi">
+<em class="property">classmethod </em><code class="sig-name descname">phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/localization.html#LOCALIZATION.phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.LOCALIZATION.phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi\left(\boldsymbol{\chi}, \boldsymbol{\xi}\right) = 
+\left( \begin{matrix}
+  \mathbf{C} \exp\left(\boldsymbol{\xi}^{(0)}\right) \\
+  \mathbf{p} + \boldsymbol{\xi}^{(1:3)}
+ \end{matrix} \right)\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(2) 
+\times \mathbb R^2\)</span>.</p>
+<p>Its corresponding inverse operation is
+<a class="reference internal" href="#ukfm.LOCALIZATION.phi_inv" title="ukfm.LOCALIZATION.phi_inv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi_inv()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.LOCALIZATION.phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/localization.html#LOCALIZATION.phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.LOCALIZATION.phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi^{-1}_{\boldsymbol{\hat{\chi}}}\left(\boldsymbol{\chi}
+\right) = \left( \begin{matrix}
+  \log\left(\mathbf{C} \mathbf{\hat{C}}^T\right) \\
+  \mathbf{p} - \mathbf{\hat{p}} 
+ \end{matrix} \right)\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(2)
+\times \mathbb R^2\)</span>.</p>
+<p>Its corresponding retraction is <a class="reference internal" href="#ukfm.LOCALIZATION.phi" title="ukfm.LOCALIZATION.phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.LOCALIZATION.left_phi">
+<em class="property">classmethod </em><code class="sig-name descname">left_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/localization.html#LOCALIZATION.left_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.LOCALIZATION.left_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi\left(\boldsymbol{\chi}, \boldsymbol{\xi}\right) = 
+\left( \begin{matrix}
+     \mathbf{C} \mathbf{C}_\mathbf{T} \\
+      \mathbf{p} + \mathbf{C} \mathbf{r}
+\end{matrix} \right)\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T} = \exp\left(\boldsymbol{\xi}\right) = 
+\begin{bmatrix}
+    \mathbf{C}_\mathbf{T} &amp; \mathbf{r} \\
+    \mathbf{0}^T &amp; 1
+\end{bmatrix}\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SE(2)\)</span>
+with left multiplication.</p>
+<p>Its corresponding inverse operation is
+<a class="reference internal" href="#ukfm.LOCALIZATION.left_phi_inv" title="ukfm.LOCALIZATION.left_phi_inv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">left_phi_inv()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.LOCALIZATION.left_phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">left_phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/localization.html#LOCALIZATION.left_phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.LOCALIZATION.left_phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction.</p>
+<div class="math notranslate nohighlight">
+\[\varphi^{-1}_{\boldsymbol{\hat{\chi}}}\left(\boldsymbol{\chi}
+\right) = \log\left(
+    \boldsymbol{\chi}^{-1} \boldsymbol{\hat{\chi}} \right)\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SE(2)\)</span> 
+with left multiplication.</p>
+<p>Its corresponding retraction is <a class="reference internal" href="#ukfm.LOCALIZATION.left_phi" title="ukfm.LOCALIZATION.left_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">left_phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.LOCALIZATION.right_phi">
+<em class="property">classmethod </em><code class="sig-name descname">right_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/localization.html#LOCALIZATION.right_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.LOCALIZATION.right_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi\left(\boldsymbol{\chi}, \boldsymbol{\xi}\right) = 
+\left( \begin{matrix}
+      \mathbf{C}_\mathbf{T} \mathbf{C}  \\
+       \mathbf{C}_\mathbf{T}\mathbf{p} +  \mathbf{r}
+   \end{matrix} \right)\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T} = \exp\left(\boldsymbol{\xi}\right) 
+= \begin{bmatrix}
+    \mathbf{C}_\mathbf{T} &amp;\mathbf{r} \\
+    \mathbf{0}^T &amp; 1
+\end{bmatrix}\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SE(2)\)</span> 
+with right multiplication.</p>
+<p>Its corresponding inverse operation is 
+<a class="reference internal" href="#ukfm.LOCALIZATION.right_phi_inv" title="ukfm.LOCALIZATION.right_phi_inv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_phi_inv()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.LOCALIZATION.right_phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">right_phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/localization.html#LOCALIZATION.right_phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.LOCALIZATION.right_phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction.</p>
+<div class="math notranslate nohighlight">
+\[\varphi^{-1}_{\boldsymbol{\hat{\chi}}}\left(\boldsymbol{\chi}
+\right) = \log\left(
+    \boldsymbol{\hat{\chi}}^{-1} \boldsymbol{\chi} \right)\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SE(2)\)</span> 
+with right multiplication.</p>
+<p>Its corresponding retraction is <a class="reference internal" href="#ukfm.LOCALIZATION.right_phi" title="ukfm.LOCALIZATION.right_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="d-attitude-estimation-with-an-imu">
+<h2>3D Attitude Estimation with an IMU<a class="headerlink" href="#d-attitude-estimation-with-an-imu" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.ATTITUDE">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">ATTITUDE</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">imu_freq</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/attitude.html#ATTITUDE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.ATTITUDE" title="Permalink to this definition">¶</a></dt>
+<dd><p>3D attitude estimation from an IMU equipped with gyro, accelerometer and 
+magnetometer. You can have a text description in <a class="reference internal" href="bibliography.html#kokusing2017" id="id2">[KHSchon17]</a>, 
+Section IV.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T</strong> – sequence time (s).</p></li>
+<li><p><strong>imu_freq</strong> – IMU frequency (Hz).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="ukfm.ATTITUDE.g">
+<code class="sig-name descname">g</code><em class="property"> = array([ 0.  ,  0.  , -9.82])</em><a class="headerlink" href="#ukfm.ATTITUDE.g" title="Permalink to this definition">¶</a></dt>
+<dd><p>gravity vector (m/s^2) <span class="math notranslate nohighlight">\(\mathbf{g}\)</span>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ukfm.ATTITUDE.b">
+<code class="sig-name descname">b</code><em class="property"> = array([ 0.33,  0.  , -0.95])</em><a class="headerlink" href="#ukfm.ATTITUDE.b" title="Permalink to this definition">¶</a></dt>
+<dd><p>normed magnetic field in Sweden <span class="math notranslate nohighlight">\(\mathbf{b}\)</span>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ukfm.ATTITUDE.STATE">
+<em class="property">class </em><code class="sig-name descname">STATE</code><span class="sig-paren">(</span><em class="sig-param">Rot</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/attitude.html#ATTITUDE.STATE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.ATTITUDE.STATE" title="Permalink to this definition">¶</a></dt>
+<dd><p>State of the system.</p>
+<p>It represents the orientation of a platform.</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\chi} \in \mathcal{M} = \left\{ 
+\mathbf{C} \in SO(3) \right\}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>Rot</strong> – rotation matrix <span class="math notranslate nohighlight">\(\mathbf{C}\)</span>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="ukfm.ATTITUDE.INPUT">
+<em class="property">class </em><code class="sig-name descname">INPUT</code><span class="sig-paren">(</span><em class="sig-param">gyro</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/attitude.html#ATTITUDE.INPUT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.ATTITUDE.INPUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Input of the propagation model.</p>
+<p>The input is the gyro measurement from an Inertial Measurement Unit
+(IMU).</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\omega} \in \mathcal{M} = \left\{ 
+\mathbf{u} \in \mathbb R^3 \right\}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>gyro</strong> – 3D gyro <span class="math notranslate nohighlight">\(\mathbf{u}\)</span>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.ATTITUDE.f">
+<em class="property">classmethod </em><code class="sig-name descname">f</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">omega</em>, <em class="sig-param">w</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/attitude.html#ATTITUDE.f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.ATTITUDE.f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagation function.</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{C}_{n+1}  = \mathbf{C}_{n} 
+\exp\left(\left(\mathbf{u} + \mathbf{w} \right) 
+dt \right)\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>omega</strong> – input <span class="math notranslate nohighlight">\(\boldsymbol{\omega}\)</span>.</p></li>
+<li><p><strong>w</strong> – noise <span class="math notranslate nohighlight">\(\mathbf{w}\)</span>.</p></li>
+<li><p><strong>dt</strong> – integration step <span class="math notranslate nohighlight">\(dt\)</span> (s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.ATTITUDE.h">
+<em class="property">classmethod </em><code class="sig-name descname">h</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/attitude.html#ATTITUDE.h"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.ATTITUDE.h" title="Permalink to this definition">¶</a></dt>
+<dd><p>Observation function.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}h\left(\boldsymbol{\chi}\right)  = \begin{bmatrix} 
+\mathbf{C}^T \mathbf{g} \\
+\mathbf{C}^T \mathbf{b}
+\end{bmatrix}\end{split}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.ATTITUDE.phi">
+<em class="property">classmethod </em><code class="sig-name descname">phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/attitude.html#ATTITUDE.phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.ATTITUDE.phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\varphi\left(\boldsymbol{\chi}, \boldsymbol{\xi}\right) = 
+  \mathbf{C} \exp\left(\boldsymbol{\xi}\right)\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(3)\)</span>
+with left multiplication.</p>
+<p>Its corresponding inverse operation is <a class="reference internal" href="#ukfm.ATTITUDE.phi_inv" title="ukfm.ATTITUDE.phi_inv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi_inv()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.ATTITUDE.phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/attitude.html#ATTITUDE.phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.ATTITUDE.phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction.</p>
+<div class="math notranslate nohighlight">
+\[\varphi^{-1}_{\boldsymbol{\hat{\chi}}}\left(\boldsymbol{\chi}
+\right) = \log\left(
+  \boldsymbol{\chi}^{-1} \boldsymbol{\hat{\chi}} \right)\]</div>
+<dl class="simple">
+<dt>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(3)\)</span></dt><dd><p>with left multiplication.</p>
+</dd>
+</dl>
+<p>Its corresponding retraction is <a class="reference internal" href="#ukfm.ATTITUDE.phi" title="ukfm.ATTITUDE.phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.ATTITUDE.right_phi">
+<em class="property">classmethod </em><code class="sig-name descname">right_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/attitude.html#ATTITUDE.right_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.ATTITUDE.right_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\varphi\left(\boldsymbol{\chi}, \boldsymbol{\xi}\right) = 
+  \exp\left(\boldsymbol{\xi}\right) \mathbf{C} \]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(3)\)</span> 
+with right multiplication.</p>
+<p>Its corresponding inverse operation is 
+<a class="reference internal" href="#ukfm.ATTITUDE.right_phi_inv" title="ukfm.ATTITUDE.right_phi_inv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_phi_inv()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.ATTITUDE.right_phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">right_phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/attitude.html#ATTITUDE.right_phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.ATTITUDE.right_phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction.</p>
+<div class="math notranslate nohighlight">
+\[\varphi^{-1}_{\boldsymbol{\hat{\chi}}}\left(\boldsymbol{\chi}
+\right) = \log\left(
+  \boldsymbol{\hat{\chi}}\boldsymbol{\chi}^{-1} \right)\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(3)\)</span> 
+with left multiplication.</p>
+<p>Its corresponding retraction is <a class="reference internal" href="#ukfm.ATTITUDE.right_phi" title="ukfm.ATTITUDE.right_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="d-inertial-navigation-on-flat-earth">
+<h2>3D Inertial Navigation on Flat Earth<a class="headerlink" href="#d-inertial-navigation-on-flat-earth" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.INERTIAL_NAVIGATION">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">INERTIAL_NAVIGATION</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">imu_freq</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/inertial_navigation.html#INERTIAL_NAVIGATION"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.INERTIAL_NAVIGATION" title="Permalink to this definition">¶</a></dt>
+<dd><p>3D Inertial navigation on flat Earth, where the vehicle obtains 
+observations of known landmarks. You can have a text description in
+<a class="reference internal" href="bibliography.html#barrauinvariant2017" id="id3">[BB17]</a>, Section V.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T</strong> – sequence time (s).</p></li>
+<li><p><strong>imu_freq</strong> – IMU frequency (Hz).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="ukfm.INERTIAL_NAVIGATION.g">
+<code class="sig-name descname">g</code><em class="property"> = array([ 0.  ,  0.  , -9.82])</em><a class="headerlink" href="#ukfm.INERTIAL_NAVIGATION.g" title="Permalink to this definition">¶</a></dt>
+<dd><p>gravity vector (m/s^2) <span class="math notranslate nohighlight">\(\mathbf{g}\)</span>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ukfm.INERTIAL_NAVIGATION.ldks">
+<code class="sig-name descname">ldks</code><em class="property"> = array([[ 0.,  2.,  2.],        [-2., -2., -2.],        [ 2., -2., -2.]])</em><a class="headerlink" href="#ukfm.INERTIAL_NAVIGATION.ldks" title="Permalink to this definition">¶</a></dt>
+<dd><p>known landmarks <span class="math notranslate nohighlight">\(\mathbf{p}_i^l,~i=1,\ldots,L\)</span>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ukfm.INERTIAL_NAVIGATION.STATE">
+<em class="property">class </em><code class="sig-name descname">STATE</code><span class="sig-paren">(</span><em class="sig-param">Rot</em>, <em class="sig-param">v</em>, <em class="sig-param">p</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/inertial_navigation.html#INERTIAL_NAVIGATION.STATE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.INERTIAL_NAVIGATION.STATE" title="Permalink to this definition">¶</a></dt>
+<dd><p>State of the system.</p>
+<p>It represents the state of a moving vehicle.</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\chi} \in \mathcal{M} = \left\{ \begin{matrix} 
+\mathbf{C} \in SO(3),
+ \mathbf{v} \in \mathbb R^3,
+ \mathbf{p} \in \mathbb R^3
+\end{matrix} \right\}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Rot</strong> – rotation matrix <span class="math notranslate nohighlight">\(\mathbf{C}\)</span>.</p></li>
+<li><p><strong>v</strong> – velocity vector <span class="math notranslate nohighlight">\(\mathbf{v}\)</span>.</p></li>
+<li><p><strong>p</strong> – position vector <span class="math notranslate nohighlight">\(\mathbf{p}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="ukfm.INERTIAL_NAVIGATION.INPUT">
+<em class="property">class </em><code class="sig-name descname">INPUT</code><span class="sig-paren">(</span><em class="sig-param">gyro</em>, <em class="sig-param">acc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/inertial_navigation.html#INERTIAL_NAVIGATION.INPUT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.INERTIAL_NAVIGATION.INPUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Input of the propagation model.</p>
+<p>The input is a measurement from an Inertial Measurement Unit (IMU).</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\omega} \in \mathcal{M} = \left\{ \begin{matrix}
+\mathbf{u} \in \mathbb R^3,
+\mathbf{a}_b \in \mathbb R^3 
+\end{matrix} \right\}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gyro</strong> – 3D gyro <span class="math notranslate nohighlight">\(\mathbf{u}\)</span>.</p></li>
+<li><p><strong>acc</strong> – 3D accelerometer (measurement in body frame)
+<span class="math notranslate nohighlight">\(\mathbf{a}_b\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.INERTIAL_NAVIGATION.f">
+<em class="property">classmethod </em><code class="sig-name descname">f</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">omega</em>, <em class="sig-param">w</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/inertial_navigation.html#INERTIAL_NAVIGATION.f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.INERTIAL_NAVIGATION.f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagation function.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{C}_{n+1}  &amp;= \mathbf{C}_{n} \exp\left(\left(\mathbf{u}
++ \mathbf{w}^{(0:3)} \right) dt\right)  \\
+\mathbf{v}_{n+1}  &amp;= \mathbf{v}_{n} + \mathbf{a}  dt, \\
+\mathbf{p}_{n+1}  &amp;= \mathbf{p}_{n} + \mathbf{v}_{n} dt + 
+\mathbf{a} dt^2/2\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{a}  = \mathbf{C}_{n} \left( \mathbf{a}_b + 
+\mathbf{w}^{(3:6)} \right) + \mathbf{g}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>omega</strong> – input <span class="math notranslate nohighlight">\(\boldsymbol{\omega}\)</span>.</p></li>
+<li><p><strong>w</strong> – noise <span class="math notranslate nohighlight">\(\mathbf{w}\)</span>.</p></li>
+<li><p><strong>dt</strong> – integration step <span class="math notranslate nohighlight">\(dt\)</span> (s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.INERTIAL_NAVIGATION.h">
+<em class="property">classmethod </em><code class="sig-name descname">h</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/inertial_navigation.html#INERTIAL_NAVIGATION.h"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.INERTIAL_NAVIGATION.h" title="Permalink to this definition">¶</a></dt>
+<dd><p>Observation function.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}h\left(\boldsymbol{\chi}\right)  = \begin{bmatrix} 
+\mathbf{C}^T \left( \mathbf{p} - \mathbf{p}^l_1\right) \\
+\vdots \\
+\mathbf{C}^T \left( \mathbf{p} - \mathbf{p}^l_L\right)
+\end{bmatrix}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{p}^l_i \in \mathbb R^3,~i=1,\ldots,L\)</span> are known 
+landmarks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.INERTIAL_NAVIGATION.phi">
+<em class="property">classmethod </em><code class="sig-name descname">phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/inertial_navigation.html#INERTIAL_NAVIGATION.phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.INERTIAL_NAVIGATION.phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi\left(\boldsymbol{\chi}, \boldsymbol{\xi}\right) =
+\left( \begin{matrix}
+  \mathbf{C} \exp\left(\boldsymbol{\xi}^{(0:3)}\right) \\
+  \mathbf{v} + \boldsymbol{\xi}^{(3:6)} \\
+  \mathbf{p} + \boldsymbol{\xi}^{(6:9)}
+ \end{matrix} \right)\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(3) 
+\times \mathbb R^6\)</span>.</p>
+<p>Its corresponding inverse operation is 
+<a class="reference internal" href="#ukfm.INERTIAL_NAVIGATION.phi_inv" title="ukfm.INERTIAL_NAVIGATION.phi_inv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi_inv()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.INERTIAL_NAVIGATION.phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/inertial_navigation.html#INERTIAL_NAVIGATION.phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.INERTIAL_NAVIGATION.phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi^{-1}_{\boldsymbol{\hat{\chi}}}\left(\boldsymbol{\chi}
+\right) = \left( \begin{matrix}
+  \log\left(\mathbf{C} \mathbf{\hat{C}}^T \right)\\
+  \mathbf{v} - \mathbf{\hat{v}} \\
+  \mathbf{p} - \mathbf{\hat{p}} 
+ \end{matrix} \right)\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(3)
+\times \mathbb R^6\)</span>.</p>
+<p>Its corresponding retraction is <a class="reference internal" href="#ukfm.INERTIAL_NAVIGATION.phi" title="ukfm.INERTIAL_NAVIGATION.phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.INERTIAL_NAVIGATION.left_phi">
+<em class="property">classmethod </em><code class="sig-name descname">left_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/inertial_navigation.html#INERTIAL_NAVIGATION.left_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.INERTIAL_NAVIGATION.left_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi\left(\boldsymbol{\chi}, \boldsymbol{\xi}\right) = 
+\left( \begin{matrix}
+  \mathbf{C} \mathbf{C}_\mathbf{T} \\
+  \mathbf{v} + \mathbf{C} \mathbf{r_1} \\
+  \mathbf{p} + \mathbf{C} \mathbf{r_2}
+\end{matrix} \right)\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T} = \exp\left(\boldsymbol{\xi}\right) =
+\begin{bmatrix}
+    \mathbf{C}_\mathbf{T} &amp; \mathbf{r_1}  &amp;\mathbf{r}_2 \\
+    \mathbf{0}^T &amp; &amp; \mathbf{I} 
+\end{bmatrix}\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} 
+\in SE_2(3)\)</span> with left multiplication.</p>
+<p>Its corresponding inverse operation is
+<a class="reference internal" href="#ukfm.INERTIAL_NAVIGATION.left_phi_inv" title="ukfm.INERTIAL_NAVIGATION.left_phi_inv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">left_phi_inv()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.INERTIAL_NAVIGATION.left_phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">left_phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/inertial_navigation.html#INERTIAL_NAVIGATION.left_phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.INERTIAL_NAVIGATION.left_phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction.</p>
+<div class="math notranslate nohighlight">
+\[\varphi^{-1}_{\boldsymbol{\hat{\chi}}}
+\left(\boldsymbol{\chi}\right) = 
+\log\left(
+  \boldsymbol{\chi}^{-1} \boldsymbol{\hat{\chi}} \right)\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} 
+\in SE_2(3)\)</span> with left multiplication.</p>
+<p>Its corresponding retraction is 
+<a class="reference internal" href="#ukfm.INERTIAL_NAVIGATION.left_phi" title="ukfm.INERTIAL_NAVIGATION.left_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">left_phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.INERTIAL_NAVIGATION.right_phi">
+<em class="property">classmethod </em><code class="sig-name descname">right_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/inertial_navigation.html#INERTIAL_NAVIGATION.right_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.INERTIAL_NAVIGATION.right_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi\left(\boldsymbol{\chi}, \boldsymbol{\xi}\right) =
+ \left( \begin{matrix}
+  \mathbf{C}_\mathbf{T} \mathbf{C}  \\
+  \mathbf{C}_\mathbf{T}\mathbf{v} +  \mathbf{r_1} \\
+  \mathbf{C}_\mathbf{T}\mathbf{p} +  \mathbf{r_2}
+ \end{matrix} \right)\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T} = \exp\left(\boldsymbol{\xi}\right) = 
+\begin{bmatrix}
+    \mathbf{C}_\mathbf{T} &amp; \mathbf{r_1}  &amp;\mathbf{r}_2 \\
+    \mathbf{0}^T &amp; &amp; \mathbf{I} 
+\end{bmatrix}\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} 
+\in SE_2(3)\)</span> with right multiplication.</p>
+<p>Its corresponding inverse operation is 
+<a class="reference internal" href="#ukfm.INERTIAL_NAVIGATION.right_phi_inv" title="ukfm.INERTIAL_NAVIGATION.right_phi_inv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_phi_inv()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.INERTIAL_NAVIGATION.right_phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">right_phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/inertial_navigation.html#INERTIAL_NAVIGATION.right_phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.INERTIAL_NAVIGATION.right_phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction.</p>
+<div class="math notranslate nohighlight">
+\[\varphi^{-1}_{\boldsymbol{\hat{\chi}}}\left(\boldsymbol{\chi}
+\right) = \log\left(
+  \boldsymbol{\hat{\chi}}^{-1} \boldsymbol{\chi} \right)\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} 
+\in SE_2(3)\)</span> with right multiplication.</p>
+<p>Its corresponding retraction is 
+<a class="reference internal" href="#ukfm.INERTIAL_NAVIGATION.right_phi" title="ukfm.INERTIAL_NAVIGATION.right_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="d-robot-slam">
+<h2>2D Robot SLAM<a class="headerlink" href="#d-robot-slam" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.SLAM2D">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">SLAM2D</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">odo_freq</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D SLAM based on robot odometry and unknown landmark position measurements.
+You can have a description of the model in the two references
+<a class="reference internal" href="bibliography.html#huangobservability2010" id="id4">[HMR10]</a> , <a class="reference internal" href="bibliography.html#huanga2013" id="id5">[HMR13]</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T</strong> – sequence time (s).</p></li>
+<li><p><strong>odo_freq</strong> – odometry frequency (Hz).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="ukfm.SLAM2D.max_range">
+<code class="sig-name descname">max_range</code><em class="property"> = 5</em><a class="headerlink" href="#ukfm.SLAM2D.max_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>maximal range of observation (m)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ukfm.SLAM2D.min_range">
+<code class="sig-name descname">min_range</code><em class="property"> = 1</em><a class="headerlink" href="#ukfm.SLAM2D.min_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>minimal range of observation (m)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ukfm.SLAM2D.N_ldk">
+<code class="sig-name descname">N_ldk</code><em class="property"> = 20</em><a class="headerlink" href="#ukfm.SLAM2D.N_ldk" title="Permalink to this definition">¶</a></dt>
+<dd><p>number of landmarks <span class="math notranslate nohighlight">\(L\)</span></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ukfm.SLAM2D.STATE">
+<em class="property">class </em><code class="sig-name descname">STATE</code><span class="sig-paren">(</span><em class="sig-param">Rot</em>, <em class="sig-param">p</em>, <em class="sig-param">p_l=array([]</em>, <em class="sig-param">shape=(2</em>, <em class="sig-param">0)</em>, <em class="sig-param">dtype=float64)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.STATE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.STATE" title="Permalink to this definition">¶</a></dt>
+<dd><p>State of the system.</p>
+<p>It represents the orientation and position of the robot along with yet
+observed landmarks.</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\chi} \in \mathcal{M} = \left\{ \begin{matrix} 
+\mathbf{C} \in SO(2),
+ \mathbf{p} \in \mathbb R^2,
+ \mathbf{p}^l_1 \in \mathbb R^2, 
+ \ldots,
+ \mathbf{p}^l_L \in \mathbb R^2
+\end{matrix} \right\}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Rot</strong> – rotation matrix <span class="math notranslate nohighlight">\(\mathbf{C}\)</span>.</p></li>
+<li><p><strong>p</strong> – position of the robot <span class="math notranslate nohighlight">\(\mathbf{p}\)</span>.</p></li>
+<li><p><strong>p_l</strong> – position of the landmark <span class="math notranslate nohighlight">\(\mathbf{p}^l_1, \ldots,
+\mathbf{p}^l_L\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="ukfm.SLAM2D.INPUT">
+<em class="property">class </em><code class="sig-name descname">INPUT</code><span class="sig-paren">(</span><em class="sig-param">v</em>, <em class="sig-param">gyro</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.INPUT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.INPUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Input of the propagation model.</p>
+<p>The input are robot velocities that can be obtained from a differential
+wheel system.</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\omega} \in \mathcal{M} = \left\{ \begin{matrix}
+\mathbf{v} \in \mathbb R,
+\omega \in \mathbb R 
+\end{matrix} \right\}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v</strong> – robot forward  velocity <span class="math notranslate nohighlight">\(v\)</span>.</p></li>
+<li><p><strong>gyro</strong> – robot orientation velocity <span class="math notranslate nohighlight">\(\omega\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.f">
+<em class="property">classmethod </em><code class="sig-name descname">f</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">omega</em>, <em class="sig-param">w</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagation function.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{C}_{n+1}  &amp;= \mathbf{C}_{n} \exp\left(\left(\omega +
+\mathbf{w}^{(1)} \right) dt\right)  \\
+\mathbf{p}_{n+1}  &amp;= \mathbf{p}_{n} + \left( \mathbf{v}_{n} +
+\mathbf{w}^{(0)} \right) dt \\
+\mathbf{p}_{1,n+1}^l  &amp;= \mathbf{p}_{1,n}^l \\
+\vdots \\
+\mathbf{p}_{L,n+1}^l  &amp;= \mathbf{p}_{L,n}^l\end{split}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>omega</strong> – input <span class="math notranslate nohighlight">\(\boldsymbol{\omega}\)</span>.</p></li>
+<li><p><strong>w</strong> – noise <span class="math notranslate nohighlight">\(\mathbf{w}\)</span>.</p></li>
+<li><p><strong>dt</strong> – integration step <span class="math notranslate nohighlight">\(dt\)</span> (s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.h">
+<em class="property">classmethod </em><code class="sig-name descname">h</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.h"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.h" title="Permalink to this definition">¶</a></dt>
+<dd><p>Observation function for 1 landmark.</p>
+<div class="math notranslate nohighlight">
+\[h\left(\boldsymbol{\chi}\right)  =
+\mathbf{C}^T \left( \mathbf{p} - \mathbf{p}^l\right) \]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.z">
+<em class="property">classmethod </em><code class="sig-name descname">z</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.z"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.z" title="Permalink to this definition">¶</a></dt>
+<dd><p>Augmentation function.</p>
+<p>Return a vector of the novel part of the state only.</p>
+<div class="math notranslate nohighlight">
+\[z\left(\boldsymbol{\chi}, \mathbf{y}\right)  =
+\mathbf{C} \mathbf{y} + \mathbf{p}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>y</strong> – measurement <span class="math notranslate nohighlight">\(\mathbf{y}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.aug_z">
+<em class="property">classmethod </em><code class="sig-name descname">aug_z</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.aug_z"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.aug_z" title="Permalink to this definition">¶</a></dt>
+<dd><p>Augmentation function. Return the augmented state.</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\chi} \leftarrow \left(\boldsymbol{\chi},
+z\left(\boldsymbol{\chi}, \mathbf{y}\right) \right) \]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>y</strong> – measurement <span class="math notranslate nohighlight">\(\mathbf{y}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.phi">
+<em class="property">classmethod </em><code class="sig-name descname">phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi\left(\boldsymbol{\chi}, \boldsymbol{\xi}\right) =
+\left( \begin{matrix}
+  \mathbf{C} \exp\left(\boldsymbol{\xi}^{(0)}\right) \\
+  \mathbf{p} + \boldsymbol{\xi}^{(1:3)} \\
+  \mathbf{p}_1^l + \boldsymbol{\xi}^{(3:5)} \\
+  \vdots \\
+  \mathbf{p}_L^l + \boldsymbol{\xi}^{(3+2L:5+2L)}
+ \end{matrix} \right)\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(2)
+\times \mathbb R^{2(L+1)}\)</span>.</p>
+<p>Its corresponding inverse operation (for robot state only) is
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">phi_inv()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.red_phi">
+<em class="property">classmethod </em><code class="sig-name descname">red_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.red_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.red_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction (reduced).</p>
+<p>The retraction <a class="reference internal" href="#ukfm.SLAM2D.phi" title="ukfm.SLAM2D.phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi()</span></code></a> applied on the robot state only.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.red_phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">red_phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.red_phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.red_phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction (reduced).</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi^{-1}_{\boldsymbol{\hat{\chi}}}\left(\boldsymbol{\chi}
+\right) = \left( \begin{matrix} \log\left(\mathbf{C}
+\mathbf{\hat{C}}^T\right) \\
+  \mathbf{p} - \mathbf{\hat{p}} \end{matrix} \right)\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(2)
+\times \mathbb R^{2(L+1)}\)</span>.</p>
+<p>Its corresponding retraction is <a class="reference internal" href="#ukfm.SLAM2D.red_phi" title="ukfm.SLAM2D.red_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">red_phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p>
+</dd>
+</dl>
+<p>:var hat_state:noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.aug_phi">
+<em class="property">classmethod </em><code class="sig-name descname">aug_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.aug_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.aug_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction used for augmented state.</p>
+<p>The retraction <a class="reference internal" href="#ukfm.SLAM2D.phi" title="ukfm.SLAM2D.phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi()</span></code></a> applied on the robot state only.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.aug_phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">aug_phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">aug_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.aug_phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.aug_phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction used for augmented state.</p>
+<p>The inverse retraction <a class="reference internal" href="#ukfm.SLAM2D.phi" title="ukfm.SLAM2D.phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi()</span></code></a> applied on the landmark
+only.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.up_phi">
+<em class="property">classmethod </em><code class="sig-name descname">up_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.up_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.up_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction used for updated state and infer Jacobian.</p>
+<p>The retraction <a class="reference internal" href="#ukfm.SLAM2D.phi" title="ukfm.SLAM2D.phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi()</span></code></a> applied on the robot state and
+one landmark only.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.left_phi">
+<em class="property">classmethod </em><code class="sig-name descname">left_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.left_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.left_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi\left(\boldsymbol{\chi}, \boldsymbol{\xi}\right) =
+     \left( \begin{matrix}
+     \mathbf{C} \mathbf{C}_\mathbf{T} \\
+     \mathbf{p} + \mathbf{C} \mathbf{r}_1 \\
+     \mathbf{p}_1^l + \mathbf{C} \mathbf{r}_2 \\
+     \vdots \\
+     \mathbf{p}_L^l + \mathbf{C} \mathbf{r}_{1+L} \\
+\end{matrix} \right)\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T} = \exp\left(\boldsymbol{\xi}\right) =
+\begin{bmatrix}
+\mathbf{C}_\mathbf{T} &amp; \mathbf{r}_1 &amp; \cdots &amp;
+\mathbf{r}_{1+L}  \\
+    \mathbf{0}^T &amp; &amp; \mathbf{I}&amp;
+\end{bmatrix}\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in
+SE_{1+L}(2)\)</span> with left multiplication.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.left_red_phi">
+<em class="property">classmethod </em><code class="sig-name descname">left_red_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.left_red_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.left_red_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction (reduced).</p>
+<p>The retraction <a class="reference internal" href="#ukfm.SLAM2D.left_phi" title="ukfm.SLAM2D.left_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">left_phi()</span></code></a> applied on the robot state
+only.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.left_red_phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">left_red_phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.left_red_phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.left_red_phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction (reduced).</p>
+<div class="math notranslate nohighlight">
+\[\varphi^{-1}_{\boldsymbol{\hat{\chi}}}
+\left(\boldsymbol{\chi}\right) =
+\log\left(\boldsymbol{\chi}
+\boldsymbol{\hat{\chi}}^{-1}\right)\]</div>
+<p>The robot state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in
+SE_(2)\)</span>.</p>
+<p>Its corresponding retraction is <a class="reference internal" href="#ukfm.SLAM2D.left_red_phi" title="ukfm.SLAM2D.left_red_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">left_red_phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.left_aug_phi">
+<em class="property">classmethod </em><code class="sig-name descname">left_aug_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.left_aug_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.left_aug_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction used for augmented state.</p>
+<p>The retraction <a class="reference internal" href="#ukfm.SLAM2D.left_phi" title="ukfm.SLAM2D.left_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">left_phi()</span></code></a> applied on the robot state
+only.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.left_aug_phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">left_aug_phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">aug_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.left_aug_phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.left_aug_phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction used for augmented state.</p>
+<p>The inverse retraction <a class="reference internal" href="#ukfm.SLAM2D.left_phi" title="ukfm.SLAM2D.left_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">left_phi()</span></code></a> applied on the 
+landmark
+only.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.left_up_phi">
+<em class="property">classmethod </em><code class="sig-name descname">left_up_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.left_up_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.left_up_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction used for updated state and infer Jacobian.</p>
+<p>The retraction <a class="reference internal" href="#ukfm.SLAM2D.left_phi" title="ukfm.SLAM2D.left_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">left_phi()</span></code></a> applied on the robot state
+and one landmark only.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.right_phi">
+<em class="property">classmethod </em><code class="sig-name descname">right_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.right_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.right_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi\left(\boldsymbol{\chi}, \boldsymbol{\xi}\right) =
+      \left( \begin{matrix}
+      \mathbf{C}_\mathbf{T} \mathbf{C}  \\
+       \mathbf{C}_\mathbf{T}\mathbf{p} +  \mathbf{r}_1 \\
+     \mathbf{C}_\mathbf{T} \mathbf{p}_1^l + \mathbf{r}_2 \\
+     \vdots \\
+     \mathbf{C}_\mathbf{T} \mathbf{p}_L^l + \mathbf{r}_{1+L} \\
+\end{matrix} \right)\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T} = \exp\left(\boldsymbol{\xi}\right) =
+\begin{bmatrix}
+\mathbf{C}_\mathbf{T} &amp; \mathbf{r}_1 &amp; \cdots &amp;
+\mathbf{r}_{1+L}  \\
+    \mathbf{0}^T &amp; &amp; \mathbf{I}&amp;
+\end{bmatrix}\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in
+SE_{1+L}(2)\)</span> with right multiplication.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.right_red_phi">
+<em class="property">classmethod </em><code class="sig-name descname">right_red_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.right_red_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.right_red_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction (reduced).</p>
+<p>The retraction <a class="reference internal" href="#ukfm.SLAM2D.right_phi" title="ukfm.SLAM2D.right_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_phi()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.right_red_phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">right_red_phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.right_red_phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.right_red_phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction (reduced).</p>
+<div class="math notranslate nohighlight">
+\[\varphi^{-1}_{\boldsymbol{\hat{\chi}}}
+\left(\boldsymbol{\chi}\right) = 
+\log\left(\boldsymbol{\hat{\chi}}^{-1} 
+\boldsymbol{\chi}\right)\]</div>
+<p>The robot state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in
+SE_(2)\)</span>.</p>
+<p>Its corresponding retraction is <a class="reference internal" href="#ukfm.SLAM2D.right_red_phi" title="ukfm.SLAM2D.right_red_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_red_phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.right_aug_phi">
+<em class="property">classmethod </em><code class="sig-name descname">right_aug_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.right_aug_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.right_aug_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction used for augmented state.</p>
+<p>The retraction <a class="reference internal" href="#ukfm.SLAM2D.right_phi" title="ukfm.SLAM2D.right_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_phi()</span></code></a> applied on the robot state
+only.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.right_aug_phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">right_aug_phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">aug_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.right_aug_phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.right_aug_phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction used for augmented state.</p>
+<p>The inverse retraction <a class="reference internal" href="#ukfm.SLAM2D.right_phi" title="ukfm.SLAM2D.right_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_phi()</span></code></a> applied on the
+landmark only.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SLAM2D.right_up_phi">
+<em class="property">classmethod </em><code class="sig-name descname">right_up_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/slam2d.html#SLAM2D.right_up_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SLAM2D.right_up_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction used for updated state and infer Jacobian.</p>
+<p>The retraction <a class="reference internal" href="#ukfm.SLAM2D.right_phi" title="ukfm.SLAM2D.right_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_phi()</span></code></a> applied on the robot state
+and one landmark only.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="imu-gnss-fusion-on-the-kitti-dataset">
+<h2>IMU-GNSS Fusion on the KITTI Dataset<a class="headerlink" href="#imu-gnss-fusion-on-the-kitti-dataset" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.IMUGNSS">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">IMUGNSS</code><a class="reference internal" href="_modules/ukfm/model/imugnss.html#IMUGNSS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.IMUGNSS" title="Permalink to this definition">¶</a></dt>
+<dd><p>IMU-GNSS Sensor-Fusion on the KITTI dataset. The model is the standard 3D
+kinematics model based on inertial inputs and kinematics equations.</p>
+<dl class="attribute">
+<dt id="ukfm.IMUGNSS.g">
+<code class="sig-name descname">g</code><em class="property"> = array([ 0.  ,  0.  , -9.82])</em><a class="headerlink" href="#ukfm.IMUGNSS.g" title="Permalink to this definition">¶</a></dt>
+<dd><p>gravity vector (m/s^2) <span class="math notranslate nohighlight">\(\mathbf{g}\)</span>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ukfm.IMUGNSS.STATE">
+<em class="property">class </em><code class="sig-name descname">STATE</code><span class="sig-paren">(</span><em class="sig-param">Rot</em>, <em class="sig-param">v</em>, <em class="sig-param">p</em>, <em class="sig-param">b_gyro</em>, <em class="sig-param">b_acc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/imugnss.html#IMUGNSS.STATE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.IMUGNSS.STATE" title="Permalink to this definition">¶</a></dt>
+<dd><p>State of the system.</p>
+<p>It represents the state of a moving vehicle with IMU biases.</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\chi} \in \mathcal{M} = \left\{ \begin{matrix} 
+\mathbf{C} \in SO(3),
+ \mathbf{v} \in \mathbb R^3,
+ \mathbf{p} \in \mathbb R^3,
+ \mathbf{b}_g \in \mathbb R^3,
+ \mathbf{b}_a \in \mathbb R^3
+\end{matrix} \right\}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Rot</strong> – rotation matrix <span class="math notranslate nohighlight">\(\mathbf{C}\)</span>.</p></li>
+<li><p><strong>v</strong> – velocity vector <span class="math notranslate nohighlight">\(\mathbf{v}\)</span>.</p></li>
+<li><p><strong>p</strong> – position vector <span class="math notranslate nohighlight">\(\mathbf{p}\)</span>.</p></li>
+<li><p><strong>b_gyro</strong> – gyro bias <span class="math notranslate nohighlight">\(\mathbf{b}_g\)</span>.</p></li>
+<li><p><strong>b_acc</strong> – accelerometer bias <span class="math notranslate nohighlight">\(\mathbf{b}_a\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="ukfm.IMUGNSS.INPUT">
+<em class="property">class </em><code class="sig-name descname">INPUT</code><span class="sig-paren">(</span><em class="sig-param">gyro</em>, <em class="sig-param">acc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/imugnss.html#IMUGNSS.INPUT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.IMUGNSS.INPUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Input of the propagation model.</p>
+<p>The input is a measurement from an Inertial Measurement Unit (IMU).</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\omega} \in \mathcal{M} = \left\{ \begin{matrix}
+\mathbf{u} \in \mathbb R^3,
+\mathbf{a}_b \in \mathbb R^3 
+\end{matrix} \right\}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gyro</strong> – 3D gyro <span class="math notranslate nohighlight">\(\mathbf{u}\)</span>.</p></li>
+<li><p><strong>acc</strong> – 3D accelerometer (measurement in body frame)
+<span class="math notranslate nohighlight">\(\mathbf{a}_b\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.IMUGNSS.f">
+<em class="property">classmethod </em><code class="sig-name descname">f</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">omega</em>, <em class="sig-param">w</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/imugnss.html#IMUGNSS.f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.IMUGNSS.f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagation function.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{C}_{n+1}  &amp;= \mathbf{C}_{n} \exp\left(\left(\mathbf{u}
+- \mathbf{b}_g + \mathbf{w}^{(0:3)} \right) dt\right)  \\
+\mathbf{v}_{n+1}  &amp;= \mathbf{v}_{n} + \mathbf{a}  dt, \\
+\mathbf{p}_{n+1}  &amp;= \mathbf{p}_{n} + \mathbf{v}_{n} dt 
++ \mathbf{a} dt^2/2 \\
+\mathbf{b}_{g,n+1}  &amp;= \mathbf{b}_{g,n} 
++ \mathbf{w}^{(6:9)}dt \\
+\mathbf{b}_{a,n+1}  &amp;= \mathbf{b}_{a,n} + 
+\mathbf{w}^{(9:12)} dt\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{a}  = \mathbf{C}_{n} 
+\left( \mathbf{a}_b -\mathbf{b}_a 
++ \mathbf{w}^{(3:6)} \right) + \mathbf{g}\]</div>
+<p>Ramdom-walk noises on biases are not added as the Jacobian w.r.t. these 
+noise are trivial. This spares some computations of the UKF.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>omega</strong> – input <span class="math notranslate nohighlight">\(\boldsymbol{\omega}\)</span>.</p></li>
+<li><p><strong>w</strong> – noise <span class="math notranslate nohighlight">\(\mathbf{w}\)</span>.</p></li>
+<li><p><strong>dt</strong> – integration step <span class="math notranslate nohighlight">\(dt\)</span> (s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.IMUGNSS.h">
+<em class="property">classmethod </em><code class="sig-name descname">h</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/imugnss.html#IMUGNSS.h"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.IMUGNSS.h" title="Permalink to this definition">¶</a></dt>
+<dd><p>Observation function.</p>
+<div class="math notranslate nohighlight">
+\[h\left(\boldsymbol{\chi}\right)  = \mathbf{p}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.IMUGNSS.phi">
+<em class="property">classmethod </em><code class="sig-name descname">phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/imugnss.html#IMUGNSS.phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.IMUGNSS.phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi\left(\boldsymbol{\chi}, 
+\boldsymbol{\xi}\right) = \left( \begin{matrix}
+  \mathbf{C} \exp\left(\boldsymbol{\xi}^{(0:3)}\right) \\
+  \mathbf{v} + \boldsymbol{\xi}^{(3:6)} \\
+  \mathbf{p} + \boldsymbol{\xi}^{(6:9)} \\
+  \mathbf{b}_g + \boldsymbol{\xi}^{(9:12)} \\
+  \mathbf{b}_a + \boldsymbol{\xi}^{(12:15)}
+ \end{matrix} \right)\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(3)
+\times \mathbb R^{15}\)</span>.</p>
+<p>Its corresponding inverse operation is <a class="reference internal" href="#ukfm.IMUGNSS.phi_inv" title="ukfm.IMUGNSS.phi_inv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi_inv()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.IMUGNSS.phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/imugnss.html#IMUGNSS.phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.IMUGNSS.phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi^{-1}_{\boldsymbol{\hat{\chi}}}
+\left(\boldsymbol{\chi}\right) = \left( \begin{matrix}
+  \log\left(\mathbf{C} \mathbf{\hat{C}}^T \right)\\
+  \mathbf{v} - \mathbf{\hat{v}} \\
+  \mathbf{p} - \mathbf{\hat{p}} \\
+  \mathbf{b}_g - \mathbf{\hat{b}}_g \\
+  \mathbf{b}_a - \mathbf{\hat{b}}_a
+ \end{matrix} \right)\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(3)
+\times \mathbb R^{15}\)</span>.</p>
+<p>Its corresponding retraction is <a class="reference internal" href="#ukfm.IMUGNSS.phi" title="ukfm.IMUGNSS.phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.IMUGNSS.up_phi">
+<em class="property">classmethod </em><code class="sig-name descname">up_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/imugnss.html#IMUGNSS.up_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.IMUGNSS.up_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction used for updated state and infer Jacobian.</p>
+<p>The retraction <a class="reference internal" href="#ukfm.IMUGNSS.phi" title="ukfm.IMUGNSS.phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi()</span></code></a> applied on the position state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.IMUGNSS.left_phi">
+<em class="property">classmethod </em><code class="sig-name descname">left_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/imugnss.html#IMUGNSS.left_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.IMUGNSS.left_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi\left(\boldsymbol{\chi}, 
+\boldsymbol{\xi}\right) = \left( \begin{matrix}
+  \mathbf{C} \mathbf{C}_\mathbf{T} \\
+  \mathbf{v} + \mathbf{C} \mathbf{r_1} \\
+  \mathbf{p} + \mathbf{C} \mathbf{r_2} \\
+  \mathbf{b}_g + \boldsymbol{\xi}^{(9:12)} \\
+  \mathbf{b}_a + \boldsymbol{\xi}^{(12:15)}
+\end{matrix} \right)\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T} = \exp\left(\boldsymbol{\xi}^{(0:9)}\right) 
+= \begin{bmatrix}
+    \mathbf{C}_\mathbf{T} &amp; \mathbf{r_1}  &amp;\mathbf{r}_2 \\
+    \mathbf{0}^T &amp; &amp; \mathbf{I} 
+\end{bmatrix}\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SE_2(3)
+\times \mathbb{R}^6\)</span> with left multiplication.</p>
+<p>Its corresponding inverse operation is 
+<a class="reference internal" href="#ukfm.IMUGNSS.left_phi_inv" title="ukfm.IMUGNSS.left_phi_inv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">left_phi_inv()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.IMUGNSS.left_phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">left_phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/imugnss.html#IMUGNSS.left_phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.IMUGNSS.left_phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi^{-1}_{\boldsymbol{\hat{\chi}}}
+\left(\boldsymbol{\chi}\right) = \left( \begin{matrix}
+  \log\left(
+  \boldsymbol{\chi}^{-1} \boldsymbol{\hat{\chi}} 
+  \right) \\
+  \mathbf{b}_g - \mathbf{\hat{b}}_g \\
+  \mathbf{b}_a - \mathbf{\hat{b}}_a
+ \end{matrix} \right)\end{split}\]</div>
+<p>The state is viewed as a element 
+<span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SE_2(3)\)</span> with left multiplication.</p>
+<p>Its corresponding retraction is <a class="reference internal" href="#ukfm.IMUGNSS.left_phi" title="ukfm.IMUGNSS.left_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">left_phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.IMUGNSS.right_phi">
+<em class="property">classmethod </em><code class="sig-name descname">right_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/imugnss.html#IMUGNSS.right_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.IMUGNSS.right_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi\left(\boldsymbol{\chi}, \boldsymbol{\xi}\right) 
+= \left( \begin{matrix}
+  \mathbf{C}_\mathbf{T} \mathbf{C}  \\
+  \mathbf{C}_\mathbf{T}\mathbf{v} +  \mathbf{r_1} \\
+  \mathbf{C}_\mathbf{T}\mathbf{p} +  \mathbf{r_2} \\
+  \mathbf{b}_g + \boldsymbol{\xi}^{(9:12)} \\
+  \mathbf{b}_a + \boldsymbol{\xi}^{(12:15)}
+ \end{matrix} \right)\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T} = \exp\left(\boldsymbol{\xi}^{(0:9)}\right)
+ = \begin{bmatrix}
+    \mathbf{C}_\mathbf{T} &amp; \mathbf{r_1}  &amp;\mathbf{r}_2 \\
+    \mathbf{0}^T &amp; &amp; \mathbf{I} 
+\end{bmatrix}\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SE_2(3)
+\times \mathbb{R}^6\)</span> with right multiplication.</p>
+<p>Its corresponding inverse operation is 
+<a class="reference internal" href="#ukfm.IMUGNSS.right_phi_inv" title="ukfm.IMUGNSS.right_phi_inv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_phi_inv()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.IMUGNSS.right_phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">right_phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/imugnss.html#IMUGNSS.right_phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.IMUGNSS.right_phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi^{-1}_{\boldsymbol{\hat{\chi}}}
+\left(\boldsymbol{\chi}\right) = \left( \begin{matrix}
+  \log\left( \boldsymbol{\hat{\chi}}^{-1} 
+  \boldsymbol{\chi} \right) \\
+  \mathbf{b}_g - \mathbf{\hat{b}}_g \\
+  \mathbf{b}_a - \mathbf{\hat{b}}_a
+\end{matrix} \right)\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SE_2(3)
+\times \mathbb{R}^6\)</span> with right multiplication.</p>
+<p>Its corresponding retraction is <a class="reference internal" href="#ukfm.IMUGNSS.right_phi" title="ukfm.IMUGNSS.right_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.IMUGNSS.right_up_phi">
+<em class="property">classmethod </em><code class="sig-name descname">right_up_phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/imugnss.html#IMUGNSS.right_up_phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.IMUGNSS.right_up_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction used for updated state and infer Jacobian.</p>
+<p>The retraction <a class="reference internal" href="#ukfm.IMUGNSS.right_phi" title="ukfm.IMUGNSS.right_phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">right_phi()</span></code></a> applied on the position 
+state.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="pendulum-example">
+<h2>Pendulum Example<a class="headerlink" href="#pendulum-example" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.PENDULUM">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">PENDULUM</code><span class="sig-paren">(</span><em class="sig-param">T</em>, <em class="sig-param">model_freq</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/pendulum.html#PENDULUM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.PENDULUM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pendulum example, where the state lives on the 2-sphere.
+You can have a text description of the spherical pendulum dynamics in
+<a class="reference internal" href="bibliography.html#sjobergan2019" id="id6">[SE19]</a>, Section 7, and  <a class="reference internal" href="bibliography.html#kotaruvariation2019" id="id7">[KS19]</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T</strong> – sequence time (s).</p></li>
+<li><p><strong>model_freq</strong> – model frequency (Hz).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="ukfm.PENDULUM.g">
+<code class="sig-name descname">g</code><em class="property"> = 9.81</em><a class="headerlink" href="#ukfm.PENDULUM.g" title="Permalink to this definition">¶</a></dt>
+<dd><p>gravity constant (m/s^2) <span class="math notranslate nohighlight">\(g\)</span>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ukfm.PENDULUM.m">
+<code class="sig-name descname">m</code><em class="property"> = 1.0</em><a class="headerlink" href="#ukfm.PENDULUM.m" title="Permalink to this definition">¶</a></dt>
+<dd><p>mass of payload (kg) <span class="math notranslate nohighlight">\(m\)</span>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ukfm.PENDULUM.b">
+<code class="sig-name descname">b</code><em class="property"> = 0.0</em><a class="headerlink" href="#ukfm.PENDULUM.b" title="Permalink to this definition">¶</a></dt>
+<dd><p>damping <span class="math notranslate nohighlight">\(b\)</span>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ukfm.PENDULUM.L">
+<code class="sig-name descname">L</code><em class="property"> = 1.3</em><a class="headerlink" href="#ukfm.PENDULUM.L" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wire length <span class="math notranslate nohighlight">\(L\)</span>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ukfm.PENDULUM.STATE">
+<em class="property">class </em><code class="sig-name descname">STATE</code><span class="sig-paren">(</span><em class="sig-param">Rot</em>, <em class="sig-param">u</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/pendulum.html#PENDULUM.STATE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.PENDULUM.STATE" title="Permalink to this definition">¶</a></dt>
+<dd><p>State of the system.</p>
+<p>It represents the orientation of the wire and its angular velocity.</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\chi} \in \mathcal{M} = \left\{ \begin{matrix} 
+\mathbf{C} \in SO(3),
+ \mathbf{u} \in \mathbb R^3
+\end{matrix} \right\}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Rot</strong> – rotation matrix <span class="math notranslate nohighlight">\(\mathbf{C}\)</span>.</p></li>
+<li><p><strong>u</strong> – angular velocity vector <span class="math notranslate nohighlight">\(\mathbf{u}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="ukfm.PENDULUM.INPUT">
+<em class="property">class </em><code class="sig-name descname">INPUT</code><a class="reference internal" href="_modules/ukfm/model/pendulum.html#PENDULUM.INPUT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.PENDULUM.INPUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Input of the propagation model.</p>
+<p>The model does not require any input.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.PENDULUM.f">
+<em class="property">classmethod </em><code class="sig-name descname">f</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">omega</em>, <em class="sig-param">w</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/pendulum.html#PENDULUM.f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.PENDULUM.f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagation function.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{C}_{n+1}  &amp;= \mathbf{C}_{n} \exp\left(\left(\mathbf{u}
++ \mathbf{w}^{(0:3)} \right) dt\right)  \\
+\mathbf{u}_{n+1}  &amp;= \mathbf{u}_{n} + \dot{\mathbf{u}}  dt,\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\dot{\mathbf{u}}  = \begin{bmatrix} 
+-\omega_y  \omega_x\ \\ \omega_x \omega_z
+\\ 0 \end{bmatrix} +
+\frac{g}{l}  \left(\mathbf{z}^b \right)^\wedge
+\mathbf{C}^T \mathbf{z}^b + \mathbf{w}^{(3:6)} \end{split}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>omega</strong> – input <span class="math notranslate nohighlight">\(\boldsymbol{\omega}\)</span>.</p></li>
+<li><p><strong>w</strong> – noise <span class="math notranslate nohighlight">\(\mathbf{w}\)</span>.</p></li>
+<li><p><strong>dt</strong> – integration step <span class="math notranslate nohighlight">\(dt\)</span> (s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.PENDULUM.h">
+<em class="property">classmethod </em><code class="sig-name descname">h</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/pendulum.html#PENDULUM.h"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.PENDULUM.h" title="Permalink to this definition">¶</a></dt>
+<dd><p>Observation function.</p>
+<div class="math notranslate nohighlight">
+\[h\left(\boldsymbol{\chi}\right)  = 
+\mathbf{H} \mathbf{x}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{x} = L \mathbf{C} \mathbf{e}_3\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.PENDULUM.phi">
+<em class="property">classmethod </em><code class="sig-name descname">phi</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/pendulum.html#PENDULUM.phi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.PENDULUM.phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi\left(\boldsymbol{\chi}, \boldsymbol{\xi}\right) = \left( \begin{matrix}
+  \mathbf{C} \exp\left(\boldsymbol{\xi}^{(0:3)}\right) \\
+  \mathbf{v} + \boldsymbol{\xi}^{(3:6)} \\
+  \mathbf{p} + \boldsymbol{\xi}^{(6:9)}
+ \end{matrix} \right)\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(3) \times \mathbb R^6\)</span>.</p>
+<p>Its corresponding inverse operation is <a class="reference internal" href="#ukfm.PENDULUM.phi_inv" title="ukfm.PENDULUM.phi_inv"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi_inv()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>xi</strong> – state uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.PENDULUM.phi_inv">
+<em class="property">classmethod </em><code class="sig-name descname">phi_inv</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">hat_state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/model/pendulum.html#PENDULUM.phi_inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.PENDULUM.phi_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse retraction.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\varphi^{-1}_{\boldsymbol{\hat{\chi}}}\left(\boldsymbol{\chi}\right) = \left( \begin{matrix}
+  \log\left(\mathbf{C} \mathbf{\hat{C}}^T \right)\\
+  \mathbf{v} - \mathbf{\hat{v}} \\
+  \mathbf{p} - \mathbf{\hat{p}} 
+ \end{matrix} \right)\end{split}\]</div>
+<p>The state is viewed as a element <span class="math notranslate nohighlight">\(\boldsymbol{\chi} \in SO(3) \times \mathbb R^6\)</span>.</p>
+<p>Its corresponding retraction is <a class="reference internal" href="#ukfm.PENDULUM.phi" title="ukfm.PENDULUM.phi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phi()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span>.</p></li>
+<li><p><strong>hat_state</strong> – noise-free state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="geometry.html" class="btn btn-neutral float-right" title="Lie Groups" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="filter.html" class="btn btn-neutral" title="Filters" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

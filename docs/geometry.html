@@ -1,0 +1,818 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Lie Groups &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="index.html"/>
+        <link rel="next" title="Matlab" href="matlab.html"/>
+        <link rel="prev" title="Models" href="model.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filter.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model.html">Models</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Lie Groups</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#so-2"><span class="math notranslate nohighlight">\(SO(2)\)</span></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#se-2"><span class="math notranslate nohighlight">\(SE(2)\)</span></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#se-k-2"><span class="math notranslate nohighlight">\(SE_k(2)\)</span></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#so-3"><span class="math notranslate nohighlight">\(SO(3)\)</span></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#se-3"><span class="math notranslate nohighlight">\(SE(3)\)</span></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#se-k-3"><span class="math notranslate nohighlight">\(SE_k(3)\)</span></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Lie Groups</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/geometry.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="lie-groups">
+<span id="geometry"></span><h1>Lie Groups<a class="headerlink" href="#lie-groups" title="Permalink to this headline">¶</a></h1>
+<p>Implementation of the more used matrix Lie groups using numpy. The
+implementation of <span class="math notranslate nohighlight">\(SO(2)\)</span>, <span class="math notranslate nohighlight">\(SE(2)\)</span>, <span class="math notranslate nohighlight">\(SO(3)\)</span>, and <span class="math notranslate nohighlight">\(SE(3)\)</span>
+is based on the liegroups github <a class="reference external" href="https://github.com/utiasSTARS/liegroups">repo</a>. The implementation of
+<span class="math notranslate nohighlight">\(SE_k(2)\)</span> and <span class="math notranslate nohighlight">\(SE_k(3)\)</span> works for any <span class="math notranslate nohighlight">\(k&gt;0\)</span>.</p>
+<div class="section" id="so-2">
+<h2><span class="math notranslate nohighlight">\(SO(2)\)</span><a class="headerlink" href="#so-2" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.SO2">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">SO2</code><a class="reference internal" href="_modules/ukfm/geometry/so2.html#SO2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotation matrix in <span class="math notranslate nohighlight">\(SO(2)\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}SO(2) &amp;= \left\{ \mathbf{C} 
+\in \mathbb{R}^{2 \times 2} ~\middle|~ 
+\mathbf{C}\mathbf{C}^T = \mathbf{1}, \det \mathbf{C} = 
+1 \right\} \\
+\mathfrak{so}(2) &amp;= \left\{ \boldsymbol{\Phi} = \phi^\wedge \in 
+\mathbb{R}^{2 \times 2} ~\middle|~ \phi \in \mathbb{R} \right\}\end{split}\]</div>
+<dl class="method">
+<dt id="ukfm.SO2.exp">
+<em class="property">classmethod </em><code class="sig-name descname">exp</code><span class="sig-paren">(</span><em class="sig-param">phi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so2.html#SO2.exp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO2.exp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exponential map for <span class="math notranslate nohighlight">\(SO(2)\)</span>, which computes a transformation 
+from a tangent vector:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{C}(\phi) =
+\exp(\phi^\wedge) =
+\cos \phi \mathbf{1} + \sin \phi 1^\wedge =
+\begin{bmatrix}
+    \cos \phi  &amp; -\sin \phi  \\
+    \sin \phi &amp; \cos \phi
+\end{bmatrix}\end{split}\]</div>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SO2.log" title="ukfm.SO2.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO2.inv_left_jacobian">
+<em class="property">classmethod </em><code class="sig-name descname">inv_left_jacobian</code><span class="sig-paren">(</span><em class="sig-param">phi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so2.html#SO2.inv_left_jacobian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO2.inv_left_jacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math notranslate nohighlight">\(SO(2)\)</span> inverse left Jacobian.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{J}^{-1}(\phi) =
+\begin{cases}
+    \mathbf{1} - \frac{1}{2} \phi^\wedge, &amp; \text{if } \phi 
+    \text{ is small} \\
+    \frac{\phi}{2} \cot \frac{\phi}{2} \mathbf{1} -
+    \frac{\phi}{2} 1^\wedge, &amp; \text{otherwise}
+\end{cases}\end{split}\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO2.left_jacobian">
+<em class="property">classmethod </em><code class="sig-name descname">left_jacobian</code><span class="sig-paren">(</span><em class="sig-param">phi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so2.html#SO2.left_jacobian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO2.left_jacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math notranslate nohighlight">\(SO(2)\)</span> left Jacobian.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{J}(\phi) =
+\begin{cases}
+    \mathbf{1} + \frac{1}{2} \phi^\wedge, &amp; \text{if } \phi 
+    \text{ is small} \\
+    \frac{\sin \phi}{\phi} \mathbf{1} -
+    \frac{1 - \cos \phi}{\phi} 1^\wedge, &amp; \text{otherwise}
+\end{cases}\end{split}\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO2.log">
+<em class="property">classmethod </em><code class="sig-name descname">log</code><span class="sig-paren">(</span><em class="sig-param">Rot</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so2.html#SO2.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO2.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logarithmic map for <span class="math notranslate nohighlight">\(SO(2)\)</span>, which computes a tangent vector 
+from a transformation:</p>
+<div class="math notranslate nohighlight">
+\[\phi(\mathbf{C}) =
+\ln(\mathbf{C})^\vee =
+\text{atan2}(C_{1,0}, C_{0,0})\]</div>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SO2.exp" title="ukfm.SO2.exp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">exp()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO2.wedge">
+<em class="property">classmethod </em><code class="sig-name descname">wedge</code><span class="sig-paren">(</span><em class="sig-param">phi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so2.html#SO2.wedge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO2.wedge" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math notranslate nohighlight">\(SO(2)\)</span> wedge (skew-symmetric) operator.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{\Phi} =
+\phi^\wedge =
+\begin{bmatrix}
+    0 &amp; -\phi \\
+    \phi &amp; 0
+\end{bmatrix}\end{split}\]</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="se-2">
+<h2><span class="math notranslate nohighlight">\(SE(2)\)</span><a class="headerlink" href="#se-2" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.SE2">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">SE2</code><a class="reference internal" href="_modules/ukfm/geometry/se2.html#SE2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SE2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Homogeneous transformation matrix in <span class="math notranslate nohighlight">\(SE(2)\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{split}SE(2) &amp;= \left\{ \mathbf{T}=
+        \begin{bmatrix}
+            \mathbf{C} &amp; \mathbf{r} \\
+            \mathbf{0}^T &amp; 1
+        \end{bmatrix} \in \mathbb{R}^{3 \times 3} ~\middle|~ 
+        \mathbf{C} \in SO(2), \mathbf{r} \in \mathbb{R}^2 
+        \right\} \\
+\mathfrak{se}(2) &amp;= \left\{ \boldsymbol{\Xi} =
+\boldsymbol{\xi}^\wedge \in \mathbb{R}^{3 \times 3} ~\middle|
+~
+ \boldsymbol{\xi}=
+    \begin{bmatrix}
+        \phi \\  \boldsymbol{\rho}
+    \end{bmatrix} \in \mathbb{R}^3, \boldsymbol{\rho} \in 
+    \mathbb{R}^2, \phi \in \mathbb{R} \right\}\end{split}\]</div>
+<dl class="method">
+<dt id="ukfm.SE2.Ad">
+<em class="property">classmethod </em><code class="sig-name descname">Ad</code><span class="sig-paren">(</span><em class="sig-param">chi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/se2.html#SE2.Ad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SE2.Ad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adjoint matrix of the transformation.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\text{Ad}(\mathbf{T}) =
+\begin{bmatrix}
+    \mathbf{C} &amp; 1^\wedge \mathbf{r} \\
+    \mathbf{0}^T &amp; 1
+\end{bmatrix}
+\in \mathbb{R}^{3 \times 3}\end{split}\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SE2.exp">
+<em class="property">classmethod </em><code class="sig-name descname">exp</code><span class="sig-paren">(</span><em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/se2.html#SE2.exp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SE2.exp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exponential map for <span class="math notranslate nohighlight">\(SE(2)\)</span>, which computes a transformation
+from a tangent vector:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T}(\boldsymbol{\xi}) =
+\exp(\boldsymbol{\xi}^\wedge) =
+\begin{bmatrix}
+    \exp(\phi ^\wedge) &amp; \mathbf{J} \boldsymbol{\rho}  \\
+    \mathbf{0} ^ T &amp; 1
+\end{bmatrix}\end{split}\]</div>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SE2.log" title="ukfm.SE2.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SE2.inv">
+<em class="property">classmethod </em><code class="sig-name descname">inv</code><span class="sig-paren">(</span><em class="sig-param">chi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/se2.html#SE2.inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SE2.inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse map for <span class="math notranslate nohighlight">\(SE(2)\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T}^{-1} =
+\begin{bmatrix}
+    \mathbf{C}^T  &amp; -\mathbf{C}^T \boldsymbol{\rho}
+      \\
+    \mathbf{0} ^ T &amp; 1
+\end{bmatrix}\end{split}\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SE2.log">
+<em class="property">classmethod </em><code class="sig-name descname">log</code><span class="sig-paren">(</span><em class="sig-param">chi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/se2.html#SE2.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SE2.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logarithmic map for <span class="math notranslate nohighlight">\(SE(2)\)</span>, which computes a tangent vector 
+from a transformation:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{\xi}(\mathbf{T}) =
+\ln(\mathbf{T})^\vee =
+\begin{bmatrix}
+\ln(\boldsymbol{C}) ^\vee \\
+    \mathbf{J} ^ {-1} \mathbf{r}
+\end{bmatrix}\end{split}\]</div>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SE2.log" title="ukfm.SE2.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="se-k-2">
+<h2><span class="math notranslate nohighlight">\(SE_k(2)\)</span><a class="headerlink" href="#se-k-2" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.SEK2">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">SEK2</code><a class="reference internal" href="_modules/ukfm/geometry/sek2.html#SEK2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SEK2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Homogeneous transformation matrix in <span class="math notranslate nohighlight">\(SE_k(2)\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{split}SE_k(2) &amp;= \left\{ \mathbf{T}=
+        \begin{bmatrix}
+            \mathbf{C} &amp; \mathbf{r_1} &amp; \cdots &amp;\mathbf{r}_k
+             \\
+            \mathbf{0}^T &amp; &amp;\mathbf{I}&amp;
+        \end{bmatrix} \in \mathbb{R}^{(2+k) \times (2+k)} 
+        ~\middle|~ \mathbf{C} \in SO(2), \mathbf{r}_1 
+        \in \mathbb{R}^2, \cdots, \mathbf{r}_k \in 
+        \mathbb{R}^2 \right\} \\
+\mathfrak{se}_k(2) &amp;= \left\{ \boldsymbol{\Xi} =
+\boldsymbol{\xi}^\wedge \in \mathbb{R}^{(2+k) 
+\times (2+k)} ~\middle|~
+ \boldsymbol{\xi}=
+    \begin{bmatrix}
+        \phi \\ \boldsymbol{\rho}_1 \\ \vdots \\ 
+        \boldsymbol{\rho}_k
+    \end{bmatrix} \in \mathbb{R}^{1+2k}, \boldsymbol{\rho}_1 
+    \in \mathbb{R}^2, \cdots, \boldsymbol{\rho}_k \in 
+    \mathbb{R}^2, \phi \in \mathbb{R} \right\}\end{split}\]</div>
+<dl class="method">
+<dt id="ukfm.SEK2.exp">
+<em class="property">classmethod </em><code class="sig-name descname">exp</code><span class="sig-paren">(</span><em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/sek2.html#SEK2.exp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SEK2.exp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exponential map for <span class="math notranslate nohighlight">\(SE_k(2)\)</span>, which computes a transformation 
+from a tangent vector:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T}(\boldsymbol{\xi}) =
+\exp(\boldsymbol{\xi}^\wedge) =
+\begin{bmatrix}
+    \exp(\phi ^\wedge) &amp; \mathbf{J} \boldsymbol{\rho}_1 &amp; 
+    \cdots &amp;&amp; \mathbf{J} \boldsymbol{\rho}_k  \\
+    \mathbf{0} ^ T &amp; &amp; \mathbf{I} &amp;
+\end{bmatrix}\end{split}\]</div>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SEK2.log" title="ukfm.SEK2.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SEK2.inv">
+<em class="property">classmethod </em><code class="sig-name descname">inv</code><span class="sig-paren">(</span><em class="sig-param">chi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/sek2.html#SEK2.inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SEK2.inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse map for <span class="math notranslate nohighlight">\(SE_k(2)\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T}^{-1} =
+\begin{bmatrix}
+    \mathbf{C}^T  &amp; -\mathbf{C}^T \boldsymbol{\rho}_1  &amp;
+     \cdots &amp; &amp; -\mathbf{C}^T \boldsymbol{\rho}_k \\
+    \mathbf{0} ^ T &amp; &amp; \mathbf{I} &amp;
+\end{bmatrix}\end{split}\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SEK2.log">
+<em class="property">classmethod </em><code class="sig-name descname">log</code><span class="sig-paren">(</span><em class="sig-param">chi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/sek2.html#SEK2.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SEK2.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logarithmic map for <span class="math notranslate nohighlight">\(SE_k(2)\)</span>, which computes a tangent vector 
+from a transformation:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{\xi}(\mathbf{T}) =
+\ln(\mathbf{T})^\vee =
+\begin{bmatrix}
+\ln(\boldsymbol{C}) ^\vee \\
+    \mathbf{J} ^ {-1} \mathbf{r}_1 \\
+    \vdots \\
+    \mathbf{J} ^ {-1} \mathbf{r}_k
+\end{bmatrix}\end{split}\]</div>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SEK2.log" title="ukfm.SEK2.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="so-3">
+<h2><span class="math notranslate nohighlight">\(SO(3)\)</span><a class="headerlink" href="#so-3" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.SO3">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">SO3</code><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotation matrix in <span class="math notranslate nohighlight">\(SO(3)\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{split}SO(3) &amp;= \left\{ \mathbf{C} \in \mathbb{R}^{3 \times 3} 
+~\middle|~ \mathbf{C}\mathbf{C}^T = \mathbf{1}, \det
+ \mathbf{C} = 1 \right\} \\
+\mathfrak{so}(3) &amp;= \left\{ \boldsymbol{\Phi} = 
+\boldsymbol{\phi}^\wedge \in \mathbb{R}^{3 \times 3} 
+~\middle|~ \boldsymbol{\phi} = \phi \mathbf{a} \in \mathbb{R}
+^3, \phi = \Vert \boldsymbol{\phi} \Vert \right\}\end{split}\]</div>
+<dl class="method">
+<dt id="ukfm.SO3.Ad">
+<em class="property">classmethod </em><code class="sig-name descname">Ad</code><span class="sig-paren">(</span><em class="sig-param">Rot</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.Ad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.Ad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adjoint matrix of the transformation.</p>
+<div class="math notranslate nohighlight">
+\[\text{Ad}(\mathbf{C}) = \mathbf{C}
+\in \mathbb{R}^{3 \times 3}\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO3.exp">
+<em class="property">classmethod </em><code class="sig-name descname">exp</code><span class="sig-paren">(</span><em class="sig-param">phi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.exp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.exp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exponential map for <span class="math notranslate nohighlight">\(SO(3)\)</span>, which computes a transformation 
+from a tangent vector:</p>
+<blockquote>
+<div><blockquote>
+<div><div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{C}(\boldsymbol{\phi}) =
+\exp(\boldsymbol{\phi}^\wedge) =
+\begin{cases}
+    \mathbf{1} + \boldsymbol{\phi}^\wedge, 
+    &amp; \text{if } \phi \text{ is small} \\
+    \cos \phi \mathbf{1} +
+    (1 - \cos \phi) \mathbf{a}\mathbf{a}^T +
+    \sin \phi \mathbf{a}^\wedge, &amp; \text{otherwise}
+\end{cases}\end{split}\]</div>
+</div></blockquote>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SO3.log" title="ukfm.SO3.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO3.inv_left_jacobian">
+<em class="property">classmethod </em><code class="sig-name descname">inv_left_jacobian</code><span class="sig-paren">(</span><em class="sig-param">phi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.inv_left_jacobian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.inv_left_jacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math notranslate nohighlight">\(SO(3)\)</span> inverse left Jacobian</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{J}^{-1}(\boldsymbol{\phi}) =
+\begin{cases}
+    \mathbf{1} - \frac{1}{2} \boldsymbol{\phi}^\wedge, &amp;
+        \text{if } \phi \text{ is small} \\
+    \frac{\phi}{2} \cot \frac{\phi}{2} \mathbf{1} +
+    \left( 1 - \frac{\phi}{2} \cot \frac{\phi}{2} 
+    \right) \mathbf{a}\mathbf{a}^T -
+    \frac{\phi}{2} \mathbf{a}^\wedge, &amp; 
+    \text{otherwise}
+\end{cases}\end{split}\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO3.left_jacobian">
+<em class="property">classmethod </em><code class="sig-name descname">left_jacobian</code><span class="sig-paren">(</span><em class="sig-param">phi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.left_jacobian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.left_jacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math notranslate nohighlight">\(SO(3)\)</span> left Jacobian.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{J}(\boldsymbol{\phi}) =
+\begin{cases}
+    \mathbf{1} + \frac{1}{2} \boldsymbol{\phi}^\wedge, &amp;
+     \text{if } \phi \text{ is small} \\
+    \frac{\sin \phi}{\phi} \mathbf{1} +
+    \left(1 - \frac{\sin \phi}{\phi} \right) 
+    \mathbf{a}\mathbf{a}^T +
+    \frac{1 - \cos \phi}{\phi} \mathbf{a}^\wedge, &amp; 
+    \text{otherwise}
+\end{cases}\end{split}\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO3.log">
+<em class="property">classmethod </em><code class="sig-name descname">log</code><span class="sig-paren">(</span><em class="sig-param">Rot</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logarithmic map for <span class="math notranslate nohighlight">\(SO(3)\)</span>, which computes a tangent vector 
+from a transformation:</p>
+<blockquote>
+<div><blockquote>
+<div><div class="math notranslate nohighlight">
+\[\begin{split}\phi &amp;= \frac{1}{2} 
+\left( \mathrm{Tr}(\mathbf{C}) - 1 \right) \\
+\boldsymbol{\phi}(\mathbf{C}) &amp;=
+\ln(\mathbf{C})^\vee =
+\begin{cases}
+    \mathbf{1} - \boldsymbol{\phi}^\wedge, 
+    &amp; \text{if } \phi \text{ is small} \\
+    \left( \frac{1}{2} \frac{\phi}{\sin \phi} 
+    \left( \mathbf{C} - \mathbf{C}^T \right) 
+    \right)^\vee, &amp; \text{otherwise}
+\end{cases}\end{split}\]</div>
+</div></blockquote>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SO3.log" title="ukfm.SO3.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO3.to_rpy">
+<em class="property">classmethod </em><code class="sig-name descname">to_rpy</code><span class="sig-paren">(</span><em class="sig-param">Rot</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.to_rpy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.to_rpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a rotation matrix to RPY Euler angles 
+<span class="math notranslate nohighlight">\((\alpha, \beta, \gamma)\)</span>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO3.vee">
+<em class="property">classmethod </em><code class="sig-name descname">vee</code><span class="sig-paren">(</span><em class="sig-param">Phi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.vee"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.vee" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math notranslate nohighlight">\(SO(3)\)</span> vee operator as defined by 
+<a class="reference internal" href="bibliography.html#barfootassociating2014" id="id1">[BF14]</a>.</p>
+<blockquote>
+<div><blockquote>
+<div><div class="math notranslate nohighlight">
+\[\phi = \boldsymbol{\Phi}^\vee\]</div>
+</div></blockquote>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SO3.wedge" title="ukfm.SO3.wedge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wedge()</span></code></a>.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO3.wedge">
+<em class="property">classmethod </em><code class="sig-name descname">wedge</code><span class="sig-paren">(</span><em class="sig-param">phi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.wedge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.wedge" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math notranslate nohighlight">\(SO(3)\)</span> wedge operator as defined by 
+<a class="reference internal" href="bibliography.html#barfootassociating2014" id="id2">[BF14]</a>.</p>
+<blockquote>
+<div><blockquote>
+<div><div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{\Phi} =
+\boldsymbol{\phi}^\wedge =
+\begin{bmatrix}
+    0 &amp; -\phi_3 &amp; \phi_2 \\
+    \phi_3 &amp; 0 &amp; -\phi_1 \\
+    -\phi_2 &amp; \phi_1 &amp; 0
+\end{bmatrix}\end{split}\]</div>
+</div></blockquote>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SO3.vee" title="ukfm.SO3.vee"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vee()</span></code></a>.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO3.from_rpy">
+<em class="property">classmethod </em><code class="sig-name descname">from_rpy</code><span class="sig-paren">(</span><em class="sig-param">roll</em>, <em class="sig-param">pitch</em>, <em class="sig-param">yaw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.from_rpy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.from_rpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Form a rotation matrix from RPY Euler angles 
+<span class="math notranslate nohighlight">\((\alpha, \beta, \gamma)\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{C} = \mathbf{C}_z(\gamma) \mathbf{C}_y(\beta)
+\mathbf{C}_x(\alpha)\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO3.rotx">
+<em class="property">classmethod </em><code class="sig-name descname">rotx</code><span class="sig-paren">(</span><em class="sig-param">angle_in_radians</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.rotx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.rotx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Form a rotation matrix given an angle in rad about the x-axis.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{C}_x(\phi) = 
+\begin{bmatrix}
+    1 &amp; 0 &amp; 0 \\
+    0 &amp; \cos \phi &amp; -\sin \phi \\
+    0 &amp; \sin \phi &amp; \cos \phi
+\end{bmatrix}\end{split}\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO3.roty">
+<em class="property">classmethod </em><code class="sig-name descname">roty</code><span class="sig-paren">(</span><em class="sig-param">angle_in_radians</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.roty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.roty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Form a rotation matrix given an angle in rad about the y-axis.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{C}_y(\phi) = 
+\begin{bmatrix}
+    \cos \phi &amp; 0 &amp; \sin \phi \\
+    0 &amp; 1 &amp; 0 \\
+    \sin \phi &amp; 0 &amp; \cos \phi
+\end{bmatrix}\end{split}\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SO3.rotz">
+<em class="property">classmethod </em><code class="sig-name descname">rotz</code><span class="sig-paren">(</span><em class="sig-param">angle_in_radians</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.rotz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.rotz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Form a rotation matrix given an angle in rad about the z-axis.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{C}_z(\phi) = 
+\begin{bmatrix}
+    \cos \phi &amp; -\sin \phi &amp; 0 \\
+    \sin \phi  &amp; \cos \phi &amp; 0 \\
+    0 &amp; 0 &amp; 1
+\end{bmatrix}\end{split}\]</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="se-3">
+<h2><span class="math notranslate nohighlight">\(SE(3)\)</span><a class="headerlink" href="#se-3" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.SE3">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">SE3</code><a class="reference internal" href="_modules/ukfm/geometry/se3.html#SE3"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SE3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Homogeneous transformation matrix in <span class="math notranslate nohighlight">\(SE(3)\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}SE(3) &amp;= \left\{ \mathbf{T}=
+        \begin{bmatrix}
+            \mathbf{C} &amp; \mathbf{r} \\
+                \mathbf{0}^T &amp; 1
+        \end{bmatrix} \in \mathbb{R}^{4 \times 4} ~\middle|~ 
+        \mathbf{C} \in SO(3), \mathbf{r} \in \mathbb{R}^3 
+        \right\} \\
+\mathfrak{se}(3) &amp;= \left\{ \boldsymbol{\Xi} =
+\boldsymbol{\xi}^\wedge \in \mathbb{R}^{4 \times 4} ~\middle|~
+ \boldsymbol{\xi}=
+    \begin{bmatrix}
+        \boldsymbol{\phi} \\ \boldsymbol{\rho}
+    \end{bmatrix} \in \mathbb{R}^6, \boldsymbol{\rho} \in 
+    \mathbb{R}^3, \boldsymbol{\phi} \in \mathbb{R}^3 \right\}\end{split}\]</div>
+<dl class="method">
+<dt id="ukfm.SE3.exp">
+<em class="property">classmethod </em><code class="sig-name descname">exp</code><span class="sig-paren">(</span><em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/se3.html#SE3.exp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SE3.exp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exponential map for <span class="math notranslate nohighlight">\(SE(3)\)</span>, which computes a transformation 
+from a tangent vector:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T}(\boldsymbol{\xi}) =
+\exp(\boldsymbol{\xi}^\wedge) =
+\begin{bmatrix}
+    \exp(\boldsymbol{\phi}^\wedge) &amp; \mathbf{J} 
+    \boldsymbol{\rho}  \\
+    \mathbf{0} ^ T &amp; 1
+\end{bmatrix}\end{split}\]</div>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SE3.log" title="ukfm.SE3.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SE3.inv">
+<em class="property">classmethod </em><code class="sig-name descname">inv</code><span class="sig-paren">(</span><em class="sig-param">chi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/se3.html#SE3.inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SE3.inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse map for <span class="math notranslate nohighlight">\(SE(3)\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T}^{-1} =
+\begin{bmatrix}
+    \mathbf{C}^T  &amp; -\mathbf{C}^T \boldsymbol{\rho} 
+     \\
+    \mathbf{0} ^ T &amp; 1
+\end{bmatrix}\end{split}\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SE3.log">
+<em class="property">classmethod </em><code class="sig-name descname">log</code><span class="sig-paren">(</span><em class="sig-param">chi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/se3.html#SE3.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SE3.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logarithmic map for <span class="math notranslate nohighlight">\(SE(3)\)</span>, which computes a tangent vector 
+from a transformation:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{\xi}(\mathbf{T}) =
+\ln(\mathbf{T})^\vee =
+\begin{bmatrix}
+    \mathbf{J} ^ {-1} \mathbf{r} \\
+    \ln(\boldsymbol{C}) ^\vee
+\end{bmatrix}\end{split}\]</div>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SE3.exp" title="ukfm.SE3.exp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">exp()</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="se-k-3">
+<h2><span class="math notranslate nohighlight">\(SE_k(3)\)</span><a class="headerlink" href="#se-k-3" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ukfm.SEK3">
+<em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">SEK3</code><a class="reference internal" href="_modules/ukfm/geometry/sek3.html#SEK3"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SEK3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Homogeneous transformation matrix in <span class="math notranslate nohighlight">\(SE_k(3)\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}SE_k(3) &amp;= \left\{ \mathbf{T}=
+        \begin{bmatrix}
+            \mathbf{C} &amp; \mathbf{r_1} &amp; \cdots &amp;\mathbf{r}_k \\
+            \mathbf{0}^T &amp; &amp; \mathbf{I} &amp;
+        \end{bmatrix} \in \mathbb{R}^{(3+k) \times (3+k)} 
+        ~\middle|~ \mathbf{C} \in SO(3), \mathbf{r}_1 
+        \in \mathbb{R}^3, \cdots, \mathbf{r}_k \in 
+        \mathbb{R}^3 \right\} \\
+\mathfrak{se}_k(3) &amp;= \left\{ \boldsymbol{\Xi} =
+\boldsymbol{\xi}^\wedge \in \mathbb{R}^{(3+k) 
+\times (3+k)} ~\middle|~
+ \boldsymbol{\xi}=
+    \begin{bmatrix}
+        \boldsymbol{\phi} \\ \boldsymbol{\rho}_1  \\ 
+        \vdots  \\ \boldsymbol{\rho}_k
+    \end{bmatrix} \in \mathbb{R}^{3+3k}, \boldsymbol{\phi} 
+    \in \mathbb{R}^3, \boldsymbol{\rho}_1 \in \mathbb{R}^3, 
+    \cdots, \boldsymbol{\rho}_k \in \mathbb{R}^3 \right\}\end{split}\]</div>
+<dl class="method">
+<dt id="ukfm.SEK3.exp">
+<em class="property">classmethod </em><code class="sig-name descname">exp</code><span class="sig-paren">(</span><em class="sig-param">xi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/sek3.html#SEK3.exp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SEK3.exp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exponential map for <span class="math notranslate nohighlight">\(SE_k(3)\)</span>, which computes a transformation 
+from a tangent vector:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T}(\boldsymbol{\xi}) =
+\exp(\boldsymbol{\xi}^\wedge) =
+\begin{bmatrix}
+    \exp(\boldsymbol{\phi}^\wedge) &amp; \mathbf{J} 
+    \boldsymbol{\rho}_1 &amp; \cdots  &amp; \mathbf{J} 
+    \boldsymbol{\rho}_k  \\
+    \mathbf{0} ^ T &amp; &amp; \mathbf{I} &amp;
+\end{bmatrix}\end{split}\]</div>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SEK3.log" title="ukfm.SEK3.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SEK3.inv">
+<em class="property">classmethod </em><code class="sig-name descname">inv</code><span class="sig-paren">(</span><em class="sig-param">chi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/sek3.html#SEK3.inv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SEK3.inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse map for <span class="math notranslate nohighlight">\(SE_k(3)\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{T}^{-1} =
+\begin{bmatrix}
+    \mathbf{C}^T  &amp; -\mathbf{C}^T \boldsymbol{\rho}_1  &amp;
+     \cdots &amp; &amp; -\mathbf{C}^T \boldsymbol{\rho}_k \\
+    \mathbf{0} ^ T &amp; &amp; \mathbf{I} &amp;
+\end{bmatrix}\end{split}\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukfm.SEK3.log">
+<em class="property">classmethod </em><code class="sig-name descname">log</code><span class="sig-paren">(</span><em class="sig-param">chi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/sek3.html#SEK3.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SEK3.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logarithmic map for <span class="math notranslate nohighlight">\(SE_k(3)\)</span>, which computes a tangent vector 
+from a transformation:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{\xi}(\mathbf{T}) =
+\ln(\mathbf{T})^\vee =
+\begin{bmatrix}
+    \ln(\boldsymbol{C}) ^\vee \\
+    \mathbf{J} ^ {-1} \mathbf{r}_1 \\ \vdots \\
+    \mathbf{J} ^ {-1} \mathbf{r}_k
+\end{bmatrix}\end{split}\]</div>
+<p>This is the inverse operation to <a class="reference internal" href="#ukfm.SEK3.exp" title="ukfm.SEK3.exp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">exp()</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="matlab.html" class="btn btn-neutral float-right" title="Matlab" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="model.html" class="btn btn-neutral" title="Models" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

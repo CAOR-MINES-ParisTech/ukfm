@@ -1,0 +1,156 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>benchmark_localization_helper</title><meta name="generator" content="MATLAB 9.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-08-27"><meta name="DC.source" content="benchmark_localization_helper.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">% get estimates and plot figure</span>
+state_table = struct2table(true_state);
+p = cell2mat(state_table.p')';
+ukf_state_table = struct2table(ukf_states);
+ukf_p = cell2mat(ukf_state_table.p')';
+ukf_left_state_table = struct2table(ukf_left_states);
+ukf_left_p = cell2mat(ukf_left_state_table.p')';
+ukf_right_state_table = struct2table(ukf_right_states);
+ukf_right_p = cell2mat(ukf_right_state_table.p')';
+ekf_state_table = struct2table(ekf_states);
+ekf_p = cell2mat(ekf_state_table.p')';
+iekf_state_table = struct2table(iekf_states);
+iekf_p = cell2mat(iekf_state_table.p')';
+
+fig = figure;
+hold <span class="string">on</span>;
+grid <span class="string">on</span>;
+title(<span class="string">'Position in $xy$-plan'</span>,<span class="string">'Interprete'</span>,<span class="string">'latex'</span>)
+xlabel(<span class="string">'$x$ (m)'</span>,<span class="string">'Interprete'</span>,<span class="string">'latex'</span>)
+ylabel(<span class="string">'$y$ (m)'</span>,<span class="string">'Interprete'</span>,<span class="string">'latex'</span>)
+plot(p(:, 1), p(:, 2), <span class="string">'k'</span>);
+plot(ukf_p(:, 1), ukf_p(:, 2), <span class="string">'m'</span>);
+plot(ukf_left_p(:, 1), ukf_left_p(:, 2), <span class="string">'g'</span>);
+plot(ukf_right_p(:, 1), ukf_right_p(:, 2), <span class="string">'c'</span>);
+plot(ekf_p(:, 1), ekf_p(:, 2), <span class="string">''</span>);
+plot(iekf_p(:, 1), iekf_p(:, 2), <span class="string">'b'</span>);
+axis <span class="string">equal</span>;
+legend(<span class="string">'true position'</span>, <span class="string">'standard UKF'</span>, <span class="string">'left UKF'</span>, <span class="string">'right UKF'</span>, <span class="string">'EKF'</span>, <span class="string">'IEKF'</span>);
+print(fig, <span class="string">'benchmark/html/benchmark_localization_01'</span>, <span class="string">'-dpng'</span>, <span class="string">'-r600'</span>)
+
+
+ukf_err_rot = sprintf(<span class="string">'%0.2f'</span>, sqrt(mean(ukf_err(1, :))/N));
+ukf_left_err_rot = sprintf(<span class="string">'%0.2f'</span>, sqrt(mean(ukf_left_err(1, :))/N));
+ukf_right_err_rot = sprintf(<span class="string">'%0.2f'</span>, sqrt(mean(ukf_right_err(1, :))/N));
+ekf_err_rot = sprintf(<span class="string">'%0.2f'</span>, sqrt(mean(ekf_err(1, :))/N));
+iekf_err_rot = sprintf(<span class="string">'%0.2f'</span>, sqrt(mean(iekf_err(1, :))/N));
+
+ukf_err_p = sprintf(<span class="string">'%0.2f'</span>, sqrt(mean(ukf_err(2, :))/N));
+ukf_left_err_p = sprintf(<span class="string">'%0.2f'</span>, sqrt(mean(ukf_left_err(2, :))/N));
+ukf_right_err_p = sprintf(<span class="string">'%0.2f'</span>, sqrt(mean(ukf_right_err(2, :))/N));
+ekf_err_p = sprintf(<span class="string">'%0.2f'</span>, sqrt(mean(ekf_err(2, :))/N));
+iekf_err_p = sprintf(<span class="string">'%0.2f'</span>, sqrt(mean(iekf_err(2, :))/N));
+</pre><img vspace="5" hspace="5" src="benchmark_localization_helper_01.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% get estimates and plot figure
+state_table = struct2table(true_state);
+p = cell2mat(state_table.p')';
+ukf_state_table = struct2table(ukf_states);
+ukf_p = cell2mat(ukf_state_table.p')';
+ukf_left_state_table = struct2table(ukf_left_states);
+ukf_left_p = cell2mat(ukf_left_state_table.p')';
+ukf_right_state_table = struct2table(ukf_right_states);
+ukf_right_p = cell2mat(ukf_right_state_table.p')';
+ekf_state_table = struct2table(ekf_states);
+ekf_p = cell2mat(ekf_state_table.p')';
+iekf_state_table = struct2table(iekf_states);
+iekf_p = cell2mat(iekf_state_table.p')';
+
+fig = figure;
+hold on;
+grid on;
+title('Position in $xy$-plan','Interprete','latex')
+xlabel('$x$ (m)','Interprete','latex')
+ylabel('$y$ (m)','Interprete','latex')
+plot(p(:, 1), p(:, 2), 'k');
+plot(ukf_p(:, 1), ukf_p(:, 2), 'm');
+plot(ukf_left_p(:, 1), ukf_left_p(:, 2), 'g');
+plot(ukf_right_p(:, 1), ukf_right_p(:, 2), 'c');
+plot(ekf_p(:, 1), ekf_p(:, 2), '');
+plot(iekf_p(:, 1), iekf_p(:, 2), 'b');
+axis equal;
+legend('true position', 'standard UKF', 'left UKF', 'right UKF', 'EKF', 'IEKF [BB17]');
+print(fig, 'benchmark/html/benchmark_localization_01', '-dpng', '-r600')
+
+
+ukf_err_rot = sprintf('%0.2f', sqrt(mean(ukf_err(1, :))/N));
+ukf_left_err_rot = sprintf('%0.2f', sqrt(mean(ukf_left_err(1, :))/N));
+ukf_right_err_rot = sprintf('%0.2f', sqrt(mean(ukf_right_err(1, :))/N));
+ekf_err_rot = sprintf('%0.2f', sqrt(mean(ekf_err(1, :))/N));
+iekf_err_rot = sprintf('%0.2f', sqrt(mean(iekf_err(1, :))/N));
+
+ukf_err_p = sprintf('%0.2f', sqrt(mean(ukf_err(2, :))/N));
+ukf_left_err_p = sprintf('%0.2f', sqrt(mean(ukf_left_err(2, :))/N));
+ukf_right_err_p = sprintf('%0.2f', sqrt(mean(ukf_right_err(2, :))/N));
+ekf_err_p = sprintf('%0.2f', sqrt(mean(ekf_err(2, :))/N));
+iekf_err_p = sprintf('%0.2f', sqrt(mean(iekf_err(2, :))/N));
+##### SOURCE END #####
+--></body></html>

@@ -1,0 +1,69 @@
+clear all;
+close all;
+% addpath ../ukf;
+% addpath ../geometry;
+%% Description
+% group is
+% phi is
+
+%% Simulation Parameters
+T = 60; % sequence time
+odo_freq = 10; % Hz
+odo_noise_std = [2; 5/180*pi];
+gps_freq = 2; % Hz
+gps_noise_std = 4;
+
+%% Filter parameters
+ukf_Q = diag(odo_noise_std.^2);
+ukf_R = gps_noise_std^2 * eye(2);
+ukf_P0 = zeros(3, 3);
+ukf_f = @localization_f;
+ukf_h = @localization_h;
+ukf_phi = @localization_phi;
+ukf_phi_inv = @localization_phi_inv;
+
+%% Simulation Initialization
+N = T*odo_freq;
+alpha = 1e-2;
+ukf_weights = ukf_set_weight(3, 2, alpha);
+ukf_cholQ = chol(ukf_Q);
+dt = 1/odo_freq;
+
+
+%% Simulation
+[chi, omega] = localization_simu_f(T, odo_freq, odo_noise_std);
+[y, n_update] = localization_simu_h(chi, T, odo_freq, gps_freq, gps_noise_std);
+
+% plot
+% localization_simu_plot(chi, y);
+% pause(1);
+
+%% Filtering Initialization
+ukf_chi = chi(1);
+ukf_chi_mat = ukf_chi;
+ukf_P = ukf_P0;
+d = length(ukf_P);
+ukf_Ps = zeros(N, d, d);
+ukf_Ps(1, :, :) = ukf_P;
+
+%% Filtering
+n_y = 1;
+for n = 2:N
+    [ukf_chi, ukf_P] = ukf_propagation(ukf_chi, ukf_P, omega(n-1), ukf_f, dt, ukf_phi, ukf_phi_inv, ukf_cholQ, ukf_weights.propagation);
+    if n_update(n) == 1
+       [ukf_chi, ukf_P] = ukf_update(ukf_chi, ukf_P, y(:, n_y), ukf_h, ukf_phi, ukf_R, ukf_weights.update);
+        n_y = n_y + 1;
+    end
+    % save estimates
+    ukf_chi_mat(n) = ukf_chi;
+    ukf_Ps(n, :, :) = ukf_P;
+    
+end
+
+%% Results
+
+% plot
+localization_results_plot(ukf_chi_mat, ukf_Ps, chi)
+
+% display error
+

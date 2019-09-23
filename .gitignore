@@ -1,0 +1,11 @@
+.idea
+*/__pycache__
+*.pyc
+docsource/build
+.vscode
+python/ukfm.egg-info
+python/venv
+python/.idea
+python/.vscode
+TODO.txt
+Brossard2019UKF-M.pdf

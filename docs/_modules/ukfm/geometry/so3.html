@@ -1,0 +1,498 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ukfm.geometry.so3 &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="../../../_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../filter.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../geometry.html">Lie Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>ukfm.geometry.so3</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for ukfm.geometry.so3</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="SO3"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3">[docs]</a><span class="k">class</span> <span class="nc">SO3</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Rotation matrix in :math:`SO(3)`</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            SO(3) &amp;= \\left\\{ \\mathbf{C} \\in \\mathbb{R}^{3 \\times 3} </span>
+<span class="sd">            ~\\middle|~ \\mathbf{C}\\mathbf{C}^T = \\mathbf{1}, \\det</span>
+<span class="sd">             \\mathbf{C} = 1 \\right\\} \\\\</span>
+<span class="sd">            \\mathfrak{so}(3) &amp;= \\left\\{ \\boldsymbol{\\Phi} = </span>
+<span class="sd">            \\boldsymbol{\\phi}^\\wedge \\in \\mathbb{R}^{3 \\times 3} </span>
+<span class="sd">            ~\\middle|~ \\boldsymbol{\\phi} = \\phi \\mathbf{a} \\in \\mathbb{R}</span>
+<span class="sd">            ^3, \\phi = \\Vert \\boldsymbol{\\phi} \\Vert \\right\\}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#  tolerance criterion</span>
+    <span class="n">TOL</span> <span class="o">=</span> <span class="mf">1e-8</span>
+    <span class="n">Id_3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SO3.Ad"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3.Ad">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">Ad</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">Rot</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adjoint matrix of the transformation.</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \\text{Ad}(\\mathbf{C}) = \\mathbf{C}</span>
+<span class="sd">            \\in \\mathbb{R}^{3 \\times 3}</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Rot</span></div>
+
+<div class="viewcode-block" id="SO3.exp"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3.exp">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">exp</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Exponential map for :math:`SO(3)`, which computes a transformation </span>
+<span class="sd">        from a tangent vector:</span>
+
+<span class="sd">                .. math::</span>
+
+<span class="sd">                    \\mathbf{C}(\\boldsymbol{\\phi}) =</span>
+<span class="sd">                    \\exp(\\boldsymbol{\\phi}^\wedge) =</span>
+<span class="sd">                    \\begin{cases}</span>
+<span class="sd">                        \\mathbf{1} + \\boldsymbol{\\phi}^\wedge, </span>
+<span class="sd">                        &amp; \\text{if } \\phi \\text{ is small} \\\\</span>
+<span class="sd">                        \\cos \\phi \\mathbf{1} +</span>
+<span class="sd">                        (1 - \\cos \\phi) \\mathbf{a}\\mathbf{a}^T +</span>
+<span class="sd">                        \\sin \\phi \\mathbf{a}^\\wedge, &amp; \\text{otherwise}</span>
+<span class="sd">                    \\end{cases}</span>
+
+<span class="sd">            This is the inverse operation to :meth:`~ukfm.SO3.log`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">angle</span> <span class="o">&lt;</span> <span class="bp">cls</span><span class="o">.</span><span class="n">TOL</span><span class="p">:</span>
+            <span class="c1"># Near |phi|==0, use first order Taylor expansion</span>
+            <span class="n">Rot</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Id_3</span> <span class="o">+</span> <span class="n">SO3</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="n">phi</span> <span class="o">/</span> <span class="n">angle</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+            <span class="n">Rot</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Id_3</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">c</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span>
+                                                <span class="n">axis</span><span class="p">)</span> <span class="o">+</span> <span class="n">s</span> <span class="o">*</span> <span class="bp">cls</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Rot</span></div>
+
+<div class="viewcode-block" id="SO3.inv_left_jacobian"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3.inv_left_jacobian">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">inv_left_jacobian</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:math:`SO(3)` inverse left Jacobian</span>
+<span class="sd">    </span>
+<span class="sd">            .. math::</span>
+<span class="sd">                \\mathbf{J}^{-1}(\\boldsymbol{\\phi}) =</span>
+<span class="sd">                \\begin{cases}</span>
+<span class="sd">                    \\mathbf{1} - \\frac{1}{2} \\boldsymbol{\\phi}^\wedge, &amp;</span>
+<span class="sd">                        \\text{if } \\phi \\text{ is small} \\\\</span>
+<span class="sd">                    \\frac{\\phi}{2} \\cot \\frac{\\phi}{2} \\mathbf{1} +</span>
+<span class="sd">                    \\left( 1 - \\frac{\\phi}{2} \\cot \\frac{\\phi}{2} </span>
+<span class="sd">                    \\right) \\mathbf{a}\\mathbf{a}^T -</span>
+<span class="sd">                    \\frac{\\phi}{2} \\mathbf{a}^\\wedge, &amp; </span>
+<span class="sd">                    \\text{otherwise}</span>
+<span class="sd">                \\end{cases}</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">angle</span> <span class="o">&lt;</span> <span class="bp">cls</span><span class="o">.</span><span class="n">TOL</span><span class="p">:</span>
+            <span class="c1"># Near |phi|==0, use first order Taylor expansion</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">cls</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="n">phi</span> <span class="o">/</span> <span class="n">angle</span>
+            <span class="n">half_angle</span> <span class="o">=</span> <span class="n">angle</span><span class="o">/</span><span class="mi">2</span>
+            <span class="n">cot</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">half_angle</span><span class="p">)</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">half_angle</span> <span class="o">*</span> <span class="n">cot</span> <span class="o">*</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Id_3</span> <span class="o">+</span> \
+                <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">half_angle</span> <span class="o">*</span> <span class="n">cot</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span> <span class="o">-</span>\
+                <span class="n">half_angle</span> <span class="o">*</span> <span class="bp">cls</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">J</span></div>
+
+<div class="viewcode-block" id="SO3.left_jacobian"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3.left_jacobian">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">left_jacobian</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:math:`SO(3)` left Jacobian.</span>
+
+<span class="sd">                .. math::</span>
+
+<span class="sd">                    \\mathbf{J}(\\boldsymbol{\\phi}) =</span>
+<span class="sd">                    \\begin{cases}</span>
+<span class="sd">                        \\mathbf{1} + \\frac{1}{2} \\boldsymbol{\\phi}^\wedge, &amp;</span>
+<span class="sd">                         \\text{if } \\phi \\text{ is small} \\\\</span>
+<span class="sd">                        \\frac{\\sin \\phi}{\\phi} \\mathbf{1} +</span>
+<span class="sd">                        \\left(1 - \\frac{\\sin \\phi}{\\phi} \\right) </span>
+<span class="sd">                        \\mathbf{a}\\mathbf{a}^T +</span>
+<span class="sd">                        \\frac{1 - \\cos \\phi}{\\phi} \\mathbf{a}^\\wedge, &amp; </span>
+<span class="sd">                        \\text{otherwise}</span>
+<span class="sd">                    \\end{cases}</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">angle</span> <span class="o">&lt;</span> <span class="bp">cls</span><span class="o">.</span><span class="n">TOL</span><span class="p">:</span>
+            <span class="c1"># Near |phi|==0, use first order Taylor expansion</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Id_3</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="n">SO3</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="n">phi</span> <span class="o">/</span> <span class="n">angle</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span> <span class="o">/</span> <span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Id_3</span> <span class="o">+</span> \
+                <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span> <span class="o">/</span> <span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span> <span class="o">+</span>\
+                <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span> <span class="o">/</span> <span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="bp">cls</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">J</span></div>
+
+<div class="viewcode-block" id="SO3.log"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3.log">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">Rot</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Logarithmic map for :math:`SO(3)`, which computes a tangent vector </span>
+<span class="sd">        from a transformation:</span>
+
+<span class="sd">                .. math::</span>
+<span class="sd">                    \\phi &amp;= \\frac{1}{2} </span>
+<span class="sd">                    \\left( \\mathrm{Tr}(\\mathbf{C}) - 1 \\right) \\\\</span>
+<span class="sd">                    \\boldsymbol{\\phi}(\\mathbf{C}) &amp;=</span>
+<span class="sd">                    \\ln(\\mathbf{C})^\\vee =</span>
+<span class="sd">                    \\begin{cases}</span>
+<span class="sd">                        \\mathbf{1} - \\boldsymbol{\\phi}^\wedge, </span>
+<span class="sd">                        &amp; \\text{if } \\phi \\text{ is small} \\\\</span>
+<span class="sd">                        \\left( \\frac{1}{2} \\frac{\\phi}{\\sin \\phi} </span>
+<span class="sd">                        \\left( \\mathbf{C} - \\mathbf{C}^T \\right) </span>
+<span class="sd">                        \\right)^\\vee, &amp; \\text{otherwise}</span>
+<span class="sd">                    \\end{cases}</span>
+
+<span class="sd">            This is the inverse operation to :meth:`~ukfm.SO3.log`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cos_angle</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">Rot</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
+        <span class="c1"># Clip np.cos(angle) to its proper domain to avoid NaNs from rounding</span>
+        <span class="c1"># errors</span>
+        <span class="n">cos_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">cos_angle</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">cos_angle</span><span class="p">)</span>
+
+        <span class="c1"># If angle is close to zero, use first-order Taylor expansion</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">cls</span><span class="o">.</span><span class="n">TOL</span><span class="p">:</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">vee</span><span class="p">(</span><span class="n">Rot</span> <span class="o">-</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Id_3</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Otherwise take the matrix logarithm and return the rotation vector</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">vee</span><span class="p">((</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">angle</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">Rot</span> <span class="o">-</span> <span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">phi</span></div>
+
+<div class="viewcode-block" id="SO3.to_rpy"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3.to_rpy">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">to_rpy</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">Rot</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a rotation matrix to RPY Euler angles </span>
+<span class="sd">        :math:`(\\alpha, \\beta, \\gamma)`.&quot;&quot;&quot;</span>
+        <span class="n">pitch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="o">-</span><span class="n">Rot</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Rot</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">Rot</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pitch</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">cls</span><span class="o">.</span><span class="n">TOL</span><span class="p">:</span>
+            <span class="n">yaw</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">roll</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">Rot</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">Rot</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pitch</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-9</span><span class="p">:</span>
+            <span class="n">yaw</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="n">roll</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">Rot</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">Rot</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sec_pitch</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">pitch</span><span class="p">)</span>
+            <span class="n">yaw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">Rot</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">sec_pitch</span><span class="p">,</span> <span class="n">Rot</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">sec_pitch</span><span class="p">)</span>
+            <span class="n">roll</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">Rot</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">sec_pitch</span><span class="p">,</span> <span class="n">Rot</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">sec_pitch</span><span class="p">)</span>
+
+        <span class="n">rpy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">roll</span><span class="p">,</span> <span class="n">pitch</span><span class="p">,</span> <span class="n">yaw</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">rpy</span></div>
+
+<div class="viewcode-block" id="SO3.vee"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3.vee">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">vee</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">Phi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:math:`SO(3)` vee operator as defined by </span>
+<span class="sd">        :cite:`barfootAssociating2014`.</span>
+
+<span class="sd">                .. math::</span>
+
+<span class="sd">                    \\phi = \\boldsymbol{\\Phi}^\\vee</span>
+
+<span class="sd">            This is the inverse operation to :meth:`~ukfm.SO3.wedge`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Phi</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">Phi</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">Phi</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+        <span class="k">return</span> <span class="n">phi</span></div>
+
+<div class="viewcode-block" id="SO3.wedge"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3.wedge">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">wedge</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:math:`SO(3)` wedge operator as defined by </span>
+<span class="sd">        :cite:`barfootAssociating2014`.</span>
+
+<span class="sd">                .. math::</span>
+
+<span class="sd">                    \\boldsymbol{\\Phi} =</span>
+<span class="sd">                    \\boldsymbol{\\phi}^\\wedge =</span>
+<span class="sd">                    \\begin{bmatrix}</span>
+<span class="sd">                        0 &amp; -\\phi_3 &amp; \\phi_2 \\\\</span>
+<span class="sd">                        \\phi_3 &amp; 0 &amp; -\\phi_1 \\\\</span>
+<span class="sd">                        -\\phi_2 &amp; \\phi_1 &amp; 0</span>
+<span class="sd">                    \\end{bmatrix}</span>
+
+<span class="sd">            This is the inverse operation to :meth:`~ukfm.SO3.vee`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">phi</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">phi</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+                        <span class="p">[</span><span class="n">phi</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">phi</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+                        <span class="p">[</span><span class="o">-</span><span class="n">phi</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">phi</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">]])</span>
+        <span class="k">return</span> <span class="n">Phi</span></div>
+
+<div class="viewcode-block" id="SO3.from_rpy"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3.from_rpy">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_rpy</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">roll</span><span class="p">,</span> <span class="n">pitch</span><span class="p">,</span> <span class="n">yaw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Form a rotation matrix from RPY Euler angles </span>
+<span class="sd">        :math:`(\\alpha, \\beta, \\gamma)`.</span>
+
+<span class="sd">        .. math:: \\mathbf{C} = \\mathbf{C}_z(\\gamma) \\mathbf{C}_y(\\beta)</span>
+<span class="sd">            \\mathbf{C}_x(\\alpha)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">rotz</span><span class="p">(</span><span class="n">yaw</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">roty</span><span class="p">(</span><span class="n">pitch</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">rotx</span><span class="p">(</span><span class="n">roll</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="SO3.rotx"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3.rotx">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">rotx</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">angle_in_radians</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Form a rotation matrix given an angle in rad about the x-axis.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\mathbf{C}_x(\\phi) = </span>
+<span class="sd">            \\begin{bmatrix}</span>
+<span class="sd">                1 &amp; 0 &amp; 0 \\\\</span>
+<span class="sd">                0 &amp; \\cos \\phi &amp; -\\sin \\phi \\\\</span>
+<span class="sd">                0 &amp; \\sin \\phi &amp; \\cos \\phi</span>
+<span class="sd">            \\end{bmatrix}</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle_in_radians</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle_in_radians</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span>  <span class="n">c</span><span class="p">]])</span></div>
+
+<div class="viewcode-block" id="SO3.roty"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3.roty">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">roty</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">angle_in_radians</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Form a rotation matrix given an angle in rad about the y-axis.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\mathbf{C}_y(\\phi) = </span>
+<span class="sd">            \\begin{bmatrix}</span>
+<span class="sd">                \\cos \\phi &amp; 0 &amp; \\sin \\phi \\\\</span>
+<span class="sd">                0 &amp; 1 &amp; 0 \\\\</span>
+<span class="sd">                \\sin \\phi &amp; 0 &amp; \\cos \\phi</span>
+<span class="sd">            \\end{bmatrix}</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle_in_radians</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle_in_radians</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">c</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">,</span> <span class="n">s</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span>
+                         <span class="p">[</span><span class="o">-</span><span class="n">s</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">c</span><span class="p">]])</span></div>
+
+<div class="viewcode-block" id="SO3.rotz"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3.rotz">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">rotz</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">angle_in_radians</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Form a rotation matrix given an angle in rad about the z-axis.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\mathbf{C}_z(\\phi) = </span>
+<span class="sd">            \\begin{bmatrix}</span>
+<span class="sd">                \\cos \\phi &amp; -\\sin \\phi &amp; 0 \\\\</span>
+<span class="sd">                \\sin \\phi  &amp; \\cos \\phi &amp; 0 \\\\</span>
+<span class="sd">                0 &amp; 0 &amp; 1</span>
+<span class="sd">            \\end{bmatrix}</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle_in_radians</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle_in_radians</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">],</span>
+                         <span class="p">[</span><span class="n">s</span><span class="p">,</span>  <span class="n">c</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">],</span>
+                         <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span></div></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

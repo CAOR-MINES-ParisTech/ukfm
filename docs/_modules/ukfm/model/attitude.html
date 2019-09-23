@@ -1,0 +1,577 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ukfm.model.attitude &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="../../../_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../filter.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../geometry.html">Lie Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>ukfm.model.attitude</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for ukfm.model.attitude</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">ukfm</span> <span class="k">import</span> <span class="n">SO3</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+
+<div class="viewcode-block" id="ATTITUDE"><a class="viewcode-back" href="../../../model.html#ukfm.ATTITUDE">[docs]</a><span class="k">class</span> <span class="nc">ATTITUDE</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;3D attitude estimation from an IMU equipped with gyro, accelerometer and </span>
+<span class="sd">    magnetometer. You can have a text description in :cite:`kokUsing2017`, </span>
+<span class="sd">    Section IV.</span>
+
+<span class="sd">    :arg T: sequence time (s).</span>
+<span class="sd">    :arg imu_freq: IMU frequency (Hz).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">9.82</span><span class="p">])</span>
+    <span class="s2">&quot;gravity vector (m/s^2) :math:`</span><span class="se">\\</span><span class="s2">mathbf</span><span class="si">{g}</span><span class="s2">`.&quot;</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.33</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.95</span><span class="p">])</span>
+    <span class="s2">&quot;normed magnetic field in Sweden :math:`</span><span class="se">\\</span><span class="s2">mathbf</span><span class="si">{b}</span><span class="s2">`.&quot;</span>
+
+<div class="viewcode-block" id="ATTITUDE.STATE"><a class="viewcode-back" href="../../../model.html#ukfm.ATTITUDE.STATE">[docs]</a>    <span class="k">class</span> <span class="nc">STATE</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;State of the system.</span>
+
+<span class="sd">        It represents the orientation of a platform.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\boldsymbol{\\chi} \in \\mathcal{M} = \\left\\{ </span>
+<span class="sd">           \\mathbf{C} \in SO(3) \\right\\}</span>
+
+<span class="sd">        :ivar Rot: rotation matrix :math:`\mathbf{C}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Rot</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Rot</span> <span class="o">=</span> <span class="n">Rot</span></div>
+
+<div class="viewcode-block" id="ATTITUDE.INPUT"><a class="viewcode-back" href="../../../model.html#ukfm.ATTITUDE.INPUT">[docs]</a>    <span class="k">class</span> <span class="nc">INPUT</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Input of the propagation model.</span>
+
+<span class="sd">        The input is the gyro measurement from an Inertial Measurement Unit</span>
+<span class="sd">        (IMU).</span>
+
+<span class="sd">        .. math:: </span>
+<span class="sd">            \\boldsymbol{\\omega} \in \\mathcal{M} = \\left\\{ </span>
+<span class="sd">            \\mathbf{u} \in \\mathbb R^3 \\right\\}</span>
+
+<span class="sd">        :ivar gyro: 3D gyro :math:`\mathbf{u}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gyro</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gyro</span> <span class="o">=</span> <span class="n">gyro</span></div>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">imu_freq</span><span class="p">):</span>
+        <span class="c1"># sequence time (s)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">T</span>
+        <span class="c1"># IMU frequency (Hz)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imu_freq</span> <span class="o">=</span> <span class="n">imu_freq</span>
+        <span class="c1"># total number of timestamps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">T</span><span class="o">*</span><span class="n">imu_freq</span>
+        <span class="c1"># integration step (s)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">imu_freq</span>
+
+<div class="viewcode-block" id="ATTITUDE.f"><a class="viewcode-back" href="../../../model.html#ukfm.ATTITUDE.f">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Propagation function.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\mathbf{C}_{n+1}  = \\mathbf{C}_{n} </span>
+<span class="sd">            \\exp\\left(\\left(\\mathbf{u} + \\mathbf{w} \\right) </span>
+<span class="sd">            dt \\right)</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var omega: input :math:`\\boldsymbol{\\omega}`.</span>
+<span class="sd">        :var w: noise :math:`\\mathbf{w}`.</span>
+<span class="sd">        :var dt: integration step :math:`dt` (s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_state</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
+            <span class="n">Rot</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">omega</span><span class="o">.</span><span class="n">gyro</span> <span class="o">+</span> <span class="n">w</span><span class="p">)</span><span class="o">*</span><span class="n">dt</span><span class="p">)),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_state</span></div>
+
+<div class="viewcode-block" id="ATTITUDE.h"><a class="viewcode-back" href="../../../model.html#ukfm.ATTITUDE.h">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">h</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Observation function.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            h\\left(\\boldsymbol{\\chi}\\right)  = \\begin{bmatrix} </span>
+<span class="sd">            \\mathbf{C}^T \\mathbf{g} \\\\</span>
+<span class="sd">            \\mathbf{C}^T \\mathbf{b}</span>
+<span class="sd">            \\end{bmatrix}</span>
+
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">g</span><span class="p">),</span>
+                       <span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">b</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="n">y</span></div>
+
+<div class="viewcode-block" id="ATTITUDE.phi"><a class="viewcode-back" href="../../../model.html#ukfm.ATTITUDE.phi">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">phi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">xi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retraction.</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">          \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) = </span>
+<span class="sd">            \\mathbf{C} \\exp\\left(\\boldsymbol{\\xi}\\right)</span>
+
+
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)`</span>
+<span class="sd">        with left multiplication.</span>
+
+<span class="sd">        Its corresponding inverse operation is :meth:`~ukfm.ATTITUDE.phi_inv`.</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var xi: state uncertainty :math:`\\boldsymbol{\\xi}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_state</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
+            <span class="n">Rot</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">xi</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_state</span></div>
+
+<div class="viewcode-block" id="ATTITUDE.phi_inv"><a class="viewcode-back" href="../../../model.html#ukfm.ATTITUDE.phi_inv">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">phi_inv</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">hat_state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}</span>
+<span class="sd">          \\right) = \\log\\left(</span>
+<span class="sd">            \\boldsymbol{\chi}^{-1} \\boldsymbol{\\hat{\\chi}} \\right)</span>
+
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)`</span>
+<span class="sd">         with left multiplication.</span>
+
+<span class="sd">        Its corresponding retraction is :meth:`~ukfm.ATTITUDE.phi`.</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var hat_state: noise-free state :math:`\\boldsymbol{\hat{\\chi}}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">hat_state</span><span class="o">.</span><span class="n">Rot</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">xi</span></div>
+
+<div class="viewcode-block" id="ATTITUDE.right_phi"><a class="viewcode-back" href="../../../model.html#ukfm.ATTITUDE.right_phi">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">right_phi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">xi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retraction.</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">          \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) = </span>
+<span class="sd">            \\exp\\left(\\boldsymbol{\\xi}\\right) \\mathbf{C} </span>
+
+
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)` </span>
+<span class="sd">        with right multiplication.</span>
+
+<span class="sd">        Its corresponding inverse operation is </span>
+<span class="sd">        :meth:`~ukfm.ATTITUDE.right_phi_inv`.</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var xi: state uncertainty :math:`\\boldsymbol{\\xi}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_state</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
+            <span class="n">Rot</span><span class="o">=</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_state</span></div>
+
+<div class="viewcode-block" id="ATTITUDE.right_phi_inv"><a class="viewcode-back" href="../../../model.html#ukfm.ATTITUDE.right_phi_inv">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">right_phi_inv</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">hat_state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}</span>
+<span class="sd">          \\right) = \\log\\left(</span>
+<span class="sd">            \\boldsymbol{\\hat{\\chi}}\\boldsymbol{\chi}^{-1} \\right)</span>
+
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)` </span>
+<span class="sd">        with left multiplication.</span>
+
+<span class="sd">        Its corresponding retraction is :meth:`~ukfm.ATTITUDE.right_phi`.</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var hat_state: noise-free state :math:`\\boldsymbol{\hat{\\chi}}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">hat_state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">xi</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">ekf_FG_ana</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">dt</span><span class="o">*</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span>
+        <span class="k">return</span> <span class="n">F</span><span class="p">,</span> <span class="n">G</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">ekf_H_ana</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="o">-</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">g</span><span class="p">)),</span>
+                        <span class="o">-</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">b</span><span class="p">))])</span>
+        <span class="k">return</span> <span class="n">H</span>
+
+    <span class="k">def</span> <span class="nf">simu_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imu_std</span><span class="p">):</span>
+        <span class="c1"># The robot is 2 s stationary and then have constant angular velocity</span>
+        <span class="c1"># around gravity</span>
+
+        <span class="n">n_T</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># increment for angular velocity</span>
+        <span class="n">omega_T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>  <span class="c1"># first velocity (robot is first stationary)</span>
+        <span class="n">omega_move</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span>
+
+        <span class="c1"># set noise to zero to compute true trajectory</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="c1"># init variables at zero and do for loop</span>
+        <span class="n">omegas</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span><span class="n">Rot</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="c1"># change true input</span>
+            <span class="k">if</span> <span class="n">n_T</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">omega_T</span> <span class="o">=</span> <span class="n">omega_move</span>
+            <span class="n">n_T</span> <span class="o">=</span> <span class="n">n_T</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
+            <span class="c1"># true input</span>
+            <span class="n">omegas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">INPUT</span><span class="p">(</span><span class="n">omega_T</span><span class="p">))</span>
+            <span class="c1"># propagate state</span>
+            <span class="n">states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">))</span>
+            <span class="c1"># noisy input</span>
+            <span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">gyro</span> <span class="o">=</span> <span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">gyro</span> <span class="o">+</span> <span class="n">imu_std</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">states</span><span class="p">,</span> <span class="n">omegas</span>
+
+    <span class="k">def</span> <span class="nf">simu_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">imu_std</span><span class="p">):</span>
+        <span class="c1"># total number of timestamps</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">g</span> <span class="o">+</span> <span class="n">imu_std</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="mi">3</span><span class="p">:]</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">+</span> <span class="n">imu_std</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">y</span>
+
+    <span class="k">def</span> <span class="nf">plot_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hat_states</span><span class="p">,</span> <span class="n">hat_Ps</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">omegas</span><span class="p">):</span>
+        <span class="n">Rots</span><span class="p">,</span> <span class="n">rpys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_states</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">hat_Rots</span><span class="p">,</span> <span class="n">hat_rpys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_states</span><span class="p">(</span><span class="n">hat_states</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">(</span><span class="n">Rots</span><span class="p">,</span> <span class="n">hat_Rots</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+
+        <span class="n">ukf3sigma</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">hat_Ps</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span>
+                                 <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">hat_Ps</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
+                                 <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">hat_Ps</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])])</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;orientation (deg)&#39;</span><span class="p">,</span> 
+        <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Orientation&#39;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">rpys</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">rpys</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;yellow&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">rpys</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;roll&#39;</span><span class="p">,</span> <span class="s1">&#39;pitch&#39;</span><span class="p">,</span> <span class="s1">&#39;yaw&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> 
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Roll error (deg)&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Roll error&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">errors</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span>   <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span>  <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;UKF error&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\sigma$ UKF&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Pitch error (deg)&#39;</span><span class="p">,</span> 
+        <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Pitch error&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">errors</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:],</span>   <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:],</span>  <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;UKF error&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\sigma$ UKF&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> 
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Yaw error (deg)&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Yaw error&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">errors</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span>   <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span>  <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;UKF error&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\sigma$ UKF&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> 
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_states</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="n">Rots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">rpys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span>
+            <span class="n">rpys</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">to_rpy</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Rots</span><span class="p">,</span> <span class="n">rpys</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">errors</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">Rots</span><span class="p">,</span> <span class="n">hat_Rots</span><span class="p">):</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">Rots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="c1"># get true states and estimates, and orientation error</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">errors</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">hat_Rots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">errors</span>
+
+    <span class="k">def</span> <span class="nf">benchmark_print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left_ukf_err</span><span class="p">,</span> <span class="n">right_ukf_err</span><span class="p">,</span> <span class="n">ekf_err</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">rmse</span><span class="p">(</span><span class="n">errs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">errs</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+
+        <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="c1"># average over Monte-Carlo and angles</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+        
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;error (deg)&#39;</span><span class="p">,</span>
+               <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Orientation error(deg)&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">left_ukf_err</span><span class="p">),</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">right_ukf_err</span><span class="p">),</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;cyan&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">ekf_err</span><span class="p">),</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;\textbf{left UKF}&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\textbf{right UKF}&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;EKF&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> 
+
+        <span class="n">left_ukf_err_rot</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{:.2f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">rmse</span><span class="p">(</span><span class="n">left_ukf_err</span><span class="p">))</span>
+        <span class="n">right_ukf_err_rot</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{:.2f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">rmse</span><span class="p">(</span><span class="n">right_ukf_err</span><span class="p">))</span>
+        <span class="n">ekf_err_rot</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{:.2f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">rmse</span><span class="p">(</span><span class="n">ekf_err</span><span class="p">))</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Root Mean Square Error w.r.t. orientation (deg)&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    -left UKF    : &quot;</span> <span class="o">+</span> <span class="n">left_ukf_err_rot</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    -right UKF   : &quot;</span> <span class="o">+</span> <span class="n">right_ukf_err_rot</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    -EKF         : &quot;</span> <span class="o">+</span> <span class="n">ekf_err_rot</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">nees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">Ps</span><span class="p">,</span> <span class="n">Rots</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">neess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">err2nees</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">err</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">err</span><span class="p">))</span><span class="o">/</span><span class="mi">3</span>
+
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="c1"># covariance need to be turned</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;LEFT&#39;</span><span class="p">:</span>
+                <span class="n">P</span> <span class="o">=</span> <span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Ps</span><span class="p">[</span><span class="n">n</span><span class="p">])</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">P</span> <span class="o">=</span> <span class="n">Ps</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+            <span class="n">neess</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">err2nees</span><span class="p">(</span><span class="n">err</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">P</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">neess</span>
+
+    <span class="k">def</span> <span class="nf">nees_print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left_ukf_nees</span><span class="p">,</span> <span class="n">right_ukf_nees</span><span class="p">,</span> <span class="n">ekf_nees</span><span class="p">):</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">left_ukf_nees</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">left_ukf_nees</span><span class="p">)</span>
+        <span class="n">right_ukf_nees</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">right_ukf_nees</span><span class="p">)</span>
+        <span class="n">ekf_nees</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">ekf_nees</span><span class="p">)</span>
+
+        <span class="c1"># plot orientation nees</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;orientation NEES&#39;</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Orientation NEES&#39;</span><span class="p">,</span> <span class="n">yscale</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">left_ukf_nees</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">right_ukf_nees</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;cyan&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ekf_nees</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;\textbf{left UKF}&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\textbf{right UKF}&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;EKF&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> 
+
+        <span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; Normalized Estimation Error Squared (NEES) w.r.t. orientation&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    -left UKF    : </span><span class="si">% .2f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="n">g</span><span class="p">(</span><span class="n">left_ukf_nees</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    -right UKF   : </span><span class="si">% .2f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="n">g</span><span class="p">(</span><span class="n">right_ukf_nees</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    -EKF         : </span><span class="si">% .2f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="n">g</span><span class="p">(</span><span class="n">ekf_nees</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

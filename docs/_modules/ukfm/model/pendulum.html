@@ -1,0 +1,469 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ukfm.model.pendulum &mdash; Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+  
+    <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Unscented Kalman Filtering on (Parallelizable) Manifolds alpha documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Unscented Kalman Filtering on (Parallelizable) Manifolds
+          
+
+          
+            
+            <img src="../../../_static/blacklogo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../auto_examples/localization.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../filter.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../geometry.html">Lie Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../bibliography.html">Bibliography</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Unscented Kalman Filtering on (Parallelizable) Manifolds</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>ukfm.model.pendulum</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for ukfm.model.pendulum</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">ukfm</span> <span class="k">import</span> <span class="n">SO3</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="k">import</span> <span class="n">Axes3D</span>
+
+<div class="viewcode-block" id="PENDULUM"><a class="viewcode-back" href="../../../model.html#ukfm.PENDULUM">[docs]</a><span class="k">class</span> <span class="nc">PENDULUM</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Pendulum example, where the state lives on the 2-sphere.</span>
+<span class="sd">    You can have a text description of the spherical pendulum dynamics in</span>
+<span class="sd">    :cite:`sjobergAn2019`, Section 7, and  :cite:`kotaruVariation2019`.</span>
+
+<span class="sd">    :arg T: sequence time (s).</span>
+<span class="sd">    :arg model_freq: model frequency (Hz).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="mf">9.81</span>
+    <span class="s2">&quot;gravity constant (m/s^2) :math:`g`.&quot;</span>
+
+    <span class="n">m</span> <span class="o">=</span> <span class="mf">1.0</span>  
+    <span class="s2">&quot;mass of payload (kg) :math:`m`.&quot;</span>
+    
+    <span class="n">b</span> <span class="o">=</span> <span class="mf">0.0</span> 
+    <span class="s2">&quot;damping :math:`b`.&quot;</span>
+
+    <span class="n">L</span> <span class="o">=</span> <span class="mf">1.3</span>  
+    <span class="s2">&quot;Wire length :math:`L`.&quot;</span>
+
+    <span class="n">e3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="n">H</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PENDULUM.STATE"><a class="viewcode-back" href="../../../model.html#ukfm.PENDULUM.STATE">[docs]</a>    <span class="k">class</span> <span class="nc">STATE</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;State of the system.</span>
+
+<span class="sd">        It represents the orientation of the wire and its angular velocity.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\boldsymbol{\\chi} \in \\mathcal{M} = \\left\\{ \\begin{matrix} </span>
+<span class="sd">           \\mathbf{C} \in SO(3),</span>
+<span class="sd">            \\mathbf{u} \in \\mathbb R^3</span>
+<span class="sd">           \\end{matrix} \\right\\}</span>
+
+<span class="sd">        :ivar Rot: rotation matrix :math:`\mathbf{C}`.</span>
+<span class="sd">        :ivar u: angular velocity vector :math:`\mathbf{u}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Rot</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Rot</span> <span class="o">=</span> <span class="n">Rot</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">u</span> <span class="o">=</span> <span class="n">u</span></div>
+
+<div class="viewcode-block" id="PENDULUM.INPUT"><a class="viewcode-back" href="../../../model.html#ukfm.PENDULUM.INPUT">[docs]</a>    <span class="k">class</span> <span class="nc">INPUT</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Input of the propagation model.</span>
+
+<span class="sd">        The model does not require any input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">pass</span></div>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">model_freq</span><span class="p">):</span>
+        <span class="c1"># sequence time (s)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">T</span>
+        <span class="c1"># model frequency (Hz)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_freq</span> <span class="o">=</span> <span class="n">model_freq</span>
+        <span class="c1"># total number of timestamps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">T</span> <span class="o">*</span> <span class="n">model_freq</span>
+        <span class="c1"># integration step (s)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">model_freq</span>
+
+<div class="viewcode-block" id="PENDULUM.f"><a class="viewcode-back" href="../../../model.html#ukfm.PENDULUM.f">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Propagation function.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\mathbf{C}_{n+1}  &amp;= \\mathbf{C}_{n} \\exp\\left(\\left(\\mathbf{u}</span>
+<span class="sd">            + \\mathbf{w}^{(0:3)} \\right) dt\\right)  \\\\</span>
+<span class="sd">            \\mathbf{u}_{n+1}  &amp;= \\mathbf{u}_{n} + \\dot{\\mathbf{u}}  dt,</span>
+
+<span class="sd">        where</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \\dot{\\mathbf{u}}  = \\begin{bmatrix} </span>
+<span class="sd">            -\\omega_y  \\omega_x\\ \\\\ \\omega_x \\omega_z</span>
+<span class="sd">            \\\\ 0 \end{bmatrix} +</span>
+<span class="sd">            \\frac{g}{l}  \\left(\\mathbf{z}^b \\right)^\\wedge</span>
+<span class="sd">            \\mathbf{C}^T \\mathbf{z}^b + \\mathbf{w}^{(3:6)} </span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var omega: input :math:`\\boldsymbol{\\omega}`.</span>
+<span class="sd">        :var w: noise :math:`\\mathbf{w}`.</span>
+<span class="sd">        :var dt: integration step :math:`dt` (s).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">e3_i</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">e3</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">u</span>
+        <span class="n">d_u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="n">u</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">u</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">u</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">0</span><span class="p">])</span> <span class="o">+</span> \
+            <span class="bp">cls</span><span class="o">.</span><span class="n">g</span><span class="o">/</span><span class="bp">cls</span><span class="o">.</span><span class="n">L</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">e3</span><span class="p">,</span> <span class="n">e3_i</span><span class="p">)</span>
+ 
+        <span class="n">new_state</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
+            <span class="n">Rot</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">u</span><span class="o">+</span><span class="n">w</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span><span class="o">*</span><span class="n">dt</span><span class="p">)),</span>
+            <span class="n">u</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">u</span> <span class="o">+</span> <span class="p">(</span><span class="n">d_u</span><span class="o">+</span><span class="n">w</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">])</span><span class="o">*</span><span class="n">dt</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_state</span></div>
+
+<div class="viewcode-block" id="PENDULUM.h"><a class="viewcode-back" href="../../../model.html#ukfm.PENDULUM.h">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">h</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Observation function.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            h\\left(\\boldsymbol{\\chi}\\right)  = </span>
+<span class="sd">            \\mathbf{H} \mathbf{x}</span>
+
+<span class="sd">        where </span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \mathbf{x} = L \\mathbf{C} \mathbf{e}_3</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">L</span><span class="o">*</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">e3</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PENDULUM.phi"><a class="viewcode-back" href="../../../model.html#ukfm.PENDULUM.phi">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">phi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">xi</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retraction.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) = \\left( \\begin{matrix}</span>
+<span class="sd">            \\mathbf{C} \\exp\\left(\\boldsymbol{\\xi}^{(0:3)}\\right) \\\\</span>
+<span class="sd">            \\mathbf{v} + \\boldsymbol{\\xi}^{(3:6)} \\\\</span>
+<span class="sd">            \\mathbf{p} + \\boldsymbol{\\xi}^{(6:9)}</span>
+<span class="sd">           \\end{matrix} \\right)</span>
+
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3) \\times \\mathbb R^6`.</span>
+
+<span class="sd">        Its corresponding inverse operation is :meth:`~ukfm.PENDULUM.phi_inv`.</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var xi: state uncertainty :math:`\\boldsymbol{\\xi}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">new_state</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
+            <span class="n">Rot</span><span class="o">=</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">xi</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="p">),</span>
+            <span class="n">u</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">u</span> <span class="o">+</span> <span class="n">xi</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_state</span></div>
+
+<div class="viewcode-block" id="PENDULUM.phi_inv"><a class="viewcode-back" href="../../../model.html#ukfm.PENDULUM.phi_inv">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">phi_inv</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">hat_state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}\\right) = \\left( \\begin{matrix}</span>
+<span class="sd">            \\log\\left(\\mathbf{C} \\mathbf{\\hat{C}}^T \\right)\\\\</span>
+<span class="sd">            \\mathbf{v} - \\mathbf{\\hat{v}} \\\\</span>
+<span class="sd">            \\mathbf{p} - \\mathbf{\\hat{p}} </span>
+<span class="sd">           \\end{matrix} \\right)</span>
+
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3) \\times \\mathbb R^6`.</span>
+
+<span class="sd">        Its corresponding retraction is :meth:`~ukfm.PENDULUM.phi`.</span>
+
+<span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
+<span class="sd">        :var hat_state: noise-free state :math:`\\boldsymbol{\hat{\\chi}}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">SO3</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">hat_state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="p">)),</span>
+                        <span class="n">state</span><span class="o">.</span><span class="n">u</span> <span class="o">-</span> <span class="n">hat_state</span><span class="o">.</span><span class="n">u</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">xi</span></div>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">state2chi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="n">chi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">chi</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">Rot</span>
+        <span class="n">chi</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">u</span>
+        <span class="k">return</span> <span class="n">chi</span>
+
+
+    <span class="k">def</span> <span class="nf">simu_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_std</span><span class="p">):</span>
+        <span class="c1"># set noise to zero to compute true trajectory</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+
+        <span class="c1"># init variables at zero and do for loop</span>
+        <span class="n">omegas</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">Rot0</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">from_rpy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span><span class="n">Rot0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]))]</span>
+
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="c1"># true input</span>
+            <span class="n">omegas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">INPUT</span><span class="p">())</span>
+            <span class="c1"># propagate state</span>
+            <span class="n">w</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_std</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">w</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span> <span class="o">=</span> <span class="n">model_std</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">))</span>
+            
+        <span class="k">return</span> <span class="n">states</span><span class="p">,</span> <span class="n">omegas</span>
+
+    <span class="k">def</span> <span class="nf">simu_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">obs_std</span><span class="p">):</span>
+        <span class="c1"># measurement iteration number</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">ys</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">+</span> <span class="n">obs_std</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ys</span>
+
+    <span class="k">def</span> <span class="nf">errors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Rots</span><span class="p">,</span> <span class="n">us</span><span class="p">,</span> <span class="n">hat_Rots</span><span class="p">,</span> <span class="n">hat_us</span><span class="p">):</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">errors</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">hat_Rots</span><span class="p">[</span><span class="n">n</span><span class="p">])))</span>
+        <span class="n">errors</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">us</span> <span class="o">-</span> <span class="n">hat_us</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">errors</span>
+
+    <span class="k">def</span> <span class="nf">plot_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hat_states</span><span class="p">,</span> <span class="n">hat_P</span><span class="p">,</span> <span class="n">states</span><span class="p">):</span>
+        <span class="n">Rots</span><span class="p">,</span> <span class="n">us</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_states</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">hat_Rots</span><span class="p">,</span> <span class="n">hat_us</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_states</span><span class="p">(</span><span class="n">hat_states</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+
+        <span class="n">errors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">(</span><span class="n">Rots</span><span class="p">,</span> <span class="n">us</span><span class="p">,</span> <span class="n">hat_Rots</span><span class="p">,</span> <span class="n">hat_us</span><span class="p">)</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+
+        <span class="c1">#fig = plt.figure()</span>
+        <span class="c1">#ax = plt.axes(projection=&#39;3d&#39;)</span>
+
+        <span class="c1"># Reserve memory</span>
+
+        <span class="n">euls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">hat_euls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">euls</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+
+            <span class="n">euls</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">to_rpy</span><span class="p">(</span><span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+            <span class="n">hat_euls</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">to_rpy</span><span class="p">(</span><span class="n">hat_Rots</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+
+            <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="o">*</span><span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+            <span class="c1">#if n % 10 == 1:</span>
+            <span class="c1">#    ax.scatter3D(a[0], a[1], a[2], c=&#39;blue&#39;)</span>
+
+        <span class="c1">#plt.show()</span>
+        <span class="n">fig2</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">euls</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">hat_euls</span><span class="p">)</span>
+
+        <span class="n">fig3</span><span class="p">,</span> <span class="n">ax3</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">euls</span><span class="o">-</span><span class="n">hat_euls</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_states</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="n">Rots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">us</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span>
+            <span class="n">us</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">u</span>
+        <span class="k">return</span> <span class="n">Rots</span><span class="p">,</span> <span class="n">us</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Martin Brossard, Axel Barrau, Silvère Bonnabel.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'alpha',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

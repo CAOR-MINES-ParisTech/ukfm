@@ -1,0 +1,218 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>localization_results_plot</title><meta name="generator" content="MATLAB 9.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-09-23"><meta name="DC.source" content="localization_results_plot.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="keyword">function</span> [] = localization_results_plot(ukf_states, ukf_Ps, states, <span class="keyword">...</span>
+    dt, ys)
+<span class="comment">%LOCALIZATION_RESULTS_PLOT plot</span>
+<span class="comment">%</span>
+<span class="comment">% Syntax: [] = localization_results_plot(ukf_states, ukf_Ps, states, ...</span>
+<span class="comment">%                   dt, yq)</span>
+
+set(groot,<span class="string">'defaulttextinterprete'</span>,<span class="string">'latex'</span>);
+set(groot, <span class="string">'defaultAxesTickLabelInterprete'</span>,<span class="string">'latex'</span>);
+set(groot, <span class="string">'defaultLegendInterprete'</span>,<span class="string">'latex'</span>);
+
+<span class="comment">% get true state</span>
+state_table = struct2table(states);
+Rots = state_table.Rot;
+ps = cell2mat(state_table.p')';
+
+<span class="comment">% get estimated state</span>
+ukf_state_table = struct2table(ukf_states);
+ukf_Rots = ukf_state_table.Rot;
+ukf_ps = cell2mat(ukf_state_table.p')';
+
+<span class="comment">% get orientation error and confidence interval</span>
+N = length(ps);
+t = linspace(0, dt*N, N);
+ukf_err = zeros(N, 1);
+<span class="keyword">for</span> n = 1:N
+    ukf_err(n) = so2_log(ukf_Rots{n}' * Rots{n});
+<span class="keyword">end</span>
+
+fig = figure;
+title(<span class="string">'Position in $xy$-plan'</span>)
+xlabel(<span class="string">'$x$ (m)'</span>)
+ylabel(<span class="string">'$y$ (m)'</span>)
+hold <span class="string">on</span>;
+grid <span class="string">on</span>;
+plot(ps(:, 1), ps(:, 2), <span class="string">'k'</span>);
+scatter(ys(1, :), ys(2, :), <span class="string">''</span>);
+plot(ukf_ps(:, 1), ukf_ps(:, 2), <span class="string">'b'</span>);
+legend(<span class="string">'true position'</span>, <span class="string">'GPS measurements'</span>, <span class="string">'UKF'</span>);
+axis <span class="string">equal</span>;
+<span class="comment">% save to a correct resolution</span>
+print(fig, <span class="string">'matlab/examples/html/main_localization_01'</span>, <span class="string">'-dpng'</span>, <span class="string">'-r600'</span>)
+
+ukf_three_sigma = 3*sqrt(ukf_Ps(:, 1, 1));
+fig = figure;
+title(<span class="string">'Robot attitude error (deg)'</span>)
+xlabel(<span class="string">'$t$ (s)'</span>)
+ylabel(<span class="string">'orientation error (deg)'</span>)
+hold <span class="string">on</span>;
+grid <span class="string">on</span>;
+plot(t, 180/pi*ukf_err, <span class="string">'b'</span>);
+plot(t, 180/pi*ukf_three_sigma,<span class="string">'b--'</span>);
+plot(t, 180/pi*(- ukf_three_sigma),<span class="string">'b--'</span>);
+legend(<span class="string">'UKF'</span>, <span class="string">'$3\sigma$ UKF'</span>);
+print(fig, <span class="string">'matlab/examples/html/main_localization_02'</span>, <span class="string">'-dpng'</span>, <span class="string">'-r600'</span>)
+
+ukf_three_sigma = 3*sqrt(ukf_Ps(:, 2, 2) + ukf_Ps(:, 3, 3));
+p_err = sqrt(sum((ps-ukf_ps).^2, 2));
+fig = figure;
+title(<span class="string">'Robot position error (m)'</span>)
+xlabel(<span class="string">'$t$ (s)'</span>)
+ylabel(<span class="string">'error (m)'</span>)
+hold <span class="string">on</span>;
+grid <span class="string">on</span>;
+plot(t, p_err, <span class="string">'b'</span>);
+plot(t, ukf_three_sigma,<span class="string">'b--'</span>);
+plot(t, -ukf_three_sigma,<span class="string">'b--'</span>);
+legend(<span class="string">'UKF'</span>, <span class="string">'$3\sigma$ UKF'</span>);
+print(fig, <span class="string">'matlab/examples/html/main_localization_03'</span>, <span class="string">'-dpng'</span>, <span class="string">'-r600'</span>)
+<span class="keyword">end</span>
+</pre><pre class="codeoutput error">Not enough input arguments.
+
+Error in localization_results_plot (line 13)
+state_table = struct2table(states);
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function [] = localization_results_plot(ukf_states, ukf_Ps, states, ...
+    dt, ys)
+%LOCALIZATION_RESULTS_PLOT plot
+%
+% Syntax: [] = localization_results_plot(ukf_states, ukf_Ps, states, ...
+%                   dt, yq)
+
+set(groot,'defaulttextinterprete','latex');  
+set(groot, 'defaultAxesTickLabelInterprete','latex');  
+set(groot, 'defaultLegendInterprete','latex');
+
+% get true state
+state_table = struct2table(states);
+Rots = state_table.Rot;
+ps = cell2mat(state_table.p')';
+
+% get estimated state
+ukf_state_table = struct2table(ukf_states);
+ukf_Rots = ukf_state_table.Rot;
+ukf_ps = cell2mat(ukf_state_table.p')';
+
+% get orientation error and confidence interval
+N = length(ps);
+t = linspace(0, dt*N, N);
+ukf_err = zeros(N, 1);
+for n = 1:N
+    ukf_err(n) = so2_log(ukf_Rots{n}' * Rots{n});
+end
+
+fig = figure;
+title('Position in $xy$-plan')
+xlabel('$x$ (m)')
+ylabel('$y$ (m)')
+hold on;
+grid on;
+plot(ps(:, 1), ps(:, 2), 'k');
+scatter(ys(1, :), ys(2, :), 'r');
+plot(ukf_ps(:, 1), ukf_ps(:, 2), 'b');
+legend('true position', 'GPS measurements', 'UKF');
+axis equal;
+% save to a correct resolution
+print(fig, 'matlab/examples/html/main_localization_01', '-dpng', '-r600')
+
+ukf_three_sigma = 3*sqrt(ukf_Ps(:, 1, 1));
+fig = figure;
+title('Robot attitude error (deg)')
+xlabel('$t$ (s)')
+ylabel('orientation error (deg)')
+hold on;
+grid on;
+plot(t, 180/pi*ukf_err, 'b');
+plot(t, 180/pi*ukf_three_sigma,'bREPLACE_WITH_DASH_DASH');
+plot(t, 180/pi*(- ukf_three_sigma),'bREPLACE_WITH_DASH_DASH');
+legend('UKF', '$3\sigma$ UKF');
+print(fig, 'matlab/examples/html/main_localization_02', '-dpng', '-r600')
+
+ukf_three_sigma = 3*sqrt(ukf_Ps(:, 2, 2) + ukf_Ps(:, 3, 3));
+p_err = sqrt(sum((ps-ukf_ps).^2, 2));
+fig = figure;
+title('Robot position error (m)')
+xlabel('$t$ (s)')
+ylabel('error (m)')
+hold on;
+grid on;
+plot(t, p_err, 'b');
+plot(t, ukf_three_sigma,'bREPLACE_WITH_DASH_DASH');
+plot(t, -ukf_three_sigma,'bREPLACE_WITH_DASH_DASH');
+legend('UKF', '$3\sigma$ UKF');
+print(fig, 'matlab/examples/html/main_localization_03', '-dpng', '-r600')
+end
+
+
+##### SOURCE END #####
+--></body></html>
