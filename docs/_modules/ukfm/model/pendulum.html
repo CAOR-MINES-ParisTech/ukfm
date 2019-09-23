@@ -147,7 +147,7 @@
             
   <h1>Source code for ukfm.model.pendulum</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">ukfm</span> <span class="k">import</span> <span class="n">SO3</span>
+<span class="kn">from</span> <span class="nn">ukfm</span> <span class="k">import</span> <span class="n">SO3</span><span class="p">,</span> <span class="n">SE3</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="k">import</span> <span class="n">Axes3D</span>
 
@@ -172,10 +172,13 @@
     <span class="n">L</span> <span class="o">=</span> <span class="mf">1.3</span>  
     <span class="s2">&quot;Wire length :math:`L`.&quot;</span>
 
-    <span class="n">e3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">e3</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="s2">&quot;Third coordinate vector :math:`\mathbf</span><span class="si">{e}</span><span class="s2">^b=-[0,0,1]^T`.&quot;</span>
 
     <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-    <span class="n">H</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="s2">&quot;Observability matrix :math:`\mathbf</span><span class="si">{H}</span><span class="s2">`.&quot;</span>
+    <span class="n">H</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    
 
 <div class="viewcode-block" id="PENDULUM.STATE"><a class="viewcode-back" href="../../../model.html#ukfm.PENDULUM.STATE">[docs]</a>    <span class="k">class</span> <span class="nc">STATE</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;State of the system.</span>
@@ -231,8 +234,8 @@
 <span class="sd">            \\dot{\\mathbf{u}}  = \\begin{bmatrix} </span>
 <span class="sd">            -\\omega_y  \\omega_x\\ \\\\ \\omega_x \\omega_z</span>
 <span class="sd">            \\\\ 0 \end{bmatrix} +</span>
-<span class="sd">            \\frac{g}{l}  \\left(\\mathbf{z}^b \\right)^\\wedge</span>
-<span class="sd">            \\mathbf{C}^T \\mathbf{z}^b + \\mathbf{w}^{(3:6)} </span>
+<span class="sd">            \\frac{g}{l}  \\left(\\mathbf{e}^b \\right)^\\wedge</span>
+<span class="sd">            \\mathbf{C}^T \\mathbf{e}^b + \\mathbf{w}^{(3:6)} </span>
 
 <span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
 <span class="sd">        :var omega: input :math:`\\boldsymbol{\\omega}`.</span>
@@ -263,8 +266,11 @@
 <span class="sd">        where </span>
 
 <span class="sd">        .. math::</span>
+<span class="sd">            \mathbf{H}&amp;= \\begin{bmatrix} 0 &amp; 1 &amp; 0 \\\\  0</span>
+<span class="sd">            &amp; 0 &amp; 1 \end{bmatrix} \\\\</span>
+<span class="sd">            \mathbf{x} &amp;= L \\mathbf{C} \mathbf{e}^b</span>
 
-<span class="sd">            \mathbf{x} = L \\mathbf{C} \mathbf{e}_3</span>
+<span class="sd">        with :math:`\mathbf{x}` the position of the pendulum.</span>
 
 <span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -276,13 +282,14 @@
         <span class="sd">&quot;&quot;&quot;Retraction.</span>
 
 <span class="sd">        .. math::</span>
-<span class="sd">          \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) = \\left( \\begin{matrix}</span>
-<span class="sd">            \\mathbf{C} \\exp\\left(\\boldsymbol{\\xi}^{(0:3)}\\right) \\\\</span>
-<span class="sd">            \\mathbf{v} + \\boldsymbol{\\xi}^{(3:6)} \\\\</span>
-<span class="sd">            \\mathbf{p} + \\boldsymbol{\\xi}^{(6:9)}</span>
+<span class="sd">          \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) = </span>
+<span class="sd">          \\left( \\begin{matrix}</span>
+<span class="sd">            \\exp\\left(\\boldsymbol{\\xi}^{(0:3)}\\right) \\mathbf{C}  \\\\</span>
+<span class="sd">            \\mathbf{u} + \\boldsymbol{\\xi}^{(3:6)}</span>
 <span class="sd">           \\end{matrix} \\right)</span>
 
-<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3) \\times \\mathbb R^6`.</span>
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3) </span>
+<span class="sd">        \\times \\mathbb R^3`.</span>
 
 <span class="sd">        Its corresponding inverse operation is :meth:`~ukfm.PENDULUM.phi_inv`.</span>
 
@@ -291,7 +298,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">new_state</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
-            <span class="n">Rot</span><span class="o">=</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">xi</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="p">),</span>
+            <span class="n">Rot</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">xi</span><span class="p">[:</span><span class="mi">3</span><span class="p">])),</span>
             <span class="n">u</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">u</span> <span class="o">+</span> <span class="n">xi</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">new_state</span></div>
@@ -301,23 +308,23 @@
         <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
 
 <span class="sd">        .. math::</span>
-<span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}\\right) = \\left( \\begin{matrix}</span>
-<span class="sd">            \\log\\left(\\mathbf{C} \\mathbf{\\hat{C}}^T \\right)\\\\</span>
-<span class="sd">            \\mathbf{v} - \\mathbf{\\hat{v}} \\\\</span>
-<span class="sd">            \\mathbf{p} - \\mathbf{\\hat{p}} </span>
+<span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}</span>
+<span class="sd">          \\right) = \\left( \\begin{matrix}</span>
+<span class="sd">            \\log\\left(\\mathbf{\\hat{C}}^T \\mathbf{C}  \\right)\\\\</span>
+<span class="sd">            \\mathbf{u} - \\mathbf{\\hat{u}}</span>
 <span class="sd">           \\end{matrix} \\right)</span>
 
-<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3) \\times \\mathbb R^6`.</span>
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3) </span>
+<span class="sd">        \\times \\mathbb R^3`.</span>
 
 <span class="sd">        Its corresponding retraction is :meth:`~ukfm.PENDULUM.phi`.</span>
 
 <span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
 <span class="sd">        :var hat_state: noise-free state :math:`\\boldsymbol{\hat{\\chi}}`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">SO3</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">hat_state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="p">)),</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">SO3</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">hat_state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="p">)),</span>
                         <span class="n">state</span><span class="o">.</span><span class="n">u</span> <span class="o">-</span> <span class="n">hat_state</span><span class="o">.</span><span class="n">u</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">xi</span></div>
-
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">state2chi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
@@ -326,15 +333,15 @@
         <span class="n">chi</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">u</span>
         <span class="k">return</span> <span class="n">chi</span>
 
-
     <span class="k">def</span> <span class="nf">simu_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_std</span><span class="p">):</span>
         <span class="c1"># set noise to zero to compute true trajectory</span>
         <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
 
         <span class="c1"># init variables at zero and do for loop</span>
         <span class="n">omegas</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">Rot0</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">from_rpy</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span><span class="n">Rot0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]))]</span>
+        <span class="n">Rot0</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">from_rpy</span><span class="p">(</span><span class="mf">57.3</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">40</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span><span class="n">Rot0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">10</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> 
+            <span class="mi">30</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))]</span>
 
         <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
             <span class="c1"># true input</span>
@@ -346,54 +353,72 @@
             
         <span class="k">return</span> <span class="n">states</span><span class="p">,</span> <span class="n">omegas</span>
 
-    <span class="k">def</span> <span class="nf">simu_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">obs_std</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">simu_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">obs_freq</span><span class="p">,</span> <span class="n">obs_std</span><span class="p">):</span>
+        <span class="c1"># vector to know where measurement happen</span>
+        <span class="n">one_hot_ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+        <span class="c1"># imu_freq/obs_freq must be integer</span>
+        <span class="n">one_hot_ys</span><span class="p">[::</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_freq</span> <span class="o">/</span> <span class="n">obs_freq</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">one_hot_ys</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># indexes where measurement happen</span>
+        <span class="c1"># total number of measurements</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">idxs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
         <span class="c1"># measurement iteration number</span>
-        <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
-            <span class="n">ys</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">+</span> <span class="n">obs_std</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ys</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">K</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
+            <span class="n">ys</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span> <span class="o">+</span> <span class="n">obs_std</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ys</span><span class="p">,</span> <span class="n">one_hot_ys</span>
 
-    <span class="k">def</span> <span class="nf">errors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Rots</span><span class="p">,</span> <span class="n">us</span><span class="p">,</span> <span class="n">hat_Rots</span><span class="p">,</span> <span class="n">hat_us</span><span class="p">):</span>
-        <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
-            <span class="n">errors</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">hat_Rots</span><span class="p">[</span><span class="n">n</span><span class="p">])))</span>
-        <span class="n">errors</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">us</span> <span class="o">-</span> <span class="n">hat_us</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">errors</span>
 
-    <span class="k">def</span> <span class="nf">plot_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hat_states</span><span class="p">,</span> <span class="n">hat_P</span><span class="p">,</span> <span class="n">states</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">plot_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hat_states</span><span class="p">,</span> <span class="n">hat_Ps</span><span class="p">,</span> <span class="n">states</span><span class="p">):</span>
         <span class="n">Rots</span><span class="p">,</span> <span class="n">us</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_states</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
         <span class="n">hat_Rots</span><span class="p">,</span> <span class="n">hat_us</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_states</span><span class="p">(</span><span class="n">hat_states</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
 
-        <span class="n">errors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="p">(</span><span class="n">Rots</span><span class="p">,</span> <span class="n">us</span><span class="p">,</span> <span class="n">hat_Rots</span><span class="p">,</span> <span class="n">hat_us</span><span class="p">)</span>
-
         <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
-
-        <span class="c1">#fig = plt.figure()</span>
-        <span class="c1">#ax = plt.axes(projection=&#39;3d&#39;)</span>
-
-        <span class="c1"># Reserve memory</span>
-
-        <span class="n">euls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-        <span class="n">hat_euls</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">euls</span><span class="p">)</span>
-
+        <span class="n">rpys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">hat_rpys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">rpys</span><span class="p">)</span>
+        <span class="n">ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">ukf3sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">hat_ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">e3wedge</span> <span class="o">=</span> <span class="o">-</span><span class="n">SO3</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">e3</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">rpys</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">to_rpy</span><span class="p">(</span><span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+            <span class="n">hat_rpys</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">to_rpy</span><span class="p">(</span><span class="n">hat_Rots</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+            <span class="n">ps</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="o">*</span><span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e3</span><span class="p">)</span>
+            <span class="n">hat_ps</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="o">*</span><span class="n">hat_Rots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e3</span><span class="p">)</span>
+            <span class="n">A</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">hat_Rots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">e3wedge</span><span class="p">)</span>
+            <span class="n">P</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">hat_Ps</span><span class="p">[</span><span class="n">n</span><span class="p">])</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="n">ukf3sigma</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">P</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">ps</span> <span class="o">-</span> <span class="n">hat_ps</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ukf3sigma</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ukf3sigma</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;position (m)&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;position (m)&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ps</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">hat_ps</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;$x$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$y$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$z$&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$x$ UKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$y$ UKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$z$ UKF&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> 
 
-            <span class="n">euls</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">to_rpy</span><span class="p">(</span><span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
-            <span class="n">hat_euls</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">to_rpy</span><span class="p">(</span><span class="n">hat_Rots</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$x$ (m)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;$y$ (m)&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;position (m)&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ps</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">ps</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">hat_ps</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">hat_ps</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;true position&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;UKF&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
 
-            <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="o">*</span><span class="n">Rots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$y$ (m)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;z (m)&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;position in $yz$ plan&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ps</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">ps</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">hat_ps</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">hat_ps</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;true position&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;UKF&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
 
-            <span class="c1">#if n % 10 == 1:</span>
-            <span class="c1">#    ax.scatter3D(a[0], a[1], a[2], c=&#39;blue&#39;)</span>
-
-        <span class="c1">#plt.show()</span>
-        <span class="n">fig2</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-        <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">euls</span><span class="p">)</span>
-        <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">hat_euls</span><span class="p">)</span>
-
-        <span class="n">fig3</span><span class="p">,</span> <span class="n">ax3</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-        <span class="n">ax3</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">euls</span><span class="o">-</span><span class="n">hat_euls</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;$x$ (m)&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39; $x$ position (m)&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ukf3sigma</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;UKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\sigma$ UKF&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">get_states</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>

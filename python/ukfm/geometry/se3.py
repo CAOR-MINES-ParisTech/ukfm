@@ -77,5 +77,5 @@ class SE3:
         This is the inverse operation to :meth:`~ukfm.SE3.exp`.
         """
         phi = SO3.log(chi[:3, :3])
-        xi = np.vstack([phi, SO3.inv_left_jacobian(phi).dot(chi[:3, 3])])
+        xi = np.hstack([phi, SO3.inv_left_jacobian(phi).dot(chi[:3, 3])])
         return xi

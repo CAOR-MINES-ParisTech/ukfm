@@ -108,7 +108,30 @@
 <li class="toctree-l2"><a class="reference internal" href="#conclusion">Conclusion</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../examples.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2D Robot Localization - Tutorial</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#import">Import</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-model">The Model</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simulating-the-model">Simulating the Model</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#filter-design">Filter Design</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#filter-initialization">Filter Initialization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#filtering">Filtering</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#results">Results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conclusion">Conclusion</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="wifibot.html">2D Robot Localization on Real Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="attitude.html">Attitude Estimation with an IMU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inertial_navigation.html">Navigation on Flat Earth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="slam2d.html">2D Robot SLAM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imugnss.html">IMU-GNSS Sensor-Fusion on the KITTI Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pendulum.html">Pendulum Example</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../filter.html">Filters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../model.html">Models</a></li>
@@ -311,7 +334,7 @@ as</p>
 </div>
 <p>The elements of the state and the input depend on the considered problem, they
 are thus defined in the model class <code class="docutils literal notranslate"><span class="pre">LOCALIZATION</span></code>. You can directly look at
-the <a class="reference internal" href="../model.html#ukfm.LOCALIZATION" title="ukfm.LOCALIZATION"><code class="xref py py-meth docutils literal notranslate"><span class="pre">LOCALIZATION()</span></code></a> class to see how they are defined, that is also
+the <code class="xref py py-meth docutils literal notranslate"><span class="pre">LOCALIZATION()</span></code> class to see how they are defined, that is also
 described in <a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id3">[BB17]</a>. The model documentation contains
 also a mathematical description of the propagation and measumrent functions.</p>
 <div class="admonition note">

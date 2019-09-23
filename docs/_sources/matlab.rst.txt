@@ -68,3 +68,7 @@ Benchmarks
 
 We simulate Monte-Carlo data and benchmark UKFs and EKFs based on different choices of uncertainty representation through accuracy and consistency metrics on the following benchmark:
 
+- `2D Robot Localization <matlab/benchmark_localization.html>`_
+- `Attitude Estimation with an IMU <matlab/benchmark_attitude.html>`_
+- `Navigation on Flat Earth <matlab/benchmark_inertial_navigation.html>`_
+- `2D Robot SLAM <matlab/benchmark_slam2d.html>`_

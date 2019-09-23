@@ -12,7 +12,6 @@ on parallelizable manifolds.
 
 
 
-
 .. raw:: html
 
     <div class="sphx-glr-thumbcontainer" tooltip="Goal of this script:">
@@ -35,7 +34,7 @@ on parallelizable manifolds.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="The set of all points in the Euclidean space \mathbb{R}^{3}, that lie on the surface of the uni...">
+    <div class="sphx-glr-thumbcontainer" tooltip="which is a two-dimensional manifold. Many mechanical systems such as a spherical pendulum, doub...">
 
 .. only:: html
 

@@ -32,7 +32,7 @@ IMU-GNSS Fusion on the KITTI Dataset
 .. autoclass:: ukfm.IMUGNSS
     :members:
 
-Pendulum Example
+Spherical Pendulum
 --------------------------------------------------------------------------------
 .. autoclass:: ukfm.PENDULUM
     :members:

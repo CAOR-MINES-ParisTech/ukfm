@@ -10,12 +10,17 @@
 ********************************************************************************
 Pendulum Example
 ********************************************************************************
-
 The set of all points in the Euclidean space :math:`\mathbb{R}^{3}`, that lie on
 the surface of the unit ball about the origin belong to the two-sphere manifold,
-:math:`S(2)`, which is a two-dimensional manifold. Many mechanical systems such
+
+.. math::
+    \mathbb{S}^2 = \left\{ \mathbf{x} \in \mathbb{R}^3 \mid \|\mathbf{x}\|_2 = 1
+    \right\},
+
+which is a two-dimensional manifold. Many mechanical systems such
 as a spherical pendulum, double pendulum, quadrotor with a cable-suspended load,
-evolve on either :math:`S(2)` or products comprising of :math:`S(2)`.
+evolve on either :math:`\mathbb{S}^2` or products comprising of 
+:math:`\mathbb{S}^2`.
 
 In this script, we estimate the state of a system living on the sphere but where
 observations are standard vectors. You can have a text description of the 
@@ -28,10 +33,10 @@ Import
 
 .. code-block:: default
 
-    from scipy.linalg import block_diag
-    import ukfm
-    import numpy as np
-    import matplotlib
+    from scipy.linalg import block_diag 
+    import ukfm 
+    import numpy as np 
+    import matplotlib 
     ukfm.utils.set_matplotlib_config()
 
 
@@ -42,7 +47,7 @@ Import
 
 Model and Simulation
 ==============================================================================
-This script uses the ``INERTIAL_NAVIGATION`` model class that requires  the
+This script uses the ``PENDULUM`` model class that requires  the
 sequence time and the model frequency to create an instance of the model.
 
 
@@ -50,8 +55,8 @@ sequence time and the model frequency to create an instance of the model.
 
 
     # sequence time (s)
-    T = 20
-    # IMU frequency (Hz)
+    T = 10
+    # model frequency (Hz)
     model_freq = 100
     # create the model
     model = ukfm.PENDULUM(T, model_freq)
@@ -63,7 +68,7 @@ sequence time and the model frequency to create an instance of the model.
 
 
 The true trajectory is computed along with empty inputs (the model does not
-require input) after we define the noise standard deviation affecting the
+require any input) after we define the noise standard deviation affecting the
 dynamic.
 
 
@@ -71,8 +76,8 @@ dynamic.
 
 
     # model standard-deviation noise (noise is isotropic)
-    model_std = np.array([2/180*np.pi,  # orientation (rad/s)
-                        0.5]) # orientation velocity (rad/s^2)
+    model_std = np.array([1/180*np.pi,  # orientation (rad) 
+                          1/180*np.pi])   # orientation velocity (rad/s)
 
     # simulate true trajectory and noised input
     states, omegas = model.simu_f(model_std)
@@ -92,6 +97,8 @@ The state and the input contain the following variables:
   states[n].u    # 3d angular velocity
   omegas[n]      # empty input
 
+The model dynamics is based on the Euler equations of pendulum motion.
+
 We compute noisy measurements at low frequency based on the true state
 sequence.
 
@@ -99,27 +106,36 @@ sequence.
 .. code-block:: default
 
 
+    # observation frequency (Hz)
+    obs_freq = 20
     # observation noise standard deviation (m)
-    obs_std = 0.1
+    obs_std = 0.02
     # simulate landmark measurements
-    ys = model.simu_h(states, obs_std)
+    ys, one_hot_ys = model.simu_h(states, obs_freq, obs_std)
 
 
 
 
 
 
+
+We assume observing only the position of the state only in the
+:math:`yz`-plan.
 
 Filter Design and Initialization
 ------------------------------------------------------------------------------
-We choose in this example to embed the state in :math:`SO(3)` with left
-multiplication, such that:
+We choose in this example to embed the state in :math:`SO(3) \times \mathbb{R}
+^3` with left multiplication, such that:
 
 - the retraction :math:`\varphi(.,.)` is the :math:`SO(3)` exponential map for
-  orientation where the state multiplies the uncertainty on the left.
+  orientation where the state multiplies the uncertainty on the left, and the
+  standard vector addition for the  velocity.
 
 - the inverse retraction :math:`\varphi^{-1}(.,.)` is the :math:`SO(3)`
-  logarithm for orientation.
+  logarithm for orientation and the standard vector subtraction for the
+  velocity.
+
+Remaining parameter setting is standard.
 
 
 .. code-block:: default
@@ -130,40 +146,19 @@ multiplication, such that:
     # measurement noise matrix
     R = obs_std**2*np.eye(2)
     # initial error matrix
-    P0 = np.zeros((6, 6))  # The state is perfectly initialized
+    P0 = block_diag((45/180*np.pi)**2*np.eye(3), (10/180*np.pi)**2*np.eye(3))
+
     # sigma point parameters
     alpha = np.array([1e-3, 1e-3, 1e-3])
 
+    state0 = model.STATE(Rot=np.eye(3), u=np.zeros(3))
 
-
-
-
-
-
-We initialize the filter with the true state.
-
-
-.. code-block:: default
-
-
-    state0 = model.STATE(
-        Rot=states[0].Rot,
-        u=states[0].u,
-    )
-
-    ukf = ukfm.UKF(state0=state0,
-                   P0=P0,
-                   f=model.f,
-                   h=model.h,
-                   Q=Q,
-                   R=R,
-                   phi=model.phi,
-                   phi_inv=model.phi_inv,
-                   alpha=alpha)
+    ukf = ukfm.UKF(state0=state0, P0=P0, f=model.f, h=model.h, Q=Q, R=R,
+            phi=model.phi, phi_inv=model.phi_inv, alpha=alpha)
 
     # set variables for recording estimates along the full trajectory
-    ukf_states = [state0]
-    ukf_Ps = np.zeros((model.N, 6, 6))
+    ukf_states = [state0] 
+    ukf_Ps = np.zeros((model.N, 6, 6)) 
     ukf_Ps[0] = P0
 
 
@@ -179,12 +174,17 @@ The UKF proceeds as a standard Kalman filter with a simple for loop.
 
 .. code-block:: default
 
-    for n in range(1, model.N):
-        # propagation
+
+    # measurement iteration number
+    k = 1 
+    for n in range(1, model.N): 
+        # propagation 
         ukf.propagation(omegas[n-1], model.dt)
-        # update
-        ukf.update(ys[n])
-        # save estimates
+        # update only if a measurement is received 
+        if one_hot_ys[n] == 1:
+            ukf.update(ys[k]) 
+            k = k + 1 
+        # save estimates 
         ukf_states.append(ukf.state)
         ukf_Ps[n] = ukf.P
 
@@ -196,41 +196,76 @@ The UKF proceeds as a standard Kalman filter with a simple for loop.
 
 Results
 ------------------------------------------------------------------------------
-We plot the orientation as function of time along with the orientation
-error
-model.plot_results(ukf_states, ukf_Ps, states)
+We plot the position of the pendulum as function of time, the position in the
+:math:`xy` plan and the position in the :math:`yz` plan (we are more
+interested in the position of the pendulum than its orientation). We compute
+the :math:`3\sigma` interval confidence by leveraging the *covariance
+retrieval* proposed in :cite:`brossardCode2019`, Section V-B.
 
-We see the true trajectory starts by a small stationary step following
-by constantly turning around the gravity vector (only the yaw is
-increasing). As yaw is not observable with an accelerometer only, it is
-expected that yaw error would be stronger than roll or pitch errors.
 
-As UKF estimates the covariance of the error, we have plotted the 95%
-confident interval (:math:`3\sigma`). We expect the error keeps behind this
-interval, and in this situation the filter covariance output matches
-especially well the error.
+.. code-block:: default
 
-A cruel aspect of these curves is the absence of comparision. Is the filter
-good ? It would be nice to compare it, e.g., to an extended Kalman filter.
+
+    model.plot_results(ukf_states, ukf_Ps, states)
+
+
+
+
+.. rst-class:: sphx-glr-horizontal
+
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_pendulum_001.png
+            :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_pendulum_002.png
+            :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_pendulum_003.png
+            :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_pendulum_004.png
+            :class: sphx-glr-multi-img
+
+
+
+
+On the first plot, we observe that even if the state if unaccurately
+initialized, the filter estimates  the depth position (:math:`x` axis) of the
+pendulum whereas only the :math:`yz` position of the pendulum is observed. 
+
+The second and third plots show how the filter converges to the true state.
+Finally, the last plot reveals the consistency of the filter, where the
+interval confidence encompasses the error.
 
 Conclusion
 ==============================================================================
 We have seen in this script how well works the UKF on parallelizable
-manifolds for estimating orientation from an IMU.
+manifolds for estimating the position of a spherical pendulum where only two
+components of the pendulum are measured. The filter is accurate, robust to
+strong initial errors, and obtains consistent covariance estimates with the
+method proposed in :cite:`brossardCode2019`.
 
 You can now:
 
-- address the UKF for the same problem with different noise parameters.
+- address the same problem with another retraction, e.g. with right
+  multiplication.
 
-- add outliers in acceleration or magnetometer measurements.
+- modify the measurement with 3D position.
 
-- benchmark the UKF with different function errors and compare it to the
-  extended Kalman filter in the Benchmarks section.
+- consider the mass of the system as unknown and estimate it.
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  12.505 seconds)
+   **Total running time of the script:** ( 0 minutes  7.094 seconds)
 
 
 .. _sphx_glr_download_auto_examples_pendulum.py:
