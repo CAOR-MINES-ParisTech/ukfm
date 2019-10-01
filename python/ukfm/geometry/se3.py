@@ -6,6 +6,7 @@ class SE3:
     """Homogeneous transformation matrix in :math:`SE(3)`.
 
     .. math::
+
         SE(3) &= \\left\\{ \\mathbf{T}=
                 \\begin{bmatrix}
                     \\mathbf{C} & \\mathbf{r} \\\\
@@ -28,6 +29,7 @@ class SE3:
         from a tangent vector:
 
         .. math::
+
             \\mathbf{T}(\\boldsymbol{\\xi}) =
             \\exp(\\boldsymbol{\\xi}^\\wedge) =
             \\begin{bmatrix}
@@ -47,13 +49,14 @@ class SE3:
     def inv(cls, chi):
         """Inverse map for :math:`SE(3)`.
 
-                .. math::
-                    \\mathbf{T}^{-1} =
-                    \\begin{bmatrix}
-                        \\mathbf{C}^T  & -\\mathbf{C}^T \\boldsymbol{\\rho} 
-                         \\\\
-                        \\mathbf{0} ^ T & 1
-                    \\end{bmatrix}
+        .. math::
+
+            \\mathbf{T}^{-1} =
+            \\begin{bmatrix}
+                \\mathbf{C}^T  & -\\mathbf{C}^T \\boldsymbol{\\rho} 
+                    \\\\
+                \\mathbf{0} ^ T & 1
+            \\end{bmatrix}
 
         """
         chi_inv = np.eye(4)
@@ -67,6 +70,7 @@ class SE3:
         from a transformation:
 
         .. math::
+        
             \\boldsymbol{\\xi}(\\mathbf{T}) =
             \\ln(\\mathbf{T})^\\vee =
             \\begin{bmatrix}

@@ -153,8 +153,7 @@
 
 <div class="viewcode-block" id="ATTITUDE"><a class="viewcode-back" href="../../../model.html#ukfm.ATTITUDE">[docs]</a><span class="k">class</span> <span class="nc">ATTITUDE</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;3D attitude estimation from an IMU equipped with gyro, accelerometer and </span>
-<span class="sd">    magnetometer. You can have a text description in :cite:`kokUsing2017`, </span>
-<span class="sd">    Section IV.</span>
+<span class="sd">    magnetometer. See text description in :cite:`kokUsing2017`, Section IV.</span>
 
 <span class="sd">    :arg T: sequence time (s).</span>
 <span class="sd">    :arg imu_freq: IMU frequency (Hz).</span>
@@ -168,9 +167,10 @@
 <div class="viewcode-block" id="ATTITUDE.STATE"><a class="viewcode-back" href="../../../model.html#ukfm.ATTITUDE.STATE">[docs]</a>    <span class="k">class</span> <span class="nc">STATE</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;State of the system.</span>
 
-<span class="sd">        It represents the orientation of a platform.</span>
+<span class="sd">        It represents the orientation of the platform.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \\boldsymbol{\\chi} \in \\mathcal{M} = \\left\\{ </span>
 <span class="sd">           \\mathbf{C} \in SO(3) \\right\\}</span>
 
@@ -187,7 +187,8 @@
 <span class="sd">        (IMU).</span>
 
 <span class="sd">        .. math:: </span>
-<span class="sd">            \\boldsymbol{\\omega} \in \\mathcal{M} = \\left\\{ </span>
+
+<span class="sd">            \\boldsymbol{\\omega} \in \\mathcal{U} = \\left\\{ </span>
 <span class="sd">            \\mathbf{u} \in \\mathbb R^3 \\right\\}</span>
 
 <span class="sd">        :ivar gyro: 3D gyro :math:`\mathbf{u}`.</span>
@@ -211,6 +212,7 @@
         <span class="sd">&quot;&quot;&quot; Propagation function.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \\mathbf{C}_{n+1}  = \\mathbf{C}_{n} </span>
 <span class="sd">            \\exp\\left(\\left(\\mathbf{u} + \\mathbf{w} \\right) </span>
 <span class="sd">            dt \\right)</span>
@@ -230,11 +232,11 @@
         <span class="sd">&quot;&quot;&quot; Observation function.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            h\\left(\\boldsymbol{\\chi}\\right)  = \\begin{bmatrix} </span>
 <span class="sd">            \\mathbf{C}^T \\mathbf{g} \\\\</span>
 <span class="sd">            \\mathbf{C}^T \\mathbf{b}</span>
 <span class="sd">            \\end{bmatrix}</span>
-
 
 <span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -250,7 +252,6 @@
 
 <span class="sd">          \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) = </span>
 <span class="sd">            \\mathbf{C} \\exp\\left(\\boldsymbol{\\xi}\\right)</span>
-
 
 <span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)`</span>
 <span class="sd">        with left multiplication.</span>
@@ -270,12 +271,13 @@
         <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}</span>
 <span class="sd">          \\right) = \\log\\left(</span>
 <span class="sd">            \\boldsymbol{\chi}^{-1} \\boldsymbol{\\hat{\\chi}} \\right)</span>
 
 <span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)`</span>
-<span class="sd">         with left multiplication.</span>
+<span class="sd">        with left multiplication.</span>
 
 <span class="sd">        Its corresponding retraction is :meth:`~ukfm.ATTITUDE.phi`.</span>
 
@@ -293,7 +295,6 @@
 
 <span class="sd">          \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) = </span>
 <span class="sd">            \\exp\\left(\\boldsymbol{\\xi}\\right) \\mathbf{C} </span>
-
 
 <span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)` </span>
 <span class="sd">        with right multiplication.</span>
@@ -314,12 +315,13 @@
         <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}</span>
 <span class="sd">          \\right) = \\log\\left(</span>
 <span class="sd">            \\boldsymbol{\\hat{\\chi}}\\boldsymbol{\chi}^{-1} \\right)</span>
 
 <span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)` </span>
-<span class="sd">        with left multiplication.</span>
+<span class="sd">        with right multiplication.</span>
 
 <span class="sd">        Its corresponding retraction is :meth:`~ukfm.ATTITUDE.right_phi`.</span>
 
@@ -337,8 +339,8 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">ekf_H_ana</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
-        <span class="n">H</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="o">-</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">g</span><span class="p">)),</span>
-                        <span class="o">-</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">b</span><span class="p">))])</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">g</span><span class="p">)),</span>
+                       <span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">wedge</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">b</span><span class="p">))])</span>
         <span class="k">return</span> <span class="n">H</span>
 
     <span class="k">def</span> <span class="nf">simu_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">imu_std</span><span class="p">):</span>
@@ -399,28 +401,30 @@
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> 
 
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Roll error (deg)&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Roll error&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Roll error (deg)&#39;</span><span class="p">,</span> 
+            <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Roll error  (deg)&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">errors</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span>   <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span>  <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;UKF error&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\sigma$ UKF&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;UKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\sigma$ UKF&#39;</span><span class="p">])</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Pitch error (deg)&#39;</span><span class="p">,</span> 
-        <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Pitch error&#39;</span><span class="p">)</span>
+        <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Pitch error  (deg)&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">errors</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:],</span>   <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:],</span>  <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;UKF error&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\sigma$ UKF&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;UKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\sigma$ UKF&#39;</span><span class="p">])</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> 
 
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Yaw error (deg)&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Yaw error&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Yaw error (deg)&#39;</span><span class="p">,</span> 
+            <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Yaw error  (deg)&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">errors</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span>   <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span>  <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;UKF error&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\sigma$ UKF&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;UKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\sigma$ UKF&#39;</span><span class="p">])</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> 
 
     <span class="nd">@classmethod</span>

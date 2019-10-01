@@ -152,8 +152,8 @@
 
 
 <div class="viewcode-block" id="INERTIAL_NAVIGATION"><a class="viewcode-back" href="../../../model.html#ukfm.INERTIAL_NAVIGATION">[docs]</a><span class="k">class</span> <span class="nc">INERTIAL_NAVIGATION</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;3D Inertial navigation on flat Earth, where the vehicle obtains </span>
-<span class="sd">    observations of known landmarks. You can have a text description in</span>
+    <span class="sd">&quot;&quot;&quot;3D inertial navigation on flat Earth, where the vehicle obtains </span>
+<span class="sd">    observations of known landmarks. See a text description in</span>
 <span class="sd">    :cite:`barrauInvariant2017`, Section V.</span>
 
 <span class="sd">    :arg T: sequence time (s).</span>
@@ -173,9 +173,10 @@
 <div class="viewcode-block" id="INERTIAL_NAVIGATION.STATE"><a class="viewcode-back" href="../../../model.html#ukfm.INERTIAL_NAVIGATION.STATE">[docs]</a>    <span class="k">class</span> <span class="nc">STATE</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;State of the system.</span>
 
-<span class="sd">        It represents the state of a moving vehicle.</span>
+<span class="sd">        It represents the state of the vehicle.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \\boldsymbol{\\chi} \in \\mathcal{M} = \\left\\{ \\begin{matrix} </span>
 <span class="sd">           \\mathbf{C} \in SO(3),</span>
 <span class="sd">            \\mathbf{v} \in \\mathbb R^3,</span>
@@ -198,7 +199,8 @@
 <span class="sd">        The input is a measurement from an Inertial Measurement Unit (IMU).</span>
 
 <span class="sd">        .. math:: </span>
-<span class="sd">            \\boldsymbol{\\omega} \in \\mathcal{M} = \\left\\{ \\begin{matrix}</span>
+
+<span class="sd">            \\boldsymbol{\\omega} \in \\mathcal{U} = \\left\\{ \\begin{matrix}</span>
 <span class="sd">            \\mathbf{u} \in \\mathbb R^3,</span>
 <span class="sd">            \\mathbf{a}_b \in \\mathbb R^3 </span>
 <span class="sd">            \\end{matrix} \\right\\}</span>
@@ -227,15 +229,17 @@
         <span class="sd">&quot;&quot;&quot; Propagation function.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \\mathbf{C}_{n+1}  &amp;= \\mathbf{C}_{n} \\exp\\left(\\left(\\mathbf{u}</span>
-<span class="sd">            + \\mathbf{w}^{(0:3)} \\right) dt\\right)  \\\\</span>
+<span class="sd">            + \\mathbf{w}^{(0:3)} \\right) dt\\right),  \\\\</span>
 <span class="sd">            \\mathbf{v}_{n+1}  &amp;= \\mathbf{v}_{n} + \\mathbf{a}  dt, \\\\</span>
 <span class="sd">            \\mathbf{p}_{n+1}  &amp;= \\mathbf{p}_{n} + \\mathbf{v}_{n} dt + </span>
-<span class="sd">            \mathbf{a} dt^2/2</span>
+<span class="sd">            \mathbf{a} dt^2/2,</span>
 
 <span class="sd">        where</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \\mathbf{a}  = \\mathbf{C}_{n} \\left( \\mathbf{a}_b + </span>
 <span class="sd">            \\mathbf{w}^{(3:6)} \\right) + \\mathbf{g}</span>
 
@@ -246,9 +250,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">acc</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">omega</span><span class="o">.</span><span class="n">acc</span> <span class="o">+</span> <span class="n">w</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">])</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">g</span>
         <span class="n">new_state</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
-            <span class="n">Rot</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">omega</span><span class="o">.</span><span class="n">gyro</span> <span class="o">+</span> <span class="n">w</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)),</span>
-            <span class="n">v</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">v</span> <span class="o">+</span> <span class="n">acc</span> <span class="o">*</span> <span class="n">dt</span><span class="p">,</span>
-            <span class="n">p</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">p</span> <span class="o">+</span> <span class="n">state</span><span class="o">.</span><span class="n">v</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">acc</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">Rot</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">omega</span><span class="o">.</span><span class="n">gyro</span> <span class="o">+</span> <span class="n">w</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span><span class="o">*</span><span class="n">dt</span><span class="p">)),</span>
+            <span class="n">v</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">v</span> <span class="o">+</span> <span class="n">acc</span><span class="o">*</span><span class="n">dt</span><span class="p">,</span>
+            <span class="n">p</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">p</span> <span class="o">+</span> <span class="n">state</span><span class="o">.</span><span class="n">v</span><span class="o">*</span><span class="n">dt</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">acc</span><span class="o">*</span><span class="n">dt</span><span class="o">**</span><span class="mi">2</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">new_state</span></div>
 
@@ -257,6 +261,7 @@
         <span class="sd">&quot;&quot;&quot; Observation function.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            h\\left(\\boldsymbol{\\chi}\\right)  = \\begin{bmatrix} </span>
 <span class="sd">            \\mathbf{C}^T \\left( \\mathbf{p} - \\mathbf{p}^l_1\\right) \\\\</span>
 <span class="sd">            \\vdots \\\\</span>
@@ -270,7 +275,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">N_ldk</span><span class="o">*</span><span class="mi">3</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">N_ldk</span><span class="p">):</span>
-            <span class="n">y</span><span class="p">[</span><span class="mi">3</span> <span class="o">*</span> <span class="n">i</span><span class="p">:</span><span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">ldks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
+            <span class="n">y</span><span class="p">[</span><span class="mi">3</span><span class="o">*</span><span class="n">i</span><span class="p">:</span> <span class="mi">3</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">ldks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">y</span></div>
 
 <div class="viewcode-block" id="INERTIAL_NAVIGATION.phi"><a class="viewcode-back" href="../../../model.html#ukfm.INERTIAL_NAVIGATION.phi">[docs]</a>    <span class="nd">@classmethod</span>
@@ -278,6 +283,7 @@
         <span class="sd">&quot;&quot;&quot;Retraction.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">          \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) =</span>
 <span class="sd">          \\left( \\begin{matrix}</span>
 <span class="sd">            \\mathbf{C} \\exp\\left(\\boldsymbol{\\xi}^{(0:3)}\\right) \\\\</span>
@@ -307,6 +313,7 @@
         <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}</span>
 <span class="sd">          \\right) = \\left( \\begin{matrix}</span>
 <span class="sd">            \\log\\left(\\mathbf{C} \\mathbf{\\hat{C}}^T \\right)\\\\</span>
@@ -349,8 +356,8 @@
 <span class="sd">                \\mathbf{0}^T &amp; &amp; \\mathbf{I} </span>
 <span class="sd">            \\end{bmatrix}</span>
 
-<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} </span>
-<span class="sd">        \\in SE_2(3)` with left multiplication.</span>
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SE_2(3)`</span>
+<span class="sd">        with left multiplication.</span>
 
 <span class="sd">        Its corresponding inverse operation is</span>
 <span class="sd">        :meth:`~ukfm.INERTIAL_NAVIGATION.left_phi_inv`.</span>
@@ -372,15 +379,16 @@
         <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}</span>
 <span class="sd">          \\left(\\boldsymbol{\\chi}\\right) = </span>
 <span class="sd">          \\log\\left(</span>
 <span class="sd">            \\boldsymbol{\chi}^{-1} \\boldsymbol{\\hat{\\chi}} \\right)</span>
 
-<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} </span>
-<span class="sd">        \\in SE_2(3)` with left multiplication.</span>
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SE_2(3)`</span>
+<span class="sd">        with left multiplication.</span>
 
-<span class="sd">        Its corresponding retraction is </span>
+<span class="sd">        Its corresponding retraction is</span>
 <span class="sd">        :meth:`~ukfm.INERTIAL_NAVIGATION.left_phi`.</span>
 
 <span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
@@ -413,8 +421,8 @@
 <span class="sd">                \\mathbf{0}^T &amp; &amp; \\mathbf{I} </span>
 <span class="sd">            \\end{bmatrix}</span>
 
-<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} </span>
-<span class="sd">        \\in SE_2(3)` with right multiplication.</span>
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SE_2(3)`</span>
+<span class="sd">        with right multiplication.</span>
 
 <span class="sd">        Its corresponding inverse operation is </span>
 <span class="sd">        :meth:`~ukfm.INERTIAL_NAVIGATION.right_phi_inv`.</span>
@@ -435,14 +443,15 @@
         <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}</span>
 <span class="sd">          \\right) = \\log\\left(</span>
 <span class="sd">            \\boldsymbol{\\hat{\\chi}}^{-1} \\boldsymbol{\\chi} \\right)</span>
 
-<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} </span>
-<span class="sd">        \\in SE_2(3)` with right multiplication.</span>
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SE_2(3)`</span>
+<span class="sd">        with right multiplication.</span>
 
-<span class="sd">        Its corresponding retraction is </span>
+<span class="sd">        Its corresponding retraction is</span>
 <span class="sd">        :meth:`~ukfm.INERTIAL_NAVIGATION.right_phi`.</span>
 
 <span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
@@ -546,7 +555,7 @@
         <span class="n">K</span> <span class="o">=</span> <span class="n">idxs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="c1"># measurement iteration number</span>
-        <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">K</span><span class="p">,</span> <span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_ldk</span><span class="p">))</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">K</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">N_ldk</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
             <span class="n">ys</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span> <span class="o">+</span> <span class="n">obs_std</span> <span class="o">*</span> \
                 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">N_ldk</span><span class="p">)</span>
@@ -578,7 +587,7 @@
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$x$ (m)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;$y$ (m)&#39;</span><span class="p">,</span>
                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Horizontal vehicle position&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ldks</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ldks</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ldks</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ldks</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ps</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">ps</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">hat_ps</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">hat_ps</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;true trajectory&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;UKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;features&#39;</span><span class="p">])</span>
@@ -593,7 +602,7 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ukf3sigma</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;UKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\sigma$ UKF&#39;</span><span class="p">])</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> 
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
         <span class="n">ukf3sigma</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> \
             <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">hat_P</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">hat_P</span><span class="p">[:,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">]</span>
@@ -606,7 +615,7 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ukf3sigma</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="n">ukf3sigma</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;UKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$3\sigma$ UKF&#39;</span><span class="p">])</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> 
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">benchmark_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ukf_err</span><span class="p">,</span> <span class="n">left_ukf_err</span><span class="p">,</span> <span class="n">right_ukf_err</span><span class="p">,</span> <span class="n">iekf_err</span><span class="p">,</span>
                        <span class="n">ekf_err</span><span class="p">,</span> <span class="n">ps</span><span class="p">,</span> <span class="n">ukf_ps</span><span class="p">,</span> <span class="n">left_ukf_ps</span><span class="p">,</span> <span class="n">right_ukf_ps</span><span class="p">,</span> <span class="n">ekf_ps</span><span class="p">,</span>
@@ -615,13 +624,13 @@
         <span class="k">def</span> <span class="nf">rmse</span><span class="p">(</span><span class="n">errs</span><span class="p">):</span>
             <span class="n">err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">errs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span>
             <span class="n">err</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
-                                        <span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> 
+                                        <span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
                                         <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
             <span class="n">err</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">3</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
-                                        <span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">4</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">5</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> 
+                                        <span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">4</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">5</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
                                         <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
             <span class="n">err</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">6</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
-                                        <span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">7</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">8</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> 
+                                        <span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">7</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">errs</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">8</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
                                         <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">err</span>
 
@@ -661,7 +670,7 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">ekf_err</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">iekf_err</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39; $SO(3) \times \mathbb</span><span class="si">{R}</span><span class="s1">^6$ UKF&#39;</span><span class="p">,</span>
-                   <span class="sa">r</span><span class="s1">&#39;\textbf{$SE_2(3)$ UKF (left)}&#39;</span><span class="p">,</span> 
+                   <span class="sa">r</span><span class="s1">&#39;\textbf{$SE_2(3)$ UKF (left)}&#39;</span><span class="p">,</span>
                    <span class="sa">r</span><span class="s1">&#39;\textbf{$SE_2(3)$ UKF (right)}&#39;</span><span class="p">,</span>
                    <span class="sa">r</span><span class="s1">&#39;EKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;IEKF [BB17]&#39;</span><span class="p">])</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
@@ -679,7 +688,7 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ekf_err</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">iekf_err</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39; $SO(3) \times \mathbb</span><span class="si">{R}</span><span class="s1">^6$ UKF&#39;</span><span class="p">,</span>
-                   <span class="sa">r</span><span class="s1">&#39;\textbf{$SE_2(3)$ UKF (left)}&#39;</span><span class="p">,</span> 
+                   <span class="sa">r</span><span class="s1">&#39;\textbf{$SE_2(3)$ UKF (left)}&#39;</span><span class="p">,</span>
                    <span class="sa">r</span><span class="s1">&#39;\textbf{$SE_2(3)$ UKF (right)}&#39;</span><span class="p">,</span>
                    <span class="sa">r</span><span class="s1">&#39;EKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;IEKF [BB17]&#39;</span><span class="p">])</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
@@ -774,14 +783,13 @@
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;$t$ (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;orientation NEES&#39;</span><span class="p">,</span>
                <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Vehicle orientation NEES&#39;</span><span class="p">,</span> <span class="n">yscale</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
-
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ukf_nees</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;magenta&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">left_ukf_nees</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">right_ukf_nees</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;cyan&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ekf_nees</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">iekf_nees</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;$SO(3) \times \mathbb</span><span class="si">{R}</span><span class="s1">^6$ UKF&#39;</span><span class="p">,</span> 
-        <span class="sa">r</span><span class="s1">&#39;\textbf{$SE_2(3)$ UKF (left)}&#39;</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;$SO(3) \times \mathbb</span><span class="si">{R}</span><span class="s1">^6$ UKF&#39;</span><span class="p">,</span>
+                   <span class="sa">r</span><span class="s1">&#39;\textbf{$SE_2(3)$ UKF (left)}&#39;</span><span class="p">,</span>
                    <span class="sa">r</span><span class="s1">&#39;\textbf{$SE_2(3)$ UKF (right)}&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;EKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;IEKF [BB17]&#39;</span><span class="p">])</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
@@ -795,8 +803,8 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">right_ukf_nees</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;cyan&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ekf_nees</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">iekf_nees</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;$SO(3) \times \mathbb</span><span class="si">{R}</span><span class="s1">^6$ UKF&#39;</span><span class="p">,</span> 
-        <span class="sa">r</span><span class="s1">&#39;\textbf{$SE_2(3)$ UKF (left)}&#39;</span><span class="p">,</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;$SO(3) \times \mathbb</span><span class="si">{R}</span><span class="s1">^6$ UKF&#39;</span><span class="p">,</span>
+                   <span class="sa">r</span><span class="s1">&#39;\textbf{$SE_2(3)$ UKF (left)}&#39;</span><span class="p">,</span>
                    <span class="sa">r</span><span class="s1">&#39;\textbf{$SE_2(3)$ UKF (right)}&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;EKF&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;IEKF [BB17]&#39;</span><span class="p">])</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 

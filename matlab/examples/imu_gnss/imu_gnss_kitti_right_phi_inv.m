@@ -1,5 +1,5 @@
 function [xi] = imu_gnss_kitti_right_phi_inv(state, hat_state)
-%imu_gnss_KITTI_RIGHT_PHI_INV inverse retraction
+%IMU_GNSS_KITTI_RIGHT_PHI_INV inverse retraction
 %
 % Syntax: [xi] = imu_gnss_kitti_right_phi_inv(state, hat_state)
 %

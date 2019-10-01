@@ -6,7 +6,7 @@ function [H, r] = ukf_jacobian_update(state, P, y, h, phi, weights, idxs)
 % Inputs:
 %    state - state
 %    P - covariance matrix
-%    y - measurement, vector
+%    y - measurement
 %    h - measurement function, function
 %    phi - retraction, function
 %    weights - weight parameters of UKF
@@ -27,25 +27,25 @@ P_red = P_red + TOL*eye(d);
 
 % set sigma points
 w_u = weights.u;
-xi_mat = w_u.sqrt_d_lambda * chol(P_red)';
+xis = w_u.sqrt_d_lambda * chol(P_red)';
 
 % compute measurement sigma_points
-y_mat = zeros(l, 2*d);
+ys = zeros(l, 2*d);
 y_hat = h(state);
 for j = 1:d
-    chi_j_plus = phi(state, xi_mat(:, j));
-    chi_j_minus = phi(state, -xi_mat(:, j));
-    y_mat(:, j) = h(chi_j_plus);
-    y_mat(:, d + j) = h(chi_j_minus);
+    chi_j_plus = phi(state, xis(:, j));
+    chi_j_minus = phi(state, -xis(:, j));
+    ys(:, j) = h(chi_j_plus);
+    ys(:, d + j) = h(chi_j_minus);
 end
 
 % measurement mean
-y_bar = w_u.wm0 * y_hat + w_u.wj * sum(y_mat, 2);
+y_bar = w_u.wm0 * y_hat + w_u.wj * sum(ys, 2);
 
 % prune mean before computing covariance
-y_mat = y_mat - y_bar;
+ys = ys - y_bar;
 
-Y = w_u.wj*y_mat*[xi_mat -xi_mat]';
+Y = w_u.wj*ys*[xis -xis]';
 H_idx = (P_red\Y')'; % Y*P_red^{-1}
 
 H = zeros(length(y), length(P));

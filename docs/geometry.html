@@ -262,7 +262,7 @@ from a transformation:</p>
 \mathfrak{se}(2) &amp;= \left\{ \boldsymbol{\Xi} =
 \boldsymbol{\xi}^\wedge \in \mathbb{R}^{3 \times 3} ~\middle|
 ~
- \boldsymbol{\xi}=
+    \boldsymbol{\xi}=
     \begin{bmatrix}
         \phi \\  \boldsymbol{\rho}
     \end{bmatrix} \in \mathbb{R}^3, \boldsymbol{\rho} \in 
@@ -303,7 +303,7 @@ from a tangent vector:</p>
 \[\begin{split}\mathbf{T}^{-1} =
 \begin{bmatrix}
     \mathbf{C}^T  &amp; -\mathbf{C}^T \boldsymbol{\rho}
-      \\
+        \\
     \mathbf{0} ^ T &amp; 1
 \end{bmatrix}\end{split}\]</div>
 </dd></dl>
@@ -313,8 +313,7 @@ from a tangent vector:</p>
 <em class="property">classmethod </em><code class="sig-name descname">log</code><span class="sig-paren">(</span><em class="sig-param">chi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/se2.html#SE2.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SE2.log" title="Permalink to this definition">¶</a></dt>
 <dd><p>Logarithmic map for <span class="math notranslate nohighlight">\(SE(2)\)</span>, which computes a tangent vector 
 from a transformation:</p>
-<blockquote>
-<div><div class="math notranslate nohighlight">
+<div class="math notranslate nohighlight">
 \[\begin{split}\boldsymbol{\xi}(\mathbf{T}) =
 \ln(\mathbf{T})^\vee =
 \begin{bmatrix}
@@ -322,7 +321,6 @@ from a transformation:</p>
     \mathbf{J} ^ {-1} \mathbf{r}
 \end{bmatrix}\end{split}\]</div>
 <p>This is the inverse operation to <a class="reference internal" href="#ukfm.SE2.log" title="ukfm.SE2.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>.</p>
-</div></blockquote>
 </dd></dl>
 
 </dd></dl>
@@ -338,7 +336,7 @@ from a transformation:</p>
 \[\begin{split}SE_k(2) &amp;= \left\{ \mathbf{T}=
         \begin{bmatrix}
             \mathbf{C} &amp; \mathbf{r_1} &amp; \cdots &amp;\mathbf{r}_k
-             \\
+                \\
             \mathbf{0}^T &amp; &amp;\mathbf{I}&amp;
         \end{bmatrix} \in \mathbb{R}^{(2+k) \times (2+k)} 
         ~\middle|~ \mathbf{C} \in SO(2), \mathbf{r}_1 
@@ -347,7 +345,7 @@ from a transformation:</p>
 \mathfrak{se}_k(2) &amp;= \left\{ \boldsymbol{\Xi} =
 \boldsymbol{\xi}^\wedge \in \mathbb{R}^{(2+k) 
 \times (2+k)} ~\middle|~
- \boldsymbol{\xi}=
+    \boldsymbol{\xi}=
     \begin{bmatrix}
         \phi \\ \boldsymbol{\rho}_1 \\ \vdots \\ 
         \boldsymbol{\rho}_k
@@ -378,7 +376,7 @@ from a tangent vector:</p>
 \[\begin{split}\mathbf{T}^{-1} =
 \begin{bmatrix}
     \mathbf{C}^T  &amp; -\mathbf{C}^T \boldsymbol{\rho}_1  &amp;
-     \cdots &amp; &amp; -\mathbf{C}^T \boldsymbol{\rho}_k \\
+        \cdots &amp; &amp; -\mathbf{C}^T \boldsymbol{\rho}_k \\
     \mathbf{0} ^ T &amp; &amp; \mathbf{I} &amp;
 \end{bmatrix}\end{split}\]</div>
 </dd></dl>
@@ -388,8 +386,7 @@ from a tangent vector:</p>
 <em class="property">classmethod </em><code class="sig-name descname">log</code><span class="sig-paren">(</span><em class="sig-param">chi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/sek2.html#SEK2.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SEK2.log" title="Permalink to this definition">¶</a></dt>
 <dd><p>Logarithmic map for <span class="math notranslate nohighlight">\(SE_k(2)\)</span>, which computes a tangent vector 
 from a transformation:</p>
-<blockquote>
-<div><div class="math notranslate nohighlight">
+<div class="math notranslate nohighlight">
 \[\begin{split}\boldsymbol{\xi}(\mathbf{T}) =
 \ln(\mathbf{T})^\vee =
 \begin{bmatrix}
@@ -399,7 +396,6 @@ from a transformation:</p>
     \mathbf{J} ^ {-1} \mathbf{r}_k
 \end{bmatrix}\end{split}\]</div>
 <p>This is the inverse operation to <a class="reference internal" href="#ukfm.SEK2.log" title="ukfm.SEK2.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>.</p>
-</div></blockquote>
 </dd></dl>
 
 </dd></dl>
@@ -414,7 +410,7 @@ from a transformation:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}SO(3) &amp;= \left\{ \mathbf{C} \in \mathbb{R}^{3 \times 3} 
 ~\middle|~ \mathbf{C}\mathbf{C}^T = \mathbf{1}, \det
- \mathbf{C} = 1 \right\} \\
+    \mathbf{C} = 1 \right\} \\
 \mathfrak{so}(3) &amp;= \left\{ \boldsymbol{\Phi} = 
 \boldsymbol{\phi}^\wedge \in \mathbb{R}^{3 \times 3} 
 ~\middle|~ \boldsymbol{\phi} = \phi \mathbf{a} \in \mathbb{R}
@@ -433,9 +429,7 @@ from a transformation:</p>
 <em class="property">classmethod </em><code class="sig-name descname">exp</code><span class="sig-paren">(</span><em class="sig-param">phi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.exp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.exp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exponential map for <span class="math notranslate nohighlight">\(SO(3)\)</span>, which computes a transformation 
 from a tangent vector:</p>
-<blockquote>
-<div><blockquote>
-<div><div class="math notranslate nohighlight">
+<div class="math notranslate nohighlight">
 \[\begin{split}\mathbf{C}(\boldsymbol{\phi}) =
 \exp(\boldsymbol{\phi}^\wedge) =
 \begin{cases}
@@ -445,9 +439,7 @@ from a tangent vector:</p>
     (1 - \cos \phi) \mathbf{a}\mathbf{a}^T +
     \sin \phi \mathbf{a}^\wedge, &amp; \text{otherwise}
 \end{cases}\end{split}\]</div>
-</div></blockquote>
 <p>This is the inverse operation to <a class="reference internal" href="#ukfm.SO3.log" title="ukfm.SO3.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>.</p>
-</div></blockquote>
 </dd></dl>
 
 <dl class="method">
@@ -475,7 +467,7 @@ from a tangent vector:</p>
 \[\begin{split}\mathbf{J}(\boldsymbol{\phi}) =
 \begin{cases}
     \mathbf{1} + \frac{1}{2} \boldsymbol{\phi}^\wedge, &amp;
-     \text{if } \phi \text{ is small} \\
+        \text{if } \phi \text{ is small} \\
     \frac{\sin \phi}{\phi} \mathbf{1} +
     \left(1 - \frac{\sin \phi}{\phi} \right) 
     \mathbf{a}\mathbf{a}^T +
@@ -489,9 +481,7 @@ from a tangent vector:</p>
 <em class="property">classmethod </em><code class="sig-name descname">log</code><span class="sig-paren">(</span><em class="sig-param">Rot</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.log" title="Permalink to this definition">¶</a></dt>
 <dd><p>Logarithmic map for <span class="math notranslate nohighlight">\(SO(3)\)</span>, which computes a tangent vector 
 from a transformation:</p>
-<blockquote>
-<div><blockquote>
-<div><div class="math notranslate nohighlight">
+<div class="math notranslate nohighlight">
 \[\begin{split}\phi &amp;= \frac{1}{2} 
 \left( \mathrm{Tr}(\mathbf{C}) - 1 \right) \\
 \boldsymbol{\phi}(\mathbf{C}) &amp;=
@@ -503,9 +493,7 @@ from a transformation:</p>
     \left( \mathbf{C} - \mathbf{C}^T \right) 
     \right)^\vee, &amp; \text{otherwise}
 \end{cases}\end{split}\]</div>
-</div></blockquote>
 <p>This is the inverse operation to <a class="reference internal" href="#ukfm.SO3.log" title="ukfm.SO3.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>.</p>
-</div></blockquote>
 </dd></dl>
 
 <dl class="method">
@@ -520,13 +508,9 @@ from a transformation:</p>
 <em class="property">classmethod </em><code class="sig-name descname">vee</code><span class="sig-paren">(</span><em class="sig-param">Phi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.vee"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.vee" title="Permalink to this definition">¶</a></dt>
 <dd><p><span class="math notranslate nohighlight">\(SO(3)\)</span> vee operator as defined by 
 <a class="reference internal" href="bibliography.html#barfootassociating2014" id="id1">[BF14]</a>.</p>
-<blockquote>
-<div><blockquote>
-<div><div class="math notranslate nohighlight">
+<div class="math notranslate nohighlight">
 \[\phi = \boldsymbol{\Phi}^\vee\]</div>
-</div></blockquote>
 <p>This is the inverse operation to <a class="reference internal" href="#ukfm.SO3.wedge" title="ukfm.SO3.wedge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wedge()</span></code></a>.</p>
-</div></blockquote>
 </dd></dl>
 
 <dl class="method">
@@ -534,9 +518,7 @@ from a transformation:</p>
 <em class="property">classmethod </em><code class="sig-name descname">wedge</code><span class="sig-paren">(</span><em class="sig-param">phi</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/geometry/so3.html#SO3.wedge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.SO3.wedge" title="Permalink to this definition">¶</a></dt>
 <dd><p><span class="math notranslate nohighlight">\(SO(3)\)</span> wedge operator as defined by 
 <a class="reference internal" href="bibliography.html#barfootassociating2014" id="id2">[BF14]</a>.</p>
-<blockquote>
-<div><blockquote>
-<div><div class="math notranslate nohighlight">
+<div class="math notranslate nohighlight">
 \[\begin{split}\boldsymbol{\Phi} =
 \boldsymbol{\phi}^\wedge =
 \begin{bmatrix}
@@ -544,9 +526,7 @@ from a transformation:</p>
     \phi_3 &amp; 0 &amp; -\phi_1 \\
     -\phi_2 &amp; \phi_1 &amp; 0
 \end{bmatrix}\end{split}\]</div>
-</div></blockquote>
 <p>This is the inverse operation to <a class="reference internal" href="#ukfm.SO3.vee" title="ukfm.SO3.vee"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vee()</span></code></a>.</p>
-</div></blockquote>
 </dd></dl>
 
 <dl class="method">
@@ -646,7 +626,7 @@ from a tangent vector:</p>
 \[\begin{split}\mathbf{T}^{-1} =
 \begin{bmatrix}
     \mathbf{C}^T  &amp; -\mathbf{C}^T \boldsymbol{\rho} 
-     \\
+        \\
     \mathbf{0} ^ T &amp; 1
 \end{bmatrix}\end{split}\]</div>
 </dd></dl>
@@ -719,7 +699,7 @@ from a tangent vector:</p>
 \[\begin{split}\mathbf{T}^{-1} =
 \begin{bmatrix}
     \mathbf{C}^T  &amp; -\mathbf{C}^T \boldsymbol{\rho}_1  &amp;
-     \cdots &amp; &amp; -\mathbf{C}^T \boldsymbol{\rho}_k \\
+        \cdots &amp; &amp; -\mathbf{C}^T \boldsymbol{\rho}_k \\
     \mathbf{0} ^ T &amp; &amp; \mathbf{I} &amp;
 \end{bmatrix}\end{split}\]</div>
 </dd></dl>

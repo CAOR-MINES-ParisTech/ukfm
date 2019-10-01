@@ -1,6 +1,5 @@
 Benchmarks
 ================================================================================
-
 We simulate Monte-Carlo data and benchmark UKFs and EKFs based on different
 choices of uncertainty representation through accuracy and consistency metrics
 on the following problems:

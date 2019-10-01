@@ -9,5 +9,6 @@ function [new_state] = slam2d_left_red_phi(state, xi)
 %
 % Outputs:
 %    new_state - state
+
 new_state = slam2d_left_phi(state, xi);
 end

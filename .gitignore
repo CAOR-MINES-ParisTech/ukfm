@@ -3,6 +3,8 @@
 *.pyc
 docsource/build
 .vscode
+matlab/benchmarks/html
+matlab/examples/html
 python/ukfm.egg-info
 python/venv
 python/.idea

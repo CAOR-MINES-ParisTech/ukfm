@@ -1,5 +1,8 @@
 function [omegas, ys, one_hot_ys, t] = imu_gnss_kitti_load(gps_freq)
 
+cur_folder = pwd;
+cur_folder = cur_folder(end-5:end);
+
 f_name = "data/KittiGps_converted.txt";
 gps_data = load(f_name);
 f_name = "data/KittiEquivBiasedImu.txt";
@@ -41,5 +44,4 @@ for n = 1:N
         break;
     end
 end
-
 end

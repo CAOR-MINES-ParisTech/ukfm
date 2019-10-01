@@ -34,7 +34,6 @@ changes to the code without having to reinstall every time.
 
 Get Started
 --------------------------------------------------------------------------------
-  
 Follow the 2D robot localization tutorial in the documentation, which is
 available at
 [https://caor-mines-paristech.github.io/ukfm/]

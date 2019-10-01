@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 
 class INERTIAL_NAVIGATION:
-    """3D Inertial navigation on flat Earth, where the vehicle obtains 
-    observations of known landmarks. You can have a text description in
+    """3D inertial navigation on flat Earth, where the vehicle obtains 
+    observations of known landmarks. See a text description in
     :cite:`barrauInvariant2017`, Section V.
 
     :arg T: sequence time (s).
@@ -25,9 +25,10 @@ class INERTIAL_NAVIGATION:
     class STATE:
         """State of the system.
 
-        It represents the state of a moving vehicle.
+        It represents the state of the vehicle.
 
         .. math::
+
             \\boldsymbol{\\chi} \in \\mathcal{M} = \\left\\{ \\begin{matrix} 
            \\mathbf{C} \in SO(3),
             \\mathbf{v} \in \\mathbb R^3,
@@ -50,7 +51,8 @@ class INERTIAL_NAVIGATION:
         The input is a measurement from an Inertial Measurement Unit (IMU).
 
         .. math:: 
-            \\boldsymbol{\\omega} \in \\mathcal{M} = \\left\\{ \\begin{matrix}
+
+            \\boldsymbol{\\omega} \in \\mathcal{U} = \\left\\{ \\begin{matrix}
             \\mathbf{u} \in \\mathbb R^3,
             \\mathbf{a}_b \in \\mathbb R^3 
             \\end{matrix} \\right\\}
@@ -79,15 +81,17 @@ class INERTIAL_NAVIGATION:
         """ Propagation function.
 
         .. math::
+
             \\mathbf{C}_{n+1}  &= \\mathbf{C}_{n} \\exp\\left(\\left(\\mathbf{u}
-            + \\mathbf{w}^{(0:3)} \\right) dt\\right)  \\\\
+            + \\mathbf{w}^{(0:3)} \\right) dt\\right),  \\\\
             \\mathbf{v}_{n+1}  &= \\mathbf{v}_{n} + \\mathbf{a}  dt, \\\\
             \\mathbf{p}_{n+1}  &= \\mathbf{p}_{n} + \\mathbf{v}_{n} dt + 
-            \mathbf{a} dt^2/2
+            \mathbf{a} dt^2/2,
 
         where
 
         .. math::
+
             \\mathbf{a}  = \\mathbf{C}_{n} \\left( \\mathbf{a}_b + 
             \\mathbf{w}^{(3:6)} \\right) + \\mathbf{g}
 
@@ -98,9 +102,9 @@ class INERTIAL_NAVIGATION:
         """
         acc = state.Rot.dot(omega.acc + w[3:6]) + cls.g
         new_state = cls.STATE(
-            Rot=state.Rot.dot(SO3.exp((omega.gyro + w[:3]) * dt)),
-            v=state.v + acc * dt,
-            p=state.p + state.v * dt + 1 / 2 * acc * dt ** 2
+            Rot=state.Rot.dot(SO3.exp((omega.gyro + w[:3])*dt)),
+            v=state.v + acc*dt,
+            p=state.p + state.v*dt + 1/2*acc*dt**2
         )
         return new_state
 
@@ -109,6 +113,7 @@ class INERTIAL_NAVIGATION:
         """ Observation function.
 
         .. math::
+
             h\\left(\\boldsymbol{\\chi}\\right)  = \\begin{bmatrix} 
             \\mathbf{C}^T \\left( \\mathbf{p} - \\mathbf{p}^l_1\\right) \\\\
             \\vdots \\\\
@@ -122,7 +127,7 @@ class INERTIAL_NAVIGATION:
         """
         y = np.zeros(cls.N_ldk*3)
         for i in range(cls.N_ldk):
-            y[3 * i:3 * (i + 1)] = state.Rot.T.dot(cls.ldks[i] - state.p)
+            y[3*i: 3*(i+1)] = state.Rot.T.dot(cls.ldks[i] - state.p)
         return y
 
     @classmethod
@@ -130,6 +135,7 @@ class INERTIAL_NAVIGATION:
         """Retraction.
 
         .. math::
+
           \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) =
           \\left( \\begin{matrix}
             \\mathbf{C} \\exp\\left(\\boldsymbol{\\xi}^{(0:3)}\\right) \\\\
@@ -159,6 +165,7 @@ class INERTIAL_NAVIGATION:
         """Inverse retraction.
 
         .. math::
+
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}
           \\right) = \\left( \\begin{matrix}
             \\log\\left(\\mathbf{C} \\mathbf{\\hat{C}}^T \\right)\\\\
@@ -201,8 +208,8 @@ class INERTIAL_NAVIGATION:
                 \\mathbf{0}^T & & \\mathbf{I} 
             \\end{bmatrix}
 
-        The state is viewed as a element :math:`\\boldsymbol{\chi} 
-        \\in SE_2(3)` with left multiplication.
+        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SE_2(3)`
+        with left multiplication.
 
         Its corresponding inverse operation is
         :meth:`~ukfm.INERTIAL_NAVIGATION.left_phi_inv`.
@@ -224,15 +231,16 @@ class INERTIAL_NAVIGATION:
         """Inverse retraction.
 
         .. math::
+
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}
           \\left(\\boldsymbol{\\chi}\\right) = 
           \\log\\left(
             \\boldsymbol{\chi}^{-1} \\boldsymbol{\\hat{\\chi}} \\right)
 
-        The state is viewed as a element :math:`\\boldsymbol{\chi} 
-        \\in SE_2(3)` with left multiplication.
+        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SE_2(3)`
+        with left multiplication.
 
-        Its corresponding retraction is 
+        Its corresponding retraction is
         :meth:`~ukfm.INERTIAL_NAVIGATION.left_phi`.
 
         :var state: state :math:`\\boldsymbol{\\chi}`.
@@ -265,8 +273,8 @@ class INERTIAL_NAVIGATION:
                 \\mathbf{0}^T & & \\mathbf{I} 
             \\end{bmatrix}
 
-        The state is viewed as a element :math:`\\boldsymbol{\chi} 
-        \\in SE_2(3)` with right multiplication.
+        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SE_2(3)`
+        with right multiplication.
 
         Its corresponding inverse operation is 
         :meth:`~ukfm.INERTIAL_NAVIGATION.right_phi_inv`.
@@ -287,14 +295,15 @@ class INERTIAL_NAVIGATION:
         """Inverse retraction.
 
         .. math::
+
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}
           \\right) = \\log\\left(
             \\boldsymbol{\\hat{\\chi}}^{-1} \\boldsymbol{\\chi} \\right)
 
-        The state is viewed as a element :math:`\\boldsymbol{\chi} 
-        \\in SE_2(3)` with right multiplication.
+        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SE_2(3)`
+        with right multiplication.
 
-        Its corresponding retraction is 
+        Its corresponding retraction is
         :meth:`~ukfm.INERTIAL_NAVIGATION.right_phi`.
 
         :var state: state :math:`\\boldsymbol{\\chi}`.
@@ -398,7 +407,7 @@ class INERTIAL_NAVIGATION:
         K = idxs.shape[0]
 
         # measurement iteration number
-        ys = np.zeros((K, 3 * self.N_ldk))
+        ys = np.zeros((K, 3*self.N_ldk))
         for k in range(K):
             ys[k] = self.h(states[idxs[k]]) + obs_std * \
                 np.random.randn(3*self.N_ldk)
@@ -430,7 +439,7 @@ class INERTIAL_NAVIGATION:
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.set(xlabel='$x$ (m)', ylabel='$y$ (m)',
                title="Horizontal vehicle position")
-        ax.scatter(self.ldks[0], self.ldks[1], c='red')
+        ax.scatter(self.ldks[:, 0], self.ldks[:, 1], c='red')
         plt.plot(ps[:, 0], ps[:, 1], linewidth=2, c='black')
         plt.plot(hat_ps[:, 0], hat_ps[:, 1], c='blue')
         ax.legend([r'true trajectory', r'UKF', r'features'])
@@ -445,7 +454,7 @@ class INERTIAL_NAVIGATION:
         plt.plot(t, 180/np.pi*ukf3sigma, c='blue', linestyle='dashed')
         plt.plot(t, -180/np.pi*ukf3sigma, c='blue', linestyle='dashed')
         ax.legend([r'UKF', r'$3\sigma$ UKF'])
-        ax.set_xlim(0, t[-1]) 
+        ax.set_xlim(0, t[-1])
 
         ukf3sigma = 3 * \
             np.sqrt(hat_P[:, 6, 6] ** 2 + hat_P[:, 7, 7]
@@ -458,7 +467,7 @@ class INERTIAL_NAVIGATION:
         plt.plot(t, ukf3sigma, c='blue', linestyle='dashed')
         plt.plot(t, -ukf3sigma, c='blue', linestyle='dashed')
         ax.legend([r'UKF', r'$3\sigma$ UKF'])
-        ax.set_xlim(0, t[-1]) 
+        ax.set_xlim(0, t[-1])
 
     def benchmark_plot(self, ukf_err, left_ukf_err, right_ukf_err, iekf_err,
                        ekf_err, ps, ukf_ps, left_ukf_ps, right_ukf_ps, ekf_ps,
@@ -467,13 +476,13 @@ class INERTIAL_NAVIGATION:
         def rmse(errs):
             err = np.zeros((errs.shape[1], 3))
             err[:, 0] = np.sqrt(np.mean(errs[:, :, 0]**2 +
-                                        errs[:, :, 1]**2 + errs[:, :, 2]**2, 
+                                        errs[:, :, 1]**2 + errs[:, :, 2]**2,
                                         axis=0))
             err[:, 1] = np.sqrt(np.mean(errs[:, :, 3]**2 +
-                                        errs[:, :, 4]**2 + errs[:, :, 5]**2, 
+                                        errs[:, :, 4]**2 + errs[:, :, 5]**2,
                                         axis=0))
             err[:, 2] = np.sqrt(np.mean(errs[:, :, 6]**2 +
-                                        errs[:, :, 7]**2 + errs[:, :, 8]**2, 
+                                        errs[:, :, 7]**2 + errs[:, :, 8]**2,
                                         axis=0))
             return err
 
@@ -513,7 +522,7 @@ class INERTIAL_NAVIGATION:
         plt.plot(t, 180/np.pi*ekf_err[:, 0], c='red')
         plt.plot(t, 180/np.pi*iekf_err[:, 0], c='blue')
         ax.legend([r' $SO(3) \times \mathbb{R}^6$ UKF',
-                   r'\textbf{$SE_2(3)$ UKF (left)}', 
+                   r'\textbf{$SE_2(3)$ UKF (left)}',
                    r'\textbf{$SE_2(3)$ UKF (right)}',
                    r'EKF', r'IEKF [BB17]'])
         ax.set_ylim(0, 8)
@@ -531,7 +540,7 @@ class INERTIAL_NAVIGATION:
         plt.plot(t, ekf_err[:, 2], c='red')
         plt.plot(t, iekf_err[:, 2], c='blue')
         ax.legend([r' $SO(3) \times \mathbb{R}^6$ UKF',
-                   r'\textbf{$SE_2(3)$ UKF (left)}', 
+                   r'\textbf{$SE_2(3)$ UKF (left)}',
                    r'\textbf{$SE_2(3)$ UKF (right)}',
                    r'EKF', r'IEKF [BB17]'])
         ax.set_xlim(0, t[-1])
@@ -626,14 +635,13 @@ class INERTIAL_NAVIGATION:
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.set(xlabel='$t$ (s)', ylabel='orientation NEES',
                title='Vehicle orientation NEES', yscale="log")
-
         plt.plot(t, ukf_nees[:, 0], c='magenta')
         plt.plot(t, left_ukf_nees[:, 0], c='green')
         plt.plot(t, right_ukf_nees[:, 0], c='cyan')
         plt.plot(t, ekf_nees[:, 0], c='red')
         plt.plot(t, iekf_nees[:, 0], c='blue')
-        ax.legend([r'$SO(3) \times \mathbb{R}^6$ UKF', 
-        r'\textbf{$SE_2(3)$ UKF (left)}',
+        ax.legend([r'$SO(3) \times \mathbb{R}^6$ UKF',
+                   r'\textbf{$SE_2(3)$ UKF (left)}',
                    r'\textbf{$SE_2(3)$ UKF (right)}', r'EKF', r'IEKF [BB17]'])
         ax.set_xlim(0, t[-1])
 
@@ -647,8 +655,8 @@ class INERTIAL_NAVIGATION:
         plt.plot(t, right_ukf_nees[:, 1], c='cyan')
         plt.plot(t, ekf_nees[:, 1], c='red')
         plt.plot(t, iekf_nees[:, 1], c='blue')
-        ax.legend([r'$SO(3) \times \mathbb{R}^6$ UKF', 
-        r'\textbf{$SE_2(3)$ UKF (left)}',
+        ax.legend([r'$SO(3) \times \mathbb{R}^6$ UKF',
+                   r'\textbf{$SE_2(3)$ UKF (left)}',
                    r'\textbf{$SE_2(3)$ UKF (right)}', r'EKF', r'IEKF [BB17]'])
         ax.set_xlim(0, t[-1])
 

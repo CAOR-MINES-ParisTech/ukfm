@@ -177,12 +177,11 @@
 <span id="sphx-glr-auto-examples-wifibot-py"></span><h1>2D Robot Localization on Real Data<a class="headerlink" href="#d-robot-localization-on-real-data" title="Permalink to this headline">¶</a></h1>
 <p>Goals of this script:</p>
 <ul class="simple">
-<li><p>apply the UKF for the 2D robot localization example with real data.</p></li>
+<li><p>apply the UKF for the 2D robot localization example on real data.</p></li>
 </ul>
 <p><em>We assume the reader is already familiar with the considered problem described
 in the tutorial.</em></p>
-<p>We address the same problem described in the 2D robot localization tutorial,
-with real data.</p>
+<p>We address the same problem as described in the tutorial on our own data.</p>
 <div class="section" id="import">
 <h2>Import<a class="headerlink" href="#import" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ukfm</span> <span class="k">import</span> <span class="n">LOCALIZATION</span> <span class="k">as</span> <span class="n">MODEL</span>
@@ -195,8 +194,7 @@ with real data.</p>
 </div>
 <div class="section" id="model-and-data">
 <h2>Model and Data<a class="headerlink" href="#model-and-data" title="Permalink to this headline">¶</a></h2>
-<p>This script uses the <code class="docutils literal notranslate"><span class="pre">LOCALIZATION</span></code> model class that requires  the sequence
-time and the odometry frequency to create an instance of the model.</p>
+<p>This script uses the <a class="reference internal" href="../model.html#ukfm.LOCALIZATION" title="ukfm.LOCALIZATION"><code class="xref py py-meth docutils literal notranslate"><span class="pre">LOCALIZATION()</span></code></a> model.</p>
 <p>Instead of creating data, we load recorded data. We have recorded five
 sequences (sequence 2 and 3 are the more interesting).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sequence number</span>
@@ -205,21 +203,20 @@ sequences (sequence 2 and 3 are the more interesting).</p>
 <span class="n">gps_freq</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="c1"># GPS noise standard deviation (m)</span>
 <span class="n">gps_std</span> <span class="o">=</span> <span class="mf">0.1</span>
-
 <span class="c1"># load data</span>
 <span class="n">states</span><span class="p">,</span> <span class="n">omegas</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">one_hot_ys</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">MODEL</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">n_sequence</span><span class="p">,</span> <span class="n">gps_freq</span><span class="p">,</span> <span class="n">gps_std</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The real data have been obtained in an experiment conducted at the Centre for
-Robotics, MINES ParisTech. We used a so-called Wifibot, which is a small
-wheeled robot equipped with independent odometers on the left and right
-wheels, see figure. A set of seven highly precise cameras, the OptiTrack
-motion capture system, provide the reference trajectory (ground truth) with
-sub-millimeter precision at a rate of 120 Hz.</p>
-<div class="figure align-center" id="id3">
+<p>Data has been obtained in an experiment conducted at the Centre for Robotics,
+MINES ParisTech. We used a so-called Wifibot, which is a small wheeled robot
+equipped with independent odometers on the left and right wheels, see figure.
+A set of seven highly precise cameras, the OptiTrack motion capture system,
+provide the reference trajectory (ground truth) with sub-millimeter precision
+at a rate of 120 Hz.</p>
+<div class="figure align-center" id="id1">
 <a class="reference internal image-reference" href="../_images/robot.jpg"><img alt="robot picture." src="../_images/robot.jpg" style="width: 420.40000000000003px; height: 509.40000000000003px;" /></a>
 <p class="caption"><span class="caption-text">Testing arena with Wifibot robot in the foreground of the picture. We can
-also see two of the seven Optitrack cameras in the background.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+also see two of the seven Optitrack cameras in the background.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
 </div>
 <p>We define noise odometry standard deviation for the filter.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">odo_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.15</span><span class="p">,</span>   <span class="c1"># longitudinal speed</span>
@@ -230,19 +227,21 @@ also see two of the seven Optitrack cameras in the background.</span><a class="h
 </div>
 <div class="section" id="filter-design">
 <h2>Filter Design<a class="headerlink" href="#filter-design" title="Permalink to this headline">¶</a></h2>
-<p>We choose here to embed the state in <span class="math notranslate nohighlight">\(SE(2)\)</span> with left multiplication,
-i.e.</p>
+<p>We embed here the state in <span class="math notranslate nohighlight">\(SE(2)\)</span> with left multiplication, i.e.</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SE(2)\)</span> exponential, where
-the state multiplies on the left the error <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
-<li><p>the inverse <span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SE(2)\)</span> logarithm.</p></li>
+the state multiplies on the left the uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
 </ul>
 </div></blockquote>
-<p>We define the UKF parameters based on the model parameters.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># propagation noise matrix</span>
+<ul class="simple">
+<li><p>the inverse retraction <span class="math notranslate nohighlight">\(\varphi^{-1}_.(.)\)</span> is the <span class="math notranslate nohighlight">\(SE(2)\)</span>
+logarithm.</p></li>
+</ul>
+<p>We define the filter parameters based on the model parameters.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># propagation noise covariance matrix</span>
 <span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">odo_std</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-<span class="c1"># measurement noise matrix</span>
+<span class="c1"># measurement noise covariance matrix</span>
 <span class="n">R</span> <span class="o">=</span> <span class="n">gps_std</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="c1"># sigma point parameters</span>
 <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">])</span>
@@ -250,21 +249,20 @@ the state multiplies on the left the error <span class="math notranslate nohighl
 </div>
 <div class="section" id="filter-initialization">
 <h3>Filter Initialization<a class="headerlink" href="#filter-initialization" title="Permalink to this headline">¶</a></h3>
-<p>We initialize the filter with the true state plus an initial error heading of
+<p>We initialize the filter with the true state plus an initial heading error of
 30°, and set corresponding initial covariance matrices.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># &quot;add&quot; orientation error to the initial state</span>
 <span class="n">SO2</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">SO2</span>
 <span class="n">state0</span> <span class="o">=</span> <span class="n">MODEL</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span><span class="n">Rot</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO2</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">30</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)),</span>
                      <span class="n">p</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
-
-<span class="c1"># initial state-error covariance matrix</span>
+<span class="c1"># initial state uncertainty covariance matrix</span>
 <span class="n">P0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 <span class="c1"># The state is not perfectly initialized</span>
-<span class="n">P0</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">30</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="n">P0</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">30</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
 </pre></div>
 </div>
-<p>We then define the filter as an instance  of the <code class="docutils literal notranslate"><span class="pre">UKF</span></code> class.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ukf</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span>               <span class="c1">#  initial state</span>
+<p>We define the filter as an instance of the <code class="docutils literal notranslate"><span class="pre">UKF</span></code> class.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ukf</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span>               <span class="c1"># initial state</span>
                <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>                       <span class="c1"># initial covariance</span>
                <span class="n">f</span><span class="o">=</span><span class="n">MODEL</span><span class="o">.</span><span class="n">f</span><span class="p">,</span>                   <span class="c1"># propagation model</span>
                <span class="n">h</span><span class="o">=</span><span class="n">MODEL</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>                   <span class="c1"># observation model</span>
@@ -287,7 +285,7 @@ full trajectory and a 3D array to record covariance estimates.</p>
 </div>
 <div class="section" id="filtering">
 <h3>Filtering<a class="headerlink" href="#filtering" title="Permalink to this headline">¶</a></h3>
-<p>The UKF proceeds as a standard Kalman filter with a simple for loop.</p>
+<p>The UKF proceeds as a standard Kalman filter with a for loop.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># measurement iteration number (first measurement is for n == 0)</span>
 <span class="n">k</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
@@ -298,7 +296,6 @@ full trajectory and a 3D array to record covariance estimates.</p>
     <span class="k">if</span> <span class="n">one_hot_ys</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">ukf</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ys</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
         <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
-
     <span class="c1"># save estimates</span>
     <span class="n">ukf_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
     <span class="n">ukf_Ps</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">ukf</span><span class="o">.</span><span class="n">P</span>
@@ -308,9 +305,9 @@ full trajectory and a 3D array to record covariance estimates.</p>
 </div>
 <div class="section" id="results">
 <h2>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
-<p>We plot the trajectory, GPS measurements and estimated trajectory. As UKF
-estimates the covariance of the error, we have plotted the 95% confident
-interval (<span class="math notranslate nohighlight">\(3\sigma\)</span>).</p>
+<p>We plot the trajectory, the measurements and the estimated trajectory. We then
+plot the position and orientation error with 95% (<span class="math notranslate nohighlight">\(3\sigma\)</span>) confident
+interval.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MODEL</span><span class="o">.</span><span class="n">plot_wifibot</span><span class="p">(</span><span class="n">ukf_states</span><span class="p">,</span> <span class="n">ukf_Ps</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -322,26 +319,21 @@ interval (<span class="math notranslate nohighlight">\(3\sigma\)</span>).</p>
 <li><img alt="../_images/sphx_glr_wifibot_003.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_wifibot_003.png" />
 </li>
 </ul>
-<p>All results seem coherent. This is convincing as the initial heading error is
+<p>All results are coherent. This is convincing as the initial heading error is
 relatively high.</p>
 </div>
 <div class="section" id="conclusion">
 <h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
-<p>This script apply the UKF for localizing a robot on real data. The filter
-works apparently well on this localization problem on real data, with moderate
+<p>This script applies the UKF for localizing a robot on real data. The filter
+works well on this localization problem on real data, with moderate
 initial heading error.</p>
 <p>You can now:</p>
 <ul class="simple">
-<li><p>test the UKF on different sequences and with a different choice of
-retraction.</p></li>
-<li><p>address the UKF for the same problem with  range and bearing measurements of
+<li><p>test the UKF on different sequences.</p></li>
+<li><p>address the UKF for the same problem with range and bearing measurements of
 known landmarks.</p></li>
-<li><p>enter more in depth with the theory, see <a class="reference internal" href="../bibliography.html#brossardcode2019" id="id1">[BBB19]</a>.</p></li>
-<li><p>benchmark the UKF with different function error and compare the new filters
-to both the extended Kalman filter and invariant extended Kalman filter of
-<a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id2">[BB17]</a> (see the benchmarks section).</p></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  6.879 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  7.655 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-wifibot-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/a9717a20744c72642124ac27881d4b84/wifibot.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">wifibot.py</span></code></a></p>

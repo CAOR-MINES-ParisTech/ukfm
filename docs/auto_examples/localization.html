@@ -193,7 +193,7 @@
 <p>Goals of this script:</p>
 <ul class="simple">
 <li><p>understand the main principles of Unscented Kalman Filtering on Manifolds
-(<strong>UKF-M</strong>) which are described in <a class="reference internal" href="../bibliography.html#brossardcode2019" id="id1">[BBB19]</a>.</p></li>
+(<strong>UKF-M</strong>) <a class="reference internal" href="../bibliography.html#brossardcode2019" id="id1">[BBB19]</a>.</p></li>
 <li><p>get familiar with the implementation.</p></li>
 <li><p>design an UKF for a vanilla 2D robot localization problem.</p></li>
 </ul>
@@ -202,23 +202,22 @@ filtering. However, we require really approximate prior knowledge and intuition
 about manifolds and tangent spaces.</em></p>
 <p>This tutorial describes all one require to design an Unscented Kalman Filter
 (UKF) on a (parallelizable) manifold, and puts in evidence the versatility and
-simplicity of the method in term of implementation. Indeed, we only need to
-define an UKF on parallelizable manifolds:</p>
+simplicity of the method in term of implementation. Indeed, we need to define an
+UKF on parallelizable manifolds:</p>
 <ol class="arabic simple">
-<li><p>a (physical) <strong>model</strong> of the state-space system that specifies the
-propagation and measurement functions of the system.</p></li>
-<li><p>an <strong>uncertainty representation</strong> of the estimated state of the system, which
-is a mapping that generalizes the linear error definition <span class="math notranslate nohighlight">\(\mathbf{e}
-= \mathbf{x} - \mathbf{\hat{x}}\)</span> to any type non-linear uncertainty
-representation.</p></li>
+<li><p>a <strong>model</strong> of the state-space system that specifies the propagation and
+measurement functions of the system.</p></li>
+<li><p>an <strong>uncertainty representation</strong> of the estimated state, which is a mapping
+that generalizes the linear uncertainty definition <span class="math notranslate nohighlight">\(\mathbf{e} =
+\mathbf{x} - \mathbf{\hat{x}}\)</span>.</p></li>
 <li><p>standard UKF parameters that are noise covariance matrices and sigma point
 parameters.</p></li>
 </ol>
-<p>We introduce the UKF methodology by addressing the vanilla problem of robot
+<p>We introduce the methodology by addressing the vanilla problem of robot
 localization, where the robot obtains velocity measurements, e.g., from wheel
-odometry, and position measurements, e.g., from GPS. The robot state consists of
-the robot orientation along with the 2D robot position. We reproduce the example
-that is described in <a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id2">[BB17]</a>, Section IV.</p>
+odometry, and position measurements, e.g., from GPS. The state consists of the
+robot orientation along with the 2D robot position. We reproduce the example
+described in <a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id2">[BB17]</a>, Section IV.</p>
 <div class="section" id="import">
 <h2>Import<a class="headerlink" href="#import" title="Permalink to this headline">¶</a></h2>
 <p>Package import is minimal, as <strong>UKF-M</strong> is mainly build on the standard NumPy
@@ -227,131 +226,105 @@ package.</p>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib</span>
 <span class="n">ukfm</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">set_matplotlib_config</span><span class="p">()</span>
-<span class="c1"># The matplotlib configuration is only for better render the figures.</span>
+<span class="c1"># The matplotlib configuration is adjusted for better rendering the figures.</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="the-model">
 <h2>The Model<a class="headerlink" href="#the-model" title="Permalink to this headline">¶</a></h2>
-<p>The first ingredient we need is a (physically based) <strong>model</strong> that defines:</p>
+<p>The first ingredient we need is a <strong>model</strong> that defines:</p>
 <ol class="arabic">
 <li><p>the state of the system at instant <span class="math notranslate nohighlight">\(n\)</span>, noted
-<span class="math notranslate nohighlight">\(\boldsymbol{\chi}_n \in \mathcal{M}\)</span>, where <span class="math notranslate nohighlight">\(\mathcal{M}\)</span> is
-a parallelizable manifold (vectors spaces, Lie groups and others). Here the
-state corresponds to the robot orientation and the 2D robot position:</p>
+<span class="math notranslate nohighlight">\(\boldsymbol{\chi}_n \in \mathcal{M}\)</span>, where <span class="math notranslate nohighlight">\(\mathcal{M}\)</span> is a
+parallelizable manifold (vectors spaces, Lie groups and others). Here the
+state corresponds to the robot orientation and the robot position:</p>
 <div class="math notranslate nohighlight">
-\[\mathcal{M} = \left\{ \begin{matrix}
-\mathbf{C} \in SO(2),
-\mathbf{p} \in \mathbb R^2
-\end{matrix} \right\}.\]</div>
+\[\mathcal{M} = \left\{ \begin{matrix} \mathbf{C} \in SO(2),
+\mathbf{p} \in \mathbb R^2 \end{matrix} \right\}.\]</div>
 </li>
-<li><p>a propagation function that describes how the state of the system evolves
-along time</p>
-<blockquote>
-<div><div class="math notranslate nohighlight">
+<li><p>a propagation function that describes how the state evolves along time</p>
+<div class="math notranslate nohighlight">
 \[\boldsymbol{\chi}_n = f(\boldsymbol{\chi}_{n-1},
 \boldsymbol{\omega}_{n}, \mathbf{w}_{n}) \in \mathcal{M},\]</div>
-</div></blockquote>
-<p>where  <span class="math notranslate nohighlight">\(\boldsymbol{\omega}_{n}\)</span> is the input of the system and
-<span class="math notranslate nohighlight">\(\mathbf{w}_{n} \sim \mathcal{N}(\mathbf{0}, \mathbf{Q}_n)\)</span> a noise
-affecting the input and the model propagation.</p>
+<p>where <span class="math notranslate nohighlight">\(\boldsymbol{\omega}_{n} \in \mathcal{U}\)</span> is the input of the
+system and <span class="math notranslate nohighlight">\(\mathbf{w}_{n} \sim \mathcal{N}(\mathbf{0},
+\mathbf{Q}_n)\)</span> is a Gaussian noise.</p>
 </li>
-<li><p>an observation function that describes which measurements we dispose of in
-the form of</p>
-<blockquote>
-<div><div class="math notranslate nohighlight">
-\[\mathbf{y}_n = h(\boldsymbol{\chi}_{n}) + \mathbf{v}_n
-\in \mathbb{R}^p,\]</div>
-</div></blockquote>
-<p>where  <span class="math notranslate nohighlight">\(\mathbf{v}_{n} \sim \mathcal{N}(\mathbf{0}, \mathbf{R}_n)\)</span> is
-Gaussian noise.</p>
+<li><p>an observation function describing the measures we have in the form of:</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{y}_n = h(\boldsymbol{\chi}_{n}) + \mathbf{v}_n \in
+\mathbb{R}^p,\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{v}_{n} \sim \mathcal{N}(\mathbf{0}, \mathbf{R}_n)\)</span> is
+a Gaussian noise.</p>
 </li>
 </ol>
-<p>The code contains several examples of models, which are declared as class. In
-this script, we will use the <code class="docutils literal notranslate"><span class="pre">LOCALIZATION</span></code> model.</p>
+<p>The code contains models, which are declared as class. In this script, we use
+the <code class="docutils literal notranslate"><span class="pre">LOCALIZATION</span></code> model.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MODEL</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">LOCALIZATION</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>State and input are defined through classes. A state or an input is an
-instance of the <code class="docutils literal notranslate"><span class="pre">STATE</span></code> and <code class="docutils literal notranslate"><span class="pre">INPUT</span></code> classes that are described in there
-parent <code class="docutils literal notranslate"><span class="pre">MODEL</span></code> class. We prove it is useful as the state and the input have
-often a complex form that is not handled in vector, .e.g. an orientation
-matrix. In contrast we consider for conciseness that measurement at time
-<span class="math notranslate nohighlight">\(n\)</span> is a vector (1D-array).</p>
+<p>A state or an input is an instance of the <code class="docutils literal notranslate"><span class="pre">STATE</span></code> or <code class="docutils literal notranslate"><span class="pre">INPUT</span></code> class that
+is described in the <code class="docutils literal notranslate"><span class="pre">MODEL</span></code>, and can thus handle a complex form not
+restricted  to vector. In contrast, we consider for conciseness that any
+measurement at time <span class="math notranslate nohighlight">\(n\)</span> is a vector (1D-array).</p>
 </div>
 <div class="section" id="simulating-the-model">
 <h3>Simulating the Model<a class="headerlink" href="#simulating-the-model" title="Permalink to this headline">¶</a></h3>
-<p>Along with the model, we compute simulated data, where the robot drives along
-a 10 m diameter circle for 40 seconds with high rate odometer measurements
-(100 Hz) and low rate position measurements (1 Hz). We first define the
-parameters, create an instance of the model, and compute the true state of
-robot during the sequence along with noisy inputs, where we have to define the
-trajectory radius and noise standard deviation.</p>
+<p>We compute simulated data, where the robot drives along a 10 m diameter circle
+for 40 seconds with high rate odometer measurements (100 Hz) and low rate
+position measurements (1 Hz). We first define the model parameters, create an
+instance of the model, and compute the true states along with noisy inputs.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sequence time (s)</span>
 <span class="n">T</span> <span class="o">=</span> <span class="mi">40</span>
 <span class="c1"># odometry frequency (Hz)</span>
 <span class="n">odo_freq</span> <span class="o">=</span> <span class="mi">100</span>
-
 <span class="c1">#  create the model</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">MODEL</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">odo_freq</span><span class="p">)</span>
-
 <span class="c1"># odometry noise standard deviation</span>
 <span class="n">odo_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.01</span><span class="p">,</span>          <span class="c1"># longitudinal speed (v/m)</span>
                     <span class="mf">0.01</span><span class="p">,</span>          <span class="c1"># transverse shift speed (v/m)</span>
                     <span class="mi">1</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span>  <span class="c1"># differential odometry (rad/s)</span>
-
 <span class="c1"># radius of the circle trajectory (m)</span>
 <span class="n">radius</span> <span class="o">=</span> <span class="mi">5</span>
-
 <span class="c1"># simulate trajectory</span>
 <span class="n">states</span><span class="p">,</span> <span class="n">omegas</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simu_f</span><span class="p">(</span><span class="n">odo_std</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The model encodes how noise affects the inputs and the propagation function,
-which can be non-linear. In contrast, we assume measurement noise affects
-the observations linearly. It is often the case in practice and sparse us
-some computation time, but the method can handle non-linear observation
-noises of the form <span class="math notranslate nohighlight">\(\mathbf{y}_n = h(\boldsymbol{\chi}_{n},
-\mathbf{v}_n)\)</span>.</p>
+<p>The model encodes how non-linear noise affects the propagation function. In
+contrast, we assume measurement noise affects the observations linearly. It
+spares us computational time, but the method can be adapted to handle
+non-linear observation noises of the form
+<span class="math notranslate nohighlight">\(\mathbf{y}_n = h(\boldsymbol{\chi}_{n}, \mathbf{v}_n)\)</span>.</p>
 </div>
-<p>The states and inputs variables are both list of <code class="docutils literal notranslate"><span class="pre">STATE</span></code> and <code class="docutils literal notranslate"><span class="pre">INPUT</span></code>
-classes instances. One can access to the state at specific instant <span class="math notranslate nohighlight">\(n\)</span>
-as</p>
+<p>The state and input variables are both a list of <code class="docutils literal notranslate"><span class="pre">STATE</span></code> and <code class="docutils literal notranslate"><span class="pre">INPUT</span></code>
+instances. One can access a variable at specific instant <span class="math notranslate nohighlight">\(n\)</span> as:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">state_n</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="c1"># model.STATE instance</span>
 <span class="n">omega_n</span> <span class="o">=</span> <span class="n">omegas</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="c1"># model.INPUT instance</span>
 </pre></div>
 </div>
-<p>We can then access to the elements of the state or the input as</p>
+<p>We can access to the elements of the state or the input as:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">state_n</span><span class="o">.</span><span class="n">Rot</span>    <span class="c1"># 2d orientation encoded in a rotation matrix</span>
 <span class="n">state_n</span><span class="o">.</span><span class="n">p</span>      <span class="c1"># 2d position</span>
 <span class="n">omega_n</span><span class="o">.</span><span class="n">v</span>      <span class="c1"># robot forward velocity</span>
 <span class="n">omega_n</span><span class="o">.</span><span class="n">gyro</span>   <span class="c1"># robot angular velocity</span>
 </pre></div>
 </div>
-<p>The elements of the state and the input depend on the considered problem, they
-are thus defined in the model class <code class="docutils literal notranslate"><span class="pre">LOCALIZATION</span></code>. You can directly look at
-the <code class="xref py py-meth docutils literal notranslate"><span class="pre">LOCALIZATION()</span></code> class to see how they are defined, that is also
-described in <a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id3">[BB17]</a>. The model documentation contains
-also a mathematical description of the propagation and measumrent functions.</p>
+<p>These elements depend on the considered problem and are defined in the model.
+See at the <a class="reference internal" href="../model.html#ukfm.LOCALIZATION" title="ukfm.LOCALIZATION"><code class="xref py py-meth docutils literal notranslate"><span class="pre">LOCALIZATION()</span></code></a>  documentation to get a brief
+mathematical description.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The orientation of the robot, <code class="docutils literal notranslate"><span class="pre">states[n].Rot</span></code>, is defined via a rotation
-matrix. Indeed, in all the examples, we define 2D and 3D orientations in
-matrices living respectively in <span class="math notranslate nohighlight">\(SO(2)\)</span> and <span class="math notranslate nohighlight">\(SO(3)\)</span> and we
-believe it is a well understandable orientation representation. The method
-remains compatible both with angle or quaternion that can be advantageous
-for numerical reasons (stability to round-off error, speed). We may drop
-some numerical issues (round-off that leads to non-orthogonal rotation
-matrices, non symmetric covariance matrices, speed improvement,
-integration methods with Runge-Kutta scheme, …) in order to let the code
-simple.</p>
+<p>The orientation <code class="docutils literal notranslate"><span class="pre">states[n].Rot</span></code> is defined via a rotation matrix. We
+always define for clarity orientations in matrices living  in <span class="math notranslate nohighlight">\(SO(2)\)</span>
+and <span class="math notranslate nohighlight">\(SO(3)\)</span>. The method remains compatible with quaternion. We may
+drop some numerical issues, e.g. round-off that leads to non-orthogonal
+rotation matrices, to let the code simple.</p>
 </div>
-<p>With the <em>true</em> state trajectory, we simulate <em>noisy</em> measurements of the
-robot position, where the odometry and GPS have different frequencies.</p>
+<p>With the <em>true</em> states, we simulate <em>noisy</em> measurements.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># GPS frequency (Hz)</span>
 <span class="n">gps_freq</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="c1"># GPS noise standard deviation (m)</span>
@@ -361,15 +334,14 @@ robot position, where the odometry and GPS have different frequencies.</p>
 </pre></div>
 </div>
 <p>The variable <code class="docutils literal notranslate"><span class="pre">ys</span></code> is a 2D array that contains all the observations of the
-sequence. To get the k-th measurement, simply take the k-th element the
-variable as</p>
+sequence. To get the k-th measurement, take the k-th element of the variable
+as:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">y_k</span> <span class="o">=</span> <span class="n">ys</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="c1"># vector (1D array)</span>
 </pre></div>
 </div>
-<p>We also have defined an array <code class="docutils literal notranslate"><span class="pre">one_hot_ys</span></code> that contains 1 at instant where
-a measurement happens and 0 otherwise (we indeed have a kind of multi-rate
-Kalman filter).</p>
-<p>We can visualize the robot trajectory along with measurements.</p>
+<p>We have defined an array <code class="docutils literal notranslate"><span class="pre">one_hot_ys</span></code> that contains 1 at instant where a
+measurement happens and 0 otherwise.</p>
+<p>Let us visualizes the robot trajectory along with measurements.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">plot_traj</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">ys</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -383,88 +355,74 @@ Kalman filter).</p>
 <ol class="arabic">
 <li><p>defining a model of the propagation function and the measurement function.</p></li>
 <li><p>choosing the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> and inverse retraction
-<span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span> (we discuss about this below) such that</p>
+<span class="math notranslate nohighlight">\(\varphi^{-1}_.(.)\)</span> such that</p>
 <div class="math notranslate nohighlight">
-\[ \begin{align}\begin{aligned}\boldsymbol{\chi} &amp;= \varphi(\hat{\boldsymbol{\chi}}, \boldsymbol{\xi}),\\\boldsymbol{\xi} &amp;= \varphi^{-1}(\boldsymbol{\chi},
-\hat{\boldsymbol{\chi}}),\end{aligned}\end{align} \]</div>
-</li>
-</ol>
-<blockquote>
-<div><p>where <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span> is the true state,
+\[ \begin{align}\begin{aligned}\boldsymbol{\chi} &amp;= \varphi(\hat{\boldsymbol{\chi}}, \boldsymbol{\xi})
+\in \mathcal{M},\\\boldsymbol{\xi} &amp;= \varphi^{-1}_{\hat{\boldsymbol{\chi}}}
+(\boldsymbol{\chi}) \in \mathbb{R}^d,\end{aligned}\end{align} \]</div>
+<p>where <span class="math notranslate nohighlight">\(\boldsymbol{\chi}\)</span> is the true state,
 <span class="math notranslate nohighlight">\(\hat{\boldsymbol{\chi}}\)</span> the estimated state, and
-<span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span> the state uncertainty (we does not use notation
-<span class="math notranslate nohighlight">\(\mathbf{x}\)</span> and <span class="math notranslate nohighlight">\(\mathbf{e}\)</span> to emphasize the differences with
-the linear case).</p>
-</div></blockquote>
-<ol class="arabic simple" start="3">
+<span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span> the state uncertainty (we does not use the
+notation <span class="math notranslate nohighlight">\(\mathbf{x}\)</span> and <span class="math notranslate nohighlight">\(\mathbf{e}\)</span> to emphasize the
+differences with the linear case).</p>
+</li>
 <li><p>setting UKF parameters such as sigma point dispersion and noise covariance
 values.</p></li>
 </ol>
-<p>Step 1) is already done, as we just have to take the functions defined in the
-model.</p>
-<p>Step 2) consists in choosing the functions that encodes our representation of
-the state uncertainty. A basic UKF is building on the error defined as
-<span class="math notranslate nohighlight">\(\mathbf{e} = \mathbf{x} - \mathbf{\hat{x}}\)</span>, which is clearly not
-optimal for dealing, among other, with orientation. Rather than we generalize
-and define the uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>  thought
-<span class="math notranslate nohighlight">\(\boldsymbol{\chi} = \varphi(\hat{\boldsymbol{\chi}},
-\boldsymbol{\xi})\)</span>, where the <em>retraction</em> function <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> has
-only to satisfy <span class="math notranslate nohighlight">\(\varphi(\boldsymbol{\chi}, \mathbf{0}) =
-\boldsymbol{\chi}\)</span> (without uncertainty, the estimated state equals the true
-state). The uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span> lives in a vector space
-<span class="math notranslate nohighlight">\(\mathbb{R}^d\)</span> and one can use standard UKF tools on this variable. We
-then need a <em>inverse retraction</em> function to get a vector difference from two
-states, that must respect <span class="math notranslate nohighlight">\(\varphi^{-1}(\boldsymbol{\chi},
-\boldsymbol{\chi}) = \mathbf{0}\)</span>.</p>
-<p>We choose here to embed the state in <span class="math notranslate nohighlight">\(SO(2) \times \mathbb{R}^2\)</span>, such
-that:</p>
+<p>Step 1) is already done, as we take the functions defined in the model.</p>
+<p>Step 2) consists in choosing the mapping that encode our representation of the
+state belief. A basic UKF is building on the uncertainty defined as
+<span class="math notranslate nohighlight">\(\mathbf{e} = \mathbf{x} - \mathbf{\hat{x}}\)</span>, which is not necessary
+optimal. Rather than, we define the uncertainty <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>
+thought <span class="math notranslate nohighlight">\(\boldsymbol{\chi} = \varphi(\hat{\boldsymbol{\chi}},
+\boldsymbol{\xi})\)</span>, where the <em>retraction</em> <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> has to
+satisfy <span class="math notranslate nohighlight">\(\varphi(\boldsymbol{\chi}, \mathbf{0}) = \boldsymbol{\chi}\)</span>
+(without uncertainty, the estimated state equals the true state). We then need
+an <em>inverse retraction</em> to get a difference from two states that must respect
+<span class="math notranslate nohighlight">\(\varphi^{-1}_{\boldsymbol{\chi}}(\boldsymbol{\chi}) = \mathbf{0}\)</span>.</p>
+<p>We embed here the state in <span class="math notranslate nohighlight">\(SO(2) \times \mathbb{R}^2\)</span>, such that:</p>
 <ul class="simple">
-<li><p>the function <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(2)\)</span> exponential map for
-orientation and the standard vector addition for robot position.</p></li>
-<li><p>the function <span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(2)\)</span> logarithm for
-orientation and the standard vector subtraction for position.</p></li>
+<li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(2)\)</span> exponential for
+orientation and the vector addition for position.</p></li>
+<li><p>the inverse retraction <span class="math notranslate nohighlight">\(\varphi^{-1}_.(.)\)</span> is the <span class="math notranslate nohighlight">\(SO(2)\)</span>
+logarithm for orientation and the vector subtraction for position.</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>We define the retraction and inverse retraction, which are chosen by the
-user, directly in the model class.</p>
+<p>We define different choices of retraction and inverse retraction
+directly in the model.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>One can suggest alternative and more adapted retraction, e.g. by viewing
-the state as a element of <span class="math notranslate nohighlight">\(SE(2)\)</span>. It generally exists several
-possibilities to define retraction. When no theoretical suggestions
-are in favour of a retraction, we suggest to just compare then. In the
-benchmarks section, we compare different choices of retraction for
-different problems.</p>
+<p>One can suggest alternative retractions, e.g. by viewing the state as a
+element of <span class="math notranslate nohighlight">\(SE(2)\)</span>. In the benchmarks section, we compare different
+choices of retraction for different problems.</p>
 </div>
-<p>We  define the UKF parameters based on the model parameters.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># propagation noise matrix</span>
+<p>We define the filter parameters based on the model.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># propagation noise covariance matrix</span>
 <span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">odo_std</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-<span class="c1"># measurement noise matrix</span>
+<span class="c1"># measurement noise covariance matrix</span>
 <span class="n">R</span> <span class="o">=</span> <span class="n">gps_std</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="c1"># sigma point parameters</span>
 <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">])</span>
-<span class="c1"># this parameter scales the sigma points. Current values are between 10^-3 and 1</span>
+<span class="c1"># this parameter scales the sigma points.</span>
+<span class="c1"># Current values are between 10^-3 and 1.</span>
 </pre></div>
 </div>
 <div class="section" id="filter-initialization">
 <h3>Filter Initialization<a class="headerlink" href="#filter-initialization" title="Permalink to this headline">¶</a></h3>
-<p>We initialize the filter with the true state plus a small initial error
-heading of 1°, and set corresponding initial covariance matrices.</p>
+<p>We initialize the filter with the true state with a small heading error of 1°.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># &quot;add&quot; orientation error to the initial state</span>
-<span class="n">SO2</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">SO2</span>
-<span class="n">state0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span><span class="n">Rot</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO2</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)),</span>
+<span class="n">state0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span><span class="n">Rot</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ukfm</span><span class="o">.</span><span class="n">SO2</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)),</span>
                      <span class="n">p</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
-
-<span class="c1"># initial state-error covariance matrix</span>
+<span class="c1"># initial state uncertainty covariance matrix</span>
 <span class="n">P0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 <span class="c1"># The state is not perfectly initialized</span>
-<span class="n">P0</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="n">P0</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
 </pre></div>
 </div>
-<p>We then define the filter as an instance  of the <code class="docutils literal notranslate"><span class="pre">UKF</span></code> class.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ukf</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span>          <span class="c1"># initial state</span>
+<p>We define the filter as an instance  of the <code class="docutils literal notranslate"><span class="pre">UKF</span></code> class.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ukf</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span>          <span class="c1">#  initial state</span>
                <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>                  <span class="c1"># initial covariance</span>
                <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span>              <span class="c1"># propagation model</span>
                <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>              <span class="c1"># observation model</span>
@@ -486,7 +444,7 @@ full trajectory and a 3D array to record covariance estimates.</p>
 </div>
 <div class="section" id="filtering">
 <h3>Filtering<a class="headerlink" href="#filtering" title="Permalink to this headline">¶</a></h3>
-<p>The UKF proceeds as a standard Kalman filter with a simple for loop.</p>
+<p>The UKF proceeds as a standard Kalman filter with a for loop.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># measurement iteration number (first measurement is for n == 0)</span>
 <span class="n">k</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
@@ -496,7 +454,6 @@ full trajectory and a 3D array to record covariance estimates.</p>
     <span class="k">if</span> <span class="n">one_hot_ys</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">ukf</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ys</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
         <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
-
     <span class="c1"># save estimates</span>
     <span class="n">ukf_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
     <span class="n">ukf_Ps</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">ukf</span><span class="o">.</span><span class="n">P</span>
@@ -506,10 +463,9 @@ full trajectory and a 3D array to record covariance estimates.</p>
 </div>
 <div class="section" id="results">
 <h2>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
-<p>We plot the trajectory, GPS measurements and estimated trajectory. As UKF
-estimates the covariance of the error, we have plotted the 95% confident
-interval (<span class="math notranslate nohighlight">\(3\sigma\)</span>). We expect the error keeps behind this interval.
-This plotted results has of course to be confirmed with average metrics to
+<p>We plot the trajectory, GPS measurements and estimated trajectory. We then
+plot the orientation and position errors along with 95% (<span class="math notranslate nohighlight">\(3\sigma\)</span>)
+confident interval. The results has to be confirmed with average metrics to
 reveal the filter performances in term of accuracy, consistency and
 robustness.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">plot_results</span><span class="p">(</span><span class="n">ukf_states</span><span class="p">,</span> <span class="n">ukf_Ps</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">ys</span><span class="p">)</span>
@@ -524,31 +480,30 @@ robustness.</p>
 </li>
 </ul>
 <p>All results seem coherent. This is expected as the initial heading error is
-very small.</p>
+small.</p>
 </div>
 <div class="section" id="conclusion">
 <h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
-<p>This script introduces UKF-M and shows how the UKF on parallelizable manifolds
-generalizes the standard UKF by considering an user-chosen uncertainty
-representation. Two major advantages are that many problems could be addressed
-with the proposed framework, and that both the theory and the implementation
-are not so complicated. Once the physical model is established, deriving an
-UKF is quite immediate.</p>
+<p>This script introduces UKF-M and shows how designing an UKF on parallelizable
+manifolds mainly consists in choosing an advantageous uncertainty
+representation. Two major interests of the method are that many problems could
+be addressed within the framework, and that both the theory and its
+implementation are sufficiently simple.</p>
 <p>The filter works apparently well on a simple robot localization problem, with
 small initial heading error. Is it hold for more challenging initial error ?</p>
 <p>You can now:</p>
 <ul class="simple">
-<li><p>enter more in depth with the theory, see <a class="reference internal" href="../bibliography.html#brossardcode2019" id="id4">[BBB19]</a>.</p></li>
+<li><p>enter more in depth with the theory, see <a class="reference internal" href="../bibliography.html#brossardcode2019" id="id3">[BBB19]</a>.</p></li>
 <li><p>address the UKF for the same problem with different noise parameters, and
-even tested its robustness e.g. to strong initial heading error.</p></li>
+test its robustness to strong initial heading error.</p></li>
 <li><p>modify the propagation model with a differential odometry model, where
 inputs are left and right wheel speed measurements.</p></li>
 <li><p>apply the UKF for the same problem on real data.</p></li>
-<li><p>benchmark the UKF with different function error and compare the new filters
+<li><p>benchmark the UKF with different retractions and compare the new filters
 to both the extended Kalman filter and invariant extended Kalman filter of
-<a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id5">[BB17]</a>.</p></li>
+<a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id4">[BB17]</a>.</p></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  3.172 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  3.914 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-localization-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/28219bd51c1a96321aa7f65c2e3474fa/localization.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">localization.py</span></code></a></p>

@@ -6,6 +6,7 @@ class SEK3:
     """Homogeneous transformation matrix in :math:`SE_k(3)`.
 
     .. math::
+
         SE_k(3) &= \\left\\{ \\mathbf{T}=
                 \\begin{bmatrix}
                     \\mathbf{C} & \\mathbf{r_1} & \\cdots &\\mathbf{r}_k \\\\
@@ -32,6 +33,7 @@ class SEK3:
         from a tangent vector:
 
         .. math::
+
             \\mathbf{T}(\\boldsymbol{\\xi}) =
             \\exp(\\boldsymbol{\\xi}^\\wedge) =
             \\begin{bmatrix}
@@ -54,13 +56,14 @@ class SEK3:
     def inv(cls, chi):
         """Inverse map for :math:`SE_k(3)`.
 
-                .. math::
-                    \\mathbf{T}^{-1} =
-                    \\begin{bmatrix}
-                        \\mathbf{C}^T  & -\\mathbf{C}^T \\boldsymbol{\\rho}_1  &
-                         \\cdots & & -\\mathbf{C}^T \\boldsymbol{\\rho}_k \\\\
-                        \\mathbf{0} ^ T & & \\mathbf{I} &
-                    \\end{bmatrix}
+        .. math::
+
+            \\mathbf{T}^{-1} =
+            \\begin{bmatrix}
+                \\mathbf{C}^T  & -\\mathbf{C}^T \\boldsymbol{\\rho}_1  &
+                    \\cdots & & -\\mathbf{C}^T \\boldsymbol{\\rho}_k \\\\
+                \\mathbf{0} ^ T & & \\mathbf{I} &
+            \\end{bmatrix}
 
         """
         k = chi.shape[0] - 3
@@ -75,6 +78,7 @@ class SEK3:
         from a transformation:
 
         .. math::
+        
             \\boldsymbol{\\xi}(\\mathbf{T}) =
             \\ln(\\mathbf{T})^\\vee =
             \\begin{bmatrix}
@@ -89,5 +93,3 @@ class SEK3:
         Xi = SO3.inv_left_jacobian(phi).dot(chi[:3, 3:])
         xi = np.hstack([phi, Xi.flatten('F')])
         return xi
-    
-    

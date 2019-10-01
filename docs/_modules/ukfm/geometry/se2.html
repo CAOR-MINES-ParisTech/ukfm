@@ -153,22 +153,23 @@
 <div class="viewcode-block" id="SE2"><a class="viewcode-back" href="../../../geometry.html#ukfm.SE2">[docs]</a><span class="k">class</span> <span class="nc">SE2</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Homogeneous transformation matrix in :math:`SE(2)`</span>
 
-<span class="sd">        .. math::</span>
-<span class="sd">            SE(2) &amp;= \\left\\{ \\mathbf{T}=</span>
-<span class="sd">                    \\begin{bmatrix}</span>
-<span class="sd">                        \\mathbf{C} &amp; \\mathbf{r} \\\\</span>
-<span class="sd">                        \\mathbf{0}^T &amp; 1</span>
-<span class="sd">                    \\end{bmatrix} \\in \\mathbb{R}^{3 \\times 3} ~\\middle|~ </span>
-<span class="sd">                    \\mathbf{C} \\in SO(2), \\mathbf{r} \\in \\mathbb{R}^2 </span>
-<span class="sd">                    \\right\\} \\\\</span>
-<span class="sd">            \\mathfrak{se}(2) &amp;= \\left\\{ \\boldsymbol{\\Xi} =</span>
-<span class="sd">            \\boldsymbol{\\xi}^\\wedge \\in \\mathbb{R}^{3 \\times 3} ~\\middle|</span>
-<span class="sd">            ~</span>
-<span class="sd">             \\boldsymbol{\\xi}=</span>
+<span class="sd">    .. math::</span>
+<span class="sd">    </span>
+<span class="sd">        SE(2) &amp;= \\left\\{ \\mathbf{T}=</span>
 <span class="sd">                \\begin{bmatrix}</span>
-<span class="sd">                    \\phi \\\\  \\boldsymbol{\\rho}</span>
-<span class="sd">                \\end{bmatrix} \\in \\mathbb{R}^3, \\boldsymbol{\\rho} \\in </span>
-<span class="sd">                \\mathbb{R}^2, \\phi \in \\mathbb{R} \\right\\}</span>
+<span class="sd">                    \\mathbf{C} &amp; \\mathbf{r} \\\\</span>
+<span class="sd">                    \\mathbf{0}^T &amp; 1</span>
+<span class="sd">                \\end{bmatrix} \\in \\mathbb{R}^{3 \\times 3} ~\\middle|~ </span>
+<span class="sd">                \\mathbf{C} \\in SO(2), \\mathbf{r} \\in \\mathbb{R}^2 </span>
+<span class="sd">                \\right\\} \\\\</span>
+<span class="sd">        \\mathfrak{se}(2) &amp;= \\left\\{ \\boldsymbol{\\Xi} =</span>
+<span class="sd">        \\boldsymbol{\\xi}^\\wedge \\in \\mathbb{R}^{3 \\times 3} ~\\middle|</span>
+<span class="sd">        ~</span>
+<span class="sd">            \\boldsymbol{\\xi}=</span>
+<span class="sd">            \\begin{bmatrix}</span>
+<span class="sd">                \\phi \\\\  \\boldsymbol{\\rho}</span>
+<span class="sd">            \\end{bmatrix} \\in \\mathbb{R}^3, \\boldsymbol{\\rho} \\in </span>
+<span class="sd">            \\mathbb{R}^2, \\phi \in \\mathbb{R} \\right\\}</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -176,13 +177,14 @@
     <span class="k">def</span> <span class="nf">Ad</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">chi</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Adjoint matrix of the transformation.</span>
 
-<span class="sd">                .. math::</span>
-<span class="sd">                    \\text{Ad}(\\mathbf{T}) =</span>
-<span class="sd">                    \\begin{bmatrix}</span>
-<span class="sd">                        \\mathbf{C} &amp; 1^\\wedge \\mathbf{r} \\\\</span>
-<span class="sd">                        \\mathbf{0}^T &amp; 1</span>
-<span class="sd">                    \\end{bmatrix}</span>
-<span class="sd">                    \\in \\mathbb{R}^{3 \\times 3}</span>
+<span class="sd">        .. math::</span>
+<span class="sd">        </span>
+<span class="sd">            \\text{Ad}(\\mathbf{T}) =</span>
+<span class="sd">            \\begin{bmatrix}</span>
+<span class="sd">                \\mathbf{C} &amp; 1^\\wedge \\mathbf{r} \\\\</span>
+<span class="sd">                \\mathbf{0}^T &amp; 1</span>
+<span class="sd">            \\end{bmatrix}</span>
+<span class="sd">            \\in \\mathbb{R}^{3 \\times 3}</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">Rot</span> <span class="o">=</span> <span class="n">chi</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span>
@@ -208,20 +210,21 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">chi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
         <span class="n">chi</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">SO2</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">xi</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="n">chi</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">SO2</span><span class="o">.</span><span class="n">left_jacobian</span><span class="p">(</span><span class="n">xi</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">xi</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="n">chi</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">SO2</span><span class="o">.</span><span class="n">left_jacobian</span><span class="p">(</span><span class="n">xi</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">xi</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">chi</span></div>
 
 <div class="viewcode-block" id="SE2.inv"><a class="viewcode-back" href="../../../geometry.html#ukfm.SE2.inv">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">chi</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Inverse map for :math:`SE(2)`.</span>
 
-<span class="sd">                .. math::</span>
-<span class="sd">                    \\mathbf{T}^{-1} =</span>
-<span class="sd">                    \\begin{bmatrix}</span>
-<span class="sd">                        \\mathbf{C}^T  &amp; -\\mathbf{C}^T \\boldsymbol{\\rho}</span>
-<span class="sd">                          \\\\</span>
-<span class="sd">                        \\mathbf{0} ^ T &amp; 1</span>
-<span class="sd">                    \\end{bmatrix}</span>
+<span class="sd">        .. math::</span>
+<span class="sd">        </span>
+<span class="sd">            \\mathbf{T}^{-1} =</span>
+<span class="sd">            \\begin{bmatrix}</span>
+<span class="sd">                \\mathbf{C}^T  &amp; -\\mathbf{C}^T \\boldsymbol{\\rho}</span>
+<span class="sd">                    \\\\</span>
+<span class="sd">                \\mathbf{0} ^ T &amp; 1</span>
+<span class="sd">            \\end{bmatrix}</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">chi_inv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
@@ -234,15 +237,16 @@
         <span class="sd">&quot;&quot;&quot;Logarithmic map for :math:`SE(2)`, which computes a tangent vector </span>
 <span class="sd">        from a transformation:</span>
 
-<span class="sd">                .. math::</span>
-<span class="sd">                    \\boldsymbol{\\xi}(\\mathbf{T}) =</span>
-<span class="sd">                    \\ln(\\mathbf{T})^\\vee =</span>
-<span class="sd">                    \\begin{bmatrix}</span>
-<span class="sd">                    \\ln(\\boldsymbol{C}) ^\\vee \\\\</span>
-<span class="sd">                        \\mathbf{J} ^ {-1} \\mathbf{r}</span>
-<span class="sd">                    \\end{bmatrix}</span>
+<span class="sd">        .. math::</span>
+<span class="sd">        </span>
+<span class="sd">            \\boldsymbol{\\xi}(\\mathbf{T}) =</span>
+<span class="sd">            \\ln(\\mathbf{T})^\\vee =</span>
+<span class="sd">            \\begin{bmatrix}</span>
+<span class="sd">            \\ln(\\boldsymbol{C}) ^\\vee \\\\</span>
+<span class="sd">                \\mathbf{J} ^ {-1} \\mathbf{r}</span>
+<span class="sd">            \\end{bmatrix}</span>
 
-<span class="sd">                This is the inverse operation to :meth:`~ukfm.SE2.log`.</span>
+<span class="sd">        This is the inverse operation to :meth:`~ukfm.SE2.log`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">phi</span> <span class="o">=</span> <span class="n">SO2</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">chi</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>
         <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">phi</span><span class="p">,</span> <span class="n">SO2</span><span class="o">.</span><span class="n">inv_left_jacobian</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">chi</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])])</span>

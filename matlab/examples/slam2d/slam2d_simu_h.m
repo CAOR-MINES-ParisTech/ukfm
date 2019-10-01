@@ -4,7 +4,7 @@ function [ys] = slam2d_simu_h(states, obs_noise_std, N_ldk, ldks)
 % Syntax: [ys] = slam2d_simu_h(states, obs_noise_std, N_ldk, ldks)
 %
 % Inputs.
-%    states - state, array of structure
+%    states - states
 %    obs_noise_std - observation noise standard deviation
 %    N_ldk - number of landmarks
 %    ldks - landmarks

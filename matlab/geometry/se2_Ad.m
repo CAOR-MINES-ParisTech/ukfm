@@ -1,13 +1,13 @@
 function [Ad] = se2_Ad(chi)
-%SE2_EXP Adjoint matrix of SE(2)
+%SE2_EXP Adjoint matrix
 %
 % Syntax: [Ad] = se2_Ad(chi)
 %
 % Inputs:
-%    chi - state matrix
+%    chi - matrix
 %
 % Outputs:
-%    Ad - adjoint matrix
+%    Ad - matrix
 
 Rot = chi(1:2, 1:2);
 Jp = [chi(2, 3);

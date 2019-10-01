@@ -153,8 +153,8 @@
             
   <div class="section" id="filters">
 <h1>Filters<a class="headerlink" href="#filters" title="Permalink to this headline">¶</a></h1>
-<p>This page describes the base class for designed an UKF (<a class="reference internal" href="#ukfm.UKF" title="ukfm.UKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">UKF()</span></code></a>) and a
-Jacobian UKF, <a class="reference internal" href="#ukfm.JUKF" title="ukfm.JUKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">JUKF()</span></code></a>, which is well adapted when the dimension of
+<p>This page describes the base class for designing an UKF (<a class="reference internal" href="#ukfm.UKF" title="ukfm.UKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">UKF()</span></code></a>) and
+a Jacobian UKF, <a class="reference internal" href="#ukfm.JUKF" title="ukfm.JUKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">JUKF()</span></code></a>, which is well adapted when the dimension of
 the state is important. <a class="reference internal" href="#ukfm.JUKF" title="ukfm.JUKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">JUKF()</span></code></a> infers numerical Jacobian, is
 relatively less intuitive and gets exactly the same results as
 <a class="reference internal" href="#ukfm.UKF" title="ukfm.UKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">UKF()</span></code></a>. We finally add a base class for an Extended Kalman Filter
@@ -165,12 +165,11 @@ relatively less intuitive and gets exactly the same results as
 <dt id="ukfm.UKF">
 <em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">UKF</code><span class="sig-paren">(</span><em class="sig-param">f</em>, <em class="sig-param">h</em>, <em class="sig-param">phi</em>, <em class="sig-param">phi_inv</em>, <em class="sig-param">Q</em>, <em class="sig-param">R</em>, <em class="sig-param">alpha</em>, <em class="sig-param">state0</em>, <em class="sig-param">P0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#UKF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.UKF" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Unscented Kalman Filter on (parallelizable) Manifolds.</p>
-<p>This filter is the implementation described in <a class="reference internal" href="bibliography.html#brossardcode2019" id="id1">[BBB19]</a>
-. It is well adapted to relatively small systems and
-for understanding the methodology of <strong>UKF-M</strong>, otherwise see
-<a class="reference internal" href="#ukfm.JUKF" title="ukfm.JUKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">JUKF()</span></code></a>. Noise covariance parameter are assumed static for
-convenience, i.e. <span class="math notranslate nohighlight">\(\mathbf{Q}_n = \mathbf{Q}\)</span>, and
-<span class="math notranslate nohighlight">\(\mathbf{R}_n = \mathbf{R}\)</span>.</p>
+<p>This filter is the implementation described in <a class="reference internal" href="bibliography.html#brossardcode2019" id="id1">[BBB19]</a> . It
+is well adapted to relatively small systems and for understanding the
+methodology of <strong>UKF-M</strong>, otherwise see <a class="reference internal" href="#ukfm.JUKF" title="ukfm.JUKF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">JUKF()</span></code></a>. Noise covariance
+parameters are assumed static for convenience, i.e. <span class="math notranslate nohighlight">\(\mathbf{Q}_n =
+\mathbf{Q}\)</span>, and <span class="math notranslate nohighlight">\(\mathbf{R}_n = \mathbf{R}\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -187,7 +186,7 @@ convenience, i.e. <span class="math notranslate nohighlight">\(\mathbf{Q}_n = \m
 <li><p><strong>R</strong> – observation noise covariance matrix (static) <span class="math notranslate nohighlight">\(\mathbf{R}\)</span>.</p></li>
 <li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}_n\)</span>, initialized at 
 <code class="docutils literal notranslate"><span class="pre">state0</span></code>.</p></li>
-<li><p><strong>P</strong> – state error covariance <span class="math notranslate nohighlight">\(\mathbf{P}_n\)</span>, initialized at
+<li><p><strong>P</strong> – state uncertainty covariance <span class="math notranslate nohighlight">\(\mathbf{P}_n\)</span>, initialized at
 <code class="docutils literal notranslate"><span class="pre">P0</span></code>.</p></li>
 </ul>
 </dd>
@@ -196,17 +195,17 @@ convenience, i.e. <span class="math notranslate nohighlight">\(\mathbf{Q}_n = \m
 <dt id="ukfm.UKF.WEIGHTS">
 <em class="property">class </em><code class="sig-name descname">WEIGHTS</code><span class="sig-paren">(</span><em class="sig-param">d</em>, <em class="sig-param">q</em>, <em class="sig-param">alpha</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#UKF.WEIGHTS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.UKF.WEIGHTS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sigma point weights.</p>
-<p>Weights are computed as</p>
+<p>Weights are computed as:</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\lambda &amp;= (\alpha^2 - 1) \mathrm{dim} \\
-w_j &amp;= 1/(2(\mathrm{dim} + \lambda)) \\
-w_m &amp;= \lambda/(\lambda + \mathrm{dim}) \\
-w_0 &amp;= \lambda/(\lambda + \mathrm{dim}) + 3 - \alpha^2\end{split}\]</div>
-<p>where <span class="math notranslate nohighlight">\(\alpha\)</span> is a parameter set between <span class="math notranslate nohighlight">\(10^{-3}\)</span> and 
-<span class="math notranslate nohighlight">\(1\)</span>, and <span class="math notranslate nohighlight">\(\mathrm{dim}\)</span> the dimension of the sigma-points 
-(<span class="math notranslate nohighlight">\(d\)</span> or <span class="math notranslate nohighlight">\(q\)</span>).</p>
-<p>This variable contains sigma point weights for propagation (w.r.t. 
-state error and noise) and for update.</p>
+\[\begin{split}\lambda &amp;= (\alpha^2 - 1) \mathrm{dim}, \\
+w_j &amp;= 1/(2(\mathrm{dim} + \lambda)), \\
+w_m &amp;= \lambda/(\lambda + \mathrm{dim}), \\
+w_0 &amp;= \lambda/(\lambda + \mathrm{dim}) + 3 - \alpha^2,\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\alpha\)</span> is a parameter set between <span class="math notranslate nohighlight">\(10^{-3}\)</span> and
+<span class="math notranslate nohighlight">\(1\)</span>, and <span class="math notranslate nohighlight">\(\mathrm{dim}\)</span> is the dimension of the
+sigma-points (<span class="math notranslate nohighlight">\(d\)</span> or <span class="math notranslate nohighlight">\(q\)</span>).</p>
+<p>This variable contains sigma point weights for propagation (w.r.t. state
+uncertainty and noise) and for update.</p>
 </dd></dl>
 
 <dl class="method">
@@ -286,7 +285,7 @@ augmentation. (optional)</p></li>
 <li><p><strong>Q</strong> – propagation noise covariance matrix (static) <span class="math notranslate nohighlight">\(\mathbf{Q}\)</span>.</p></li>
 <li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}_n\)</span>, initialized at 
 <code class="docutils literal notranslate"><span class="pre">state0</span></code>.</p></li>
-<li><p><strong>P</strong> – state error covariance <span class="math notranslate nohighlight">\(\mathbf{P}_n\)</span>, initialized at
+<li><p><strong>P</strong> – state uncertainty covariance <span class="math notranslate nohighlight">\(\mathbf{P}_n\)</span>, initialized at
 <code class="docutils literal notranslate"><span class="pre">P0</span></code>.</p></li>
 </ul>
 </dd>
@@ -295,17 +294,16 @@ augmentation. (optional)</p></li>
 <dt id="ukfm.JUKF.WEIGHTS">
 <em class="property">class </em><code class="sig-name descname">WEIGHTS</code><span class="sig-paren">(</span><em class="sig-param">red_d</em>, <em class="sig-param">q</em>, <em class="sig-param">up_d</em>, <em class="sig-param">aug_d</em>, <em class="sig-param">aug_q</em>, <em class="sig-param">alpha</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#JUKF.WEIGHTS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.JUKF.WEIGHTS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sigma point weights.</p>
-<p>Weights are computed as</p>
+<p>Weights are computed as:</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\lambda &amp;= (\alpha^2 - 1) \mathrm{dim} \\
-w_j &amp;= 1/(2(\mathrm{dim} + \lambda)) \\
-w_m &amp;= \lambda/(\lambda + \mathrm{dim}) \\
-w_0 &amp;= \lambda/(\lambda + \mathrm{dim}) + 3 - \alpha^2\end{split}\]</div>
+\[\begin{split}\lambda &amp;= (\alpha^2 - 1) \mathrm{dim}, \\
+w_j &amp;= 1/(2(\mathrm{dim} + \lambda)), \\
+w_m &amp;= \lambda/(\lambda + \mathrm{dim}), \\
+w_0 &amp;= \lambda/(\lambda + \mathrm{dim}) + 3 - \alpha^2,\end{split}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\alpha\)</span> is a parameter set between <span class="math notranslate nohighlight">\(10^{-3}\)</span> and 
-<span class="math notranslate nohighlight">\(1\)</span>, and <span class="math notranslate nohighlight">\(\mathrm{dim}\)</span> the dimension of the sigma-points 
-(<span class="math notranslate nohighlight">\(d\)</span> or <span class="math notranslate nohighlight">\(q\)</span>).</p>
-<p>This variable contains sigma point weights for propagation (w.r.t. 
-state error and noise), update and state augmentation.</p>
+<span class="math notranslate nohighlight">\(1\)</span>, and <span class="math notranslate nohighlight">\(\mathrm{dim}\)</span> the dimension of the sigma-points.</p>
+<p>This variable contains sigma point weights for propagation (w.r.t. state
+uncertainty and noise), update and state augmentation.</p>
 </dd></dl>
 
 <dl class="method">
@@ -327,9 +325,15 @@ state error and noise), update and state augmentation.</p>
 <code class="sig-name descname">propagation</code><span class="sig-paren">(</span><em class="sig-param">omega</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ukf.html#JUKF.propagation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.JUKF.propagation" title="Permalink to this definition">¶</a></dt>
 <dd><p>UKF propagation step.</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\boldsymbol{\hat{\chi}}_{n} &amp;\leftarrow \boldsymbol{\hat{\chi}}_{n+1} = f\left(\boldsymbol{\hat{\chi}}_{n}, \boldsymbol{\omega}_{n}, \mathbf{0}\right) \\
-\mathbf{P}_{n} &amp;\leftarrow \mathbf{P}_{n+1} = \mathbf{F} \mathbf{P}_{n} \mathbf{F}^T + \mathbf{G} \mathbf{Q} \mathbf{G}^T  \\\end{split}\]</div>
-<p>Mean state and covariance are propagated. Covariance is propagated as an EKF, where Jacobian <span class="math notranslate nohighlight">\(\mathbf{F}\)</span> and <span class="math notranslate nohighlight">\(\mathbf{G}\)</span> are <em>numerically</em> inferred.</p>
+\[\begin{split}\boldsymbol{\hat{\chi}}_{n} &amp;\leftarrow \boldsymbol{\hat{\chi}}
+_{n+1} = f\left(\boldsymbol{\hat{\chi}}_{n}, 
+\boldsymbol{\omega}_{n}, \mathbf{0}\right) \\
+\mathbf{P}_{n} &amp;\leftarrow \mathbf{P}_{n+1} = \mathbf{F} 
+\mathbf{P}_{n} \mathbf{F}^T + \mathbf{G} \mathbf{Q} 
+\mathbf{G}^T  \\\end{split}\]</div>
+<p>Mean state and covariance are propagated. Covariance is propagated as 
+an EKF, where Jacobian <span class="math notranslate nohighlight">\(\mathbf{F}\)</span> and <span class="math notranslate nohighlight">\(\mathbf{G}\)</span> are 
+<em>numerically</em> inferred.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Variables</dt>
 <dd class="field-odd"><ul class="simple">
@@ -443,7 +447,7 @@ uncertainty.</p></li>
 <em class="property">class </em><code class="sig-prename descclassname">ukfm.</code><code class="sig-name descname">EKF</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">FG_ana</em>, <em class="sig-param">H_ana</em>, <em class="sig-param">phi</em>, <em class="sig-param">Q</em>, <em class="sig-param">R</em>, <em class="sig-param">state0</em>, <em class="sig-param">P0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ekf.html#EKF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.EKF" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Extended Kalman Filter on (parallelizable) manifolds.</p>
 <p>This is the counterpart of the UKF on (parallelizable) manifolds, where 
-functions for computed Jacobian need to be provided.</p>
+functions for computing Jacobian need to be provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -462,7 +466,7 @@ update.</p></li>
 <li><p><strong>R</strong> – observation noise covariance matrix (static) <span class="math notranslate nohighlight">\(\mathbf{R}\)</span>.</p></li>
 <li><p><strong>state</strong> – state <span class="math notranslate nohighlight">\(\boldsymbol{\hat{\chi}}_n\)</span>, initialized at 
 <code class="docutils literal notranslate"><span class="pre">state0</span></code>.</p></li>
-<li><p><strong>P</strong> – state error covariance <span class="math notranslate nohighlight">\(\mathbf{P}_n\)</span>, initialized at 
+<li><p><strong>P</strong> – state uncertainty covariance <span class="math notranslate nohighlight">\(\mathbf{P}_n\)</span>, initialized at 
 <code class="docutils literal notranslate"><span class="pre">P0</span></code>.</p></li>
 </ul>
 </dd>
@@ -470,7 +474,7 @@ update.</p></li>
 <dl class="method">
 <dt id="ukfm.EKF.propagation">
 <code class="sig-name descname">propagation</code><span class="sig-paren">(</span><em class="sig-param">omega</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukfm/ukf/ekf.html#EKF.propagation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukfm.EKF.propagation" title="Permalink to this definition">¶</a></dt>
-<dd><p>UKF propagation step.</p>
+<dd><p>EKF propagation step.</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\boldsymbol{\hat{\chi}}_{n} &amp;\leftarrow
 \boldsymbol{\hat{\chi}}_{n+1} =

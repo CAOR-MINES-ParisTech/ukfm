@@ -5,7 +5,7 @@ import os
 
 
 class IMUGNSS:
-    """IMU-GNSS Sensor-Fusion on the KITTI dataset. The model is the standard 3D
+    """IMU-GNSS sensor-fusion on the KITTI dataset. The model is the standard 3D
     kinematics model based on inertial inputs and kinematics equations.
     """
 
@@ -23,6 +23,7 @@ class IMUGNSS:
         It represents the state of a moving vehicle with IMU biases.
 
         .. math::
+
             \\boldsymbol{\\chi} \in \\mathcal{M} = \\left\\{ \\begin{matrix} 
            \\mathbf{C} \in SO(3),
             \\mathbf{v} \in \\mathbb R^3,
@@ -51,7 +52,8 @@ class IMUGNSS:
         The input is a measurement from an Inertial Measurement Unit (IMU).
 
         .. math:: 
-            \\boldsymbol{\\omega} \in \\mathcal{M} = \\left\\{ \\begin{matrix}
+
+            \\boldsymbol{\\omega} \in \\mathcal{U} = \\left\\{ \\begin{matrix}
             \\mathbf{u} \in \\mathbb R^3,
             \\mathbf{a}_b \in \\mathbb R^3 
             \\end{matrix} \\right\\}
@@ -70,6 +72,7 @@ class IMUGNSS:
         """ Propagation function.
 
         .. math::
+
           \\mathbf{C}_{n+1}  &= \\mathbf{C}_{n} \\exp\\left(\\left(\\mathbf{u}
           - \mathbf{b}_g + \\mathbf{w}^{(0:3)} \\right) dt\\right)  \\\\
           \\mathbf{v}_{n+1}  &= \\mathbf{v}_{n} + \\mathbf{a}  dt, \\\\
@@ -78,12 +81,12 @@ class IMUGNSS:
           \\mathbf{b}_{g,n+1}  &= \\mathbf{b}_{g,n} 
           + \\mathbf{w}^{(6:9)}dt \\\\
           \\mathbf{b}_{a,n+1}  &= \\mathbf{b}_{a,n} + 
-          \\mathbf{w}^{(9:12)} dt
-           
+          \\mathbf{w}^{(9:12)} dt     
 
         where
 
         .. math::
+
             \\mathbf{a}  = \\mathbf{C}_{n} 
             \\left( \\mathbf{a}_b -\mathbf{b}_a 
             + \\mathbf{w}^{(3:6)} \\right) + \\mathbf{g}
@@ -113,6 +116,7 @@ class IMUGNSS:
         """ Observation function.
 
         .. math::
+
             h\\left(\\boldsymbol{\\chi}\\right)  = \\mathbf{p}
 
         :var state: state :math:`\\boldsymbol{\\chi}`.
@@ -125,6 +129,7 @@ class IMUGNSS:
         """Retraction.
 
         .. math::
+
           \\varphi\\left(\\boldsymbol{\\chi}, 
           \\boldsymbol{\\xi}\\right) = \\left( \\begin{matrix}
             \\mathbf{C} \\exp\\left(\\boldsymbol{\\xi}^{(0:3)}\\right) \\\\
@@ -156,6 +161,7 @@ class IMUGNSS:
         """Inverse retraction.
 
         .. math::
+
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}
           \\left(\\boldsymbol{\\chi}\\right) = \\left( \\begin{matrix}
             \\log\\left(\\mathbf{C} \\mathbf{\\hat{C}}^T \\right)\\\\
@@ -182,7 +188,7 @@ class IMUGNSS:
 
     @classmethod
     def up_phi(cls, state, xi):
-        """Retraction used for updated state and infer Jacobian.
+        """Retraction used for updating state and infering Jacobian.
 
         The retraction :meth:`~ukfm.IMUGNSS.phi` applied on the position state.
         """
@@ -244,6 +250,7 @@ class IMUGNSS:
         """Inverse retraction.
 
         .. math::
+
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}
           \\left(\\boldsymbol{\\chi}\\right) = \\left( \\begin{matrix}
             \\log\\left(
@@ -253,8 +260,8 @@ class IMUGNSS:
             \\mathbf{b}_a - \\mathbf{\\hat{b}}_a
            \end{matrix} \\right)
 
-        The state is viewed as a element 
-        :math:`\\boldsymbol{\chi} \\in SE_2(3)` with left multiplication.
+        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SE_2(3)`
+        with left multiplication.
 
         Its corresponding retraction is :meth:`~ukfm.IMUGNSS.left_phi`.
 
@@ -328,6 +335,7 @@ class IMUGNSS:
         """Inverse retraction.
 
         .. math::
+        
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}
           \\left(\\boldsymbol{\\chi}\\right) = \\left( \\begin{matrix}
             \\log\\left( \\boldsymbol{\\hat{\\chi}}^{-1} 
@@ -358,7 +366,7 @@ class IMUGNSS:
 
     @classmethod
     def right_up_phi(cls, state, xi):
-        """Retraction used for updated state and infer Jacobian.
+        """Retraction used for updating state and infering Jacobian.
 
         The retraction :meth:`~ukfm.IMUGNSS.right_phi` applied on the position 
         state.
@@ -440,4 +448,3 @@ class IMUGNSS:
             b_gyros[n] = states[n].b_gyro
             b_accs[n] = states[n].b_acc
         return Rots, vs, ps, b_gyros, b_accs
-        

@@ -2,8 +2,7 @@
 
 Examples
 ================================================================================
-
-The unscented Kalman Filter on parallelizable manifolds has been implemented on
+The unscented Kalman filter on parallelizable manifolds has been implemented on
 the following examples:
 
 .. toctree::
@@ -22,4 +21,3 @@ the following examples:
 The :ref:`2D Robot Localization <localization_tutorial>` is written as a
 tutorial. The difficulties among the other examples is progressive, and some
 advanced considerations, e.g. how augmenting the state in SLAM, are introduced.
-

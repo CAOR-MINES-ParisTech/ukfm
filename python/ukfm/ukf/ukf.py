@@ -4,12 +4,11 @@ from scipy.linalg import block_diag
 class UKF:
     """The Unscented Kalman Filter on (parallelizable) Manifolds.
 
-    This filter is the implementation described in :cite:`brossardCode2019`
-    . It is well adapted to relatively small systems and
-    for understanding the methodology of **UKF-M**, otherwise see
-    :meth:`~ukfm.JUKF`. Noise covariance parameter are assumed static for
-    convenience, i.e. :math:`\\mathbf{Q}_n = \\mathbf{Q}`, and
-    :math:`\\mathbf{R}_n = \\mathbf{R}`.
+    This filter is the implementation described in :cite:`brossardCode2019` . It
+    is well adapted to relatively small systems and for understanding the
+    methodology of **UKF-M**, otherwise see :meth:`~ukfm.JUKF`. Noise covariance
+    parameters are assumed static for convenience, i.e. :math:`\\mathbf{Q}_n =
+    \\mathbf{Q}`, and :math:`\\mathbf{R}_n = \\mathbf{R}`.
 
     :arg f: propagation function :math:`f`.
     :arg h: observation function :math:`h`.
@@ -20,7 +19,7 @@ class UKF:
     :arg alpha: sigma point parameters. Must be 1D array with 3 values.
     :ivar state: state :math:`\\boldsymbol{\\hat{\\chi}}_n`, initialized at 
         ``state0``.
-    :ivar P: state error covariance :math:`\\mathbf{P}_n`, initialized at
+    :ivar P: state uncertainty covariance :math:`\\mathbf{P}_n`, initialized at
         ``P0``.
     """
 
@@ -52,21 +51,21 @@ class UKF:
     class WEIGHTS:
         """Sigma point weights.
 
-        Weights are computed as
+        Weights are computed as:
 
         .. math::
-          \\lambda &= (\\alpha^2 - 1) \\mathrm{dim} \\\\
-          w_j &= 1/(2(\\mathrm{dim} + \\lambda)) \\\\
-          w_m &= \\lambda/(\\lambda + \\mathrm{dim}) \\\\
-          w_0 &= \\lambda/(\\lambda + \\mathrm{dim}) + 3 - \\alpha^2
 
+          \\lambda &= (\\alpha^2 - 1) \\mathrm{dim}, \\\\
+          w_j &= 1/(2(\\mathrm{dim} + \\lambda)), \\\\
+          w_m &= \\lambda/(\\lambda + \\mathrm{dim}), \\\\
+          w_0 &= \\lambda/(\\lambda + \\mathrm{dim}) + 3 - \\alpha^2,
 
-        where :math:`\\alpha` is a parameter set between :math:`10^{-3}` and 
-        :math:`1`, and :math:`\\mathrm{dim}` the dimension of the sigma-points 
-        (:math:`d` or :math:`q`).
+        where :math:`\\alpha` is a parameter set between :math:`10^{-3}` and
+        :math:`1`, and :math:`\\mathrm{dim}` is the dimension of the
+        sigma-points (:math:`d` or :math:`q`).
         
-        This variable contains sigma point weights for propagation (w.r.t. 
-        state error and noise) and for update.
+        This variable contains sigma point weights for propagation (w.r.t. state
+        uncertainty and noise) and for update.
         """
 
         def __init__(self, d, q, alpha):
@@ -85,12 +84,12 @@ class UKF:
                 self.wm = m/(m + l)
                 self.w0 = m/(m + l) + 3 - alpha**2
 
-
         
     def propagation(self, omega, dt):
         """UKF propagation step.
 
         .. math::
+        
           \\boldsymbol{\\hat{\\chi}}_{n} &\\leftarrow 
           \\boldsymbol{\\hat{\\chi}}_{n+1} = 
           f\\left(\\boldsymbol{\\hat{\\chi}}_{n}, \\boldsymbol{\\omega}_{n}, 
@@ -109,7 +108,7 @@ class UKF:
         w = np.zeros(self.q)
         new_state = self.f(self.state, omega, w, dt)
 
-        # compute covariance w.r.t. state error
+        # compute covariance w.r.t. state uncertainty
         w_d = self.weights.d
 
         # set sigma points
@@ -157,6 +156,7 @@ class UKF:
         """UKF update step.
 
         .. math::
+        
           \\boldsymbol{\\hat{\\chi}}_{n} &\\leftarrow \\boldsymbol{\\hat{\\chi}}
           _{n}^{+} \\\\
           \\mathbf{P}_{n} &\\leftarrow \\mathbf{P}_{n}^{+} \\\\
@@ -219,7 +219,7 @@ class JUKF:
     :arg alpha: sigma point parameters. Must be 1D array with 5 values.
     :ivar state: state :math:`\\boldsymbol{\\hat{\\chi}}_n`, initialized at 
         ``state0``.
-    :ivar P: state error covariance :math:`\\mathbf{P}_n`, initialized at
+    :ivar P: state uncertainty covariance :math:`\\mathbf{P}_n`, initialized at
         ``P0``.
     :arg red_phi: reduced retraction for propagation.
     :arg red_phi_inv: reduced inverse retraction for propagation.
@@ -283,21 +283,20 @@ class JUKF:
     class WEIGHTS:
         """Sigma point weights.
 
-        Weights are computed as
+        Weights are computed as:
 
         .. math::
-          \\lambda &= (\\alpha^2 - 1) \\mathrm{dim} \\\\
-          w_j &= 1/(2(\\mathrm{dim} + \\lambda)) \\\\
-          w_m &= \\lambda/(\\lambda + \\mathrm{dim}) \\\\
-          w_0 &= \\lambda/(\\lambda + \\mathrm{dim}) + 3 - \\alpha^2
 
+          \\lambda &= (\\alpha^2 - 1) \\mathrm{dim}, \\\\
+          w_j &= 1/(2(\\mathrm{dim} + \\lambda)), \\\\
+          w_m &= \\lambda/(\\lambda + \\mathrm{dim}), \\\\
+          w_0 &= \\lambda/(\\lambda + \\mathrm{dim}) + 3 - \\alpha^2,
 
         where :math:`\\alpha` is a parameter set between :math:`10^{-3}` and 
-        :math:`1`, and :math:`\\mathrm{dim}` the dimension of the sigma-points 
-        (:math:`d` or :math:`q`).
+        :math:`1`, and :math:`\\mathrm{dim}` the dimension of the sigma-points.
         
-        This variable contains sigma point weights for propagation (w.r.t. 
-        state error and noise), update and state augmentation.
+        This variable contains sigma point weights for propagation (w.r.t. state
+        uncertainty and noise), update and state augmentation.
         """
         def __init__(self, red_d, q, up_d, aug_d, aug_q, alpha):
             self.red_d = self.W(red_d, alpha[0])
@@ -320,7 +319,7 @@ class JUKF:
         :var omega: input :math:`\\boldsymbol{\\omega}`.
         :var dt: integration step :math:`dt` (s).
         """
-        P = self.P[np.ix_(self.red_idxs, self.red_idxs)]
+        P = self.P[np.ix_(self.red_idxs, self.red_idxs)] 
         self.F = np.eye(self.P.shape[0])
         # variable sizes
         d = P.shape[0]
@@ -328,7 +327,7 @@ class JUKF:
         w = np.zeros(self.q)
 
         w_d = self.weights.red_d
-
+        
         # set sigma points
         xis = w_d.sqrt_d_lambda * np.linalg.cholesky(P).T
         new_xis = np.zeros((2*d, d))
@@ -354,10 +353,17 @@ class JUKF:
         """UKF propagation step.
 
         .. math::
-          \\boldsymbol{\\hat{\\chi}}_{n} &\\leftarrow \\boldsymbol{\\hat{\\chi}}_{n+1} = f\\left(\\boldsymbol{\\hat{\\chi}}_{n}, \\boldsymbol{\\omega}_{n}, \\mathbf{0}\\right) \\\\
-          \\mathbf{P}_{n} &\\leftarrow \\mathbf{P}_{n+1} = \\mathbf{F} \\mathbf{P}_{n} \\mathbf{F}^T + \\mathbf{G} \\mathbf{Q} \\mathbf{G}^T  \\\\
 
-        Mean state and covariance are propagated. Covariance is propagated as an EKF, where Jacobian :math:`\\mathbf{F}` and :math:`\\mathbf{G}` are *numerically* inferred.
+          \\boldsymbol{\\hat{\\chi}}_{n} &\\leftarrow \\boldsymbol{\\hat{\\chi}}
+          _{n+1} = f\\left(\\boldsymbol{\\hat{\\chi}}_{n}, 
+          \\boldsymbol{\\omega}_{n}, \\mathbf{0}\\right) \\\\
+          \\mathbf{P}_{n} &\\leftarrow \\mathbf{P}_{n+1} = \\mathbf{F} 
+          \\mathbf{P}_{n} \\mathbf{F}^T + \\mathbf{G} \\mathbf{Q} 
+          \\mathbf{G}^T  \\\\
+
+        Mean state and covariance are propagated. Covariance is propagated as 
+        an EKF, where Jacobian :math:`\\mathbf{F}` and :math:`\\mathbf{G}` are 
+        *numerically* inferred.
 
         :var omega: input :math:`\\boldsymbol{\\omega}`.
         :var dt: integration step :math:`dt` (s).
@@ -502,10 +508,10 @@ class JUKF:
 
         P = self.P[np.ix_(aug_idxs, aug_idxs)] + self.TOL*np.eye(self.aug_d)
 
-        # 1 - augment state mean
+        # augment state mean
         aug_state = self.aug_z(self.state, y)
 
-        # 2 - compute Jacobian and covariance from state
+        # compute Jacobian and covariance from state
         # set sigma points w.r.t. state
         w_d = self.weights.aug_d
         xis = w_d.sqrt_d_lambda * np.linalg.cholesky(P).T
@@ -520,20 +526,18 @@ class JUKF:
             zs[j] = self.aug_phi_inv(aug_state, z_j_p)
             zs[self.aug_d + j] = self.aug_phi_inv(aug_state, z_j_m)
             
-        hat_z = 0*w_d.wj * np.sum(zs, 0)
-        zs = zs - hat_z
         # measurement mean
-        z_bar = w_d.wm * hat_z + w_d.wj * np.sum(zs, 0)
+        z_bar = w_d.wj * np.sum(zs, 0)
 
         # prune mean before computing covariance
         zs = zs - z_bar
-        P_ss = w_d.wj * zs.T.dot(zs) + w_d.w0*np.outer(z_bar-hat_z, z_bar-hat_z)
+        P_ss = w_d.wj * zs.T.dot(zs) + w_d.w0*np.outer(z_bar, z_bar)
 
         Xi = w_d.wj * zs.T.dot(np.vstack([xis, -xis]))
         H = np.zeros((self.aug_q, self.P.shape[0]))
         H[:, aug_idxs] = np.linalg.solve(P, Xi.T).T  # Xi*P^{-1}
 
-        # 3 - compute covariance from measurement
+        # compute covariance from measurement
         # set sigma points w.r.t. noise
         w_q = self.weights.aug_q
         y_mat = w_q.sqrt_d_lambda * np.linalg.cholesky(R).T
@@ -555,7 +559,7 @@ class JUKF:
         zs = zs - z_bar
         P_zz = w_q.wj * zs.T.dot(zs) + w_q.w0*np.outer(z_bar, z_bar)
 
-        # 4 - compute augmented covariance
+        # compute augmented covariance
         P_sz = H.dot(self.P)
         P2 = np.zeros((self.P.shape[0] + 2, self.P.shape[0] + 2))
         P2[:self.P.shape[0], :self.P.shape[0]] = self.P

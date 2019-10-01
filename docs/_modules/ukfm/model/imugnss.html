@@ -153,7 +153,7 @@
 
 
 <div class="viewcode-block" id="IMUGNSS"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS">[docs]</a><span class="k">class</span> <span class="nc">IMUGNSS</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;IMU-GNSS Sensor-Fusion on the KITTI dataset. The model is the standard 3D</span>
+    <span class="sd">&quot;&quot;&quot;IMU-GNSS sensor-fusion on the KITTI dataset. The model is the standard 3D</span>
 <span class="sd">    kinematics model based on inertial inputs and kinematics equations.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -171,6 +171,7 @@
 <span class="sd">        It represents the state of a moving vehicle with IMU biases.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \\boldsymbol{\\chi} \in \\mathcal{M} = \\left\\{ \\begin{matrix} </span>
 <span class="sd">           \\mathbf{C} \in SO(3),</span>
 <span class="sd">            \\mathbf{v} \in \\mathbb R^3,</span>
@@ -199,7 +200,8 @@
 <span class="sd">        The input is a measurement from an Inertial Measurement Unit (IMU).</span>
 
 <span class="sd">        .. math:: </span>
-<span class="sd">            \\boldsymbol{\\omega} \in \\mathcal{M} = \\left\\{ \\begin{matrix}</span>
+
+<span class="sd">            \\boldsymbol{\\omega} \in \\mathcal{U} = \\left\\{ \\begin{matrix}</span>
 <span class="sd">            \\mathbf{u} \in \\mathbb R^3,</span>
 <span class="sd">            \\mathbf{a}_b \in \\mathbb R^3 </span>
 <span class="sd">            \\end{matrix} \\right\\}</span>
@@ -218,6 +220,7 @@
         <span class="sd">&quot;&quot;&quot; Propagation function.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">          \\mathbf{C}_{n+1}  &amp;= \\mathbf{C}_{n} \\exp\\left(\\left(\\mathbf{u}</span>
 <span class="sd">          - \mathbf{b}_g + \\mathbf{w}^{(0:3)} \\right) dt\\right)  \\\\</span>
 <span class="sd">          \\mathbf{v}_{n+1}  &amp;= \\mathbf{v}_{n} + \\mathbf{a}  dt, \\\\</span>
@@ -226,12 +229,12 @@
 <span class="sd">          \\mathbf{b}_{g,n+1}  &amp;= \\mathbf{b}_{g,n} </span>
 <span class="sd">          + \\mathbf{w}^{(6:9)}dt \\\\</span>
 <span class="sd">          \\mathbf{b}_{a,n+1}  &amp;= \\mathbf{b}_{a,n} + </span>
-<span class="sd">          \\mathbf{w}^{(9:12)} dt</span>
-<span class="sd">           </span>
+<span class="sd">          \\mathbf{w}^{(9:12)} dt     </span>
 
 <span class="sd">        where</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \\mathbf{a}  = \\mathbf{C}_{n} </span>
 <span class="sd">            \\left( \\mathbf{a}_b -\mathbf{b}_a </span>
 <span class="sd">            + \\mathbf{w}^{(3:6)} \\right) + \\mathbf{g}</span>
@@ -261,6 +264,7 @@
         <span class="sd">&quot;&quot;&quot; Observation function.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            h\\left(\\boldsymbol{\\chi}\\right)  = \\mathbf{p}</span>
 
 <span class="sd">        :var state: state :math:`\\boldsymbol{\\chi}`.</span>
@@ -273,6 +277,7 @@
         <span class="sd">&quot;&quot;&quot;Retraction.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">          \\varphi\\left(\\boldsymbol{\\chi}, </span>
 <span class="sd">          \\boldsymbol{\\xi}\\right) = \\left( \\begin{matrix}</span>
 <span class="sd">            \\mathbf{C} \\exp\\left(\\boldsymbol{\\xi}^{(0:3)}\\right) \\\\</span>
@@ -304,6 +309,7 @@
         <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}</span>
 <span class="sd">          \\left(\\boldsymbol{\\chi}\\right) = \\left( \\begin{matrix}</span>
 <span class="sd">            \\log\\left(\\mathbf{C} \\mathbf{\\hat{C}}^T \\right)\\\\</span>
@@ -330,7 +336,7 @@
 
 <div class="viewcode-block" id="IMUGNSS.up_phi"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.up_phi">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">up_phi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">xi</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Retraction used for updated state and infer Jacobian.</span>
+        <span class="sd">&quot;&quot;&quot;Retraction used for updating state and infering Jacobian.</span>
 
 <span class="sd">        The retraction :meth:`~ukfm.IMUGNSS.phi` applied on the position state.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -392,6 +398,7 @@
         <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}</span>
 <span class="sd">          \\left(\\boldsymbol{\\chi}\\right) = \\left( \\begin{matrix}</span>
 <span class="sd">            \\log\\left(</span>
@@ -401,8 +408,8 @@
 <span class="sd">            \\mathbf{b}_a - \\mathbf{\\hat{b}}_a</span>
 <span class="sd">           \end{matrix} \\right)</span>
 
-<span class="sd">        The state is viewed as a element </span>
-<span class="sd">        :math:`\\boldsymbol{\chi} \\in SE_2(3)` with left multiplication.</span>
+<span class="sd">        The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SE_2(3)`</span>
+<span class="sd">        with left multiplication.</span>
 
 <span class="sd">        Its corresponding retraction is :meth:`~ukfm.IMUGNSS.left_phi`.</span>
 
@@ -476,6 +483,7 @@
         <span class="sd">&quot;&quot;&quot;Inverse retraction.</span>
 
 <span class="sd">        .. math::</span>
+<span class="sd">        </span>
 <span class="sd">          \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}</span>
 <span class="sd">          \\left(\\boldsymbol{\\chi}\\right) = \\left( \\begin{matrix}</span>
 <span class="sd">            \\log\\left( \\boldsymbol{\\hat{\\chi}}^{-1} </span>
@@ -506,7 +514,7 @@
 
 <div class="viewcode-block" id="IMUGNSS.right_up_phi"><a class="viewcode-back" href="../../../model.html#ukfm.IMUGNSS.right_up_phi">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">right_up_phi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">xi</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Retraction used for updated state and infer Jacobian.</span>
+        <span class="sd">&quot;&quot;&quot;Retraction used for updating state and infering Jacobian.</span>
 
 <span class="sd">        The retraction :meth:`~ukfm.IMUGNSS.right_phi` applied on the position </span>
 <span class="sd">        state.</span>
@@ -588,7 +596,6 @@
             <span class="n">b_gyros</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">b_gyro</span>
             <span class="n">b_accs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">b_acc</span>
         <span class="k">return</span> <span class="n">Rots</span><span class="p">,</span> <span class="n">vs</span><span class="p">,</span> <span class="n">ps</span><span class="p">,</span> <span class="n">b_gyros</span><span class="p">,</span> <span class="n">b_accs</span></div>
-        
 </pre></div>
 
            </div>

@@ -12,7 +12,7 @@ function [states, omegas, ldks] = slam2d_simu_f(T, odo_freq, ...
 %    radius - radius of the trajectory (m)
 %
 % Outputs:
-%    states - true state
+%    states - states
 %    omegas - noisy inputs
 %    ldks - landmarks
 
@@ -31,14 +31,12 @@ for n = 2:N
     omegas(n-1).v = v;
     omegas(n-1).gyro = gyro;
     states(n) = slam2d_f(states(n-1), omegas(n-1), w, dt); 
-    
     omegas(n-1).v = omegas(n-1).v + 0*odo_noise_std(1)*randn(1);
     omegas(n-1).gyro = omegas(n-1).gyro + 0*odo_noise_std(2)*randn(1);
 end
 
 % create the map
 r = v/gyro; % radius
-rmax = 5; % max range
 rmin = 1; % min range
 ldks = zeros(2, N_ldk);
 for i = 1: N_ldk

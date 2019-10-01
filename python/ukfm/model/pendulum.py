@@ -3,9 +3,10 @@ from ukfm import SO3, SE3
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+
 class PENDULUM:
     """Pendulum example, where the state lives on the 2-sphere.
-    You can have a text description of the spherical pendulum dynamics in
+    See a text description of the spherical pendulum dynamics in
     :cite:`sjobergAn2019`, Section 7, and  :cite:`kotaruVariation2019`.
 
     :arg T: sequence time (s).
@@ -15,22 +16,21 @@ class PENDULUM:
     g = 9.81
     "gravity constant (m/s^2) :math:`g`."
 
-    m = 1.0  
+    m = 1.0
     "mass of payload (kg) :math:`m`."
-    
-    b = 0.0 
+
+    b = 0.0
     "damping :math:`b`."
 
-    L = 1.3  
-    "Wire length :math:`L`."
+    L = 1.3
+    "wire length :math:`L`."
 
     e3 = -np.array([0, 0, 1])
-    "Third coordinate vector :math:`\mathbf{e}^b=-[0,0,1]^T`."
+    "third coordinate vector :math:`\mathbf{e}^b=-[0,0,1]^T`."
 
     H = np.zeros((2, 3))
-    "Observability matrix :math:`\mathbf{H}`."
+    "observability matrix :math:`\mathbf{H}`."
     H[:, 1:3] = np.eye(2)
-    
 
     class STATE:
         """State of the system.
@@ -38,6 +38,7 @@ class PENDULUM:
         It represents the orientation of the wire and its angular velocity.
 
         .. math::
+
             \\boldsymbol{\\chi} \in \\mathcal{M} = \\left\\{ \\begin{matrix} 
            \\mathbf{C} \in SO(3),
             \\mathbf{u} \in \\mathbb R^3
@@ -75,8 +76,9 @@ class PENDULUM:
         """ Propagation function.
 
         .. math::
+
             \\mathbf{C}_{n+1}  &= \\mathbf{C}_{n} \\exp\\left(\\left(\\mathbf{u}
-            + \\mathbf{w}^{(0:3)} \\right) dt\\right)  \\\\
+            + \\mathbf{w}^{(0:3)} \\right) dt\\right),  \\\\
             \\mathbf{u}_{n+1}  &= \\mathbf{u}_{n} + \\dot{\\mathbf{u}}  dt,
 
         where
@@ -100,7 +102,7 @@ class PENDULUM:
         u = state.u
         d_u = np.array([-u[1]*u[2], u[0]*u[2], 0]) + \
             cls.g/cls.L*np.cross(cls.e3, e3_i)
- 
+
         new_state = cls.STATE(
             Rot=state.Rot.dot(SO3.exp((u+w[:3])*dt)),
             u=state.u + (d_u+w[3:6])*dt
@@ -112,12 +114,14 @@ class PENDULUM:
         """ Observation function.
 
         .. math::
+
             h\\left(\\boldsymbol{\\chi}\\right)  = 
-            \\mathbf{H} \mathbf{x}
+            \\mathbf{H} \mathbf{x},
 
         where 
 
         .. math::
+
             \mathbf{H}&= \\begin{bmatrix} 0 & 1 & 0 \\\\  0
             & 0 & 1 \end{bmatrix} \\\\
             \mathbf{x} &= L \\mathbf{C} \mathbf{e}^b
@@ -134,6 +138,7 @@ class PENDULUM:
         """Retraction.
 
         .. math::
+
           \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) = 
           \\left( \\begin{matrix}
             \\exp\\left(\\boldsymbol{\\xi}^{(0:3)}\\right) \\mathbf{C}  \\\\
@@ -160,6 +165,7 @@ class PENDULUM:
         """Inverse retraction.
 
         .. math::
+
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}
           \\right) = \\left( \\begin{matrix}
             \\log\\left(\\mathbf{\\hat{C}}^T \\mathbf{C}  \\right)\\\\
@@ -192,8 +198,8 @@ class PENDULUM:
         # init variables at zero and do for loop
         omegas = []
         Rot0 = SO3.from_rpy(57.3/180*np.pi, 40/180*np.pi, 0)
-        states = [self.STATE(Rot0, np.array([-10/180*np.pi, 
-            30/180*np.pi, 0]))]
+        states = [self.STATE(Rot0, np.array([-10/180*np.pi,
+                                             30/180*np.pi, 0]))]
 
         for n in range(1, self.N):
             # true input
@@ -202,7 +208,7 @@ class PENDULUM:
             w[:3] = model_std[0]*np.random.randn(3)
             w[3:] = model_std[1]*np.random.randn(3)
             states.append(self.f(states[n-1], omegas[n-1], w, self.dt))
-            
+
         return states, omegas
 
     def simu_h(self, states, obs_freq, obs_std):
@@ -220,25 +226,20 @@ class PENDULUM:
             ys[k] = self.h(states[idxs[k]]) + obs_std * np.random.randn(2)
         return ys, one_hot_ys
 
-
     def plot_results(self, hat_states, hat_Ps, states):
         Rots, us = self.get_states(states, self.N)
         hat_Rots, hat_us = self.get_states(hat_states, self.N)
 
         t = np.linspace(0, self.T, self.N)
-        rpys = np.zeros((self.N, 3))
-        hat_rpys = np.zeros_like(rpys)
         ps = np.zeros((self.N, 3))
         ukf3sigma = np.zeros((self.N, 3))
         hat_ps = np.zeros_like(ps)
         A = np.eye(6)
-        e3wedge = -SO3.wedge(self.L*self.e3)
+        e3wedge = SO3.wedge(self.L*self.e3)
         for n in range(self.N):
-            rpys[n] = SO3.to_rpy(Rots[n])
-            hat_rpys[n] = SO3.to_rpy(hat_Rots[n])
             ps[n] = self.L*Rots[n].dot(self.e3)
             hat_ps[n] = self.L*hat_Rots[n].dot(self.e3)
-            A[:3, :3] = -hat_Rots[n].dot(e3wedge)
+            A[:3, :3] = hat_Rots[n].dot(e3wedge)
             P = A.dot(hat_Ps[n]).dot(A.T)
             ukf3sigma[n] = np.diag(P[:3, :3])
         errors = np.linalg.norm(ps - hat_ps, axis=1)
@@ -248,24 +249,27 @@ class PENDULUM:
         plt.plot(t, ps, linewidth=2)
         plt.plot(t, hat_ps)
         ax.legend([r'$x$', r'$y$', r'$z$', r'$x$ UKF', r'$y$ UKF', r'$z$ UKF'])
-        ax.set_xlim(0, t[-1]) 
+        ax.set_xlim(0, t[-1])
 
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.set(xlabel='$x$ (m)', ylabel='$y$ (m)', title='position (m)')
+        ax.set(xlabel='$x$ (m)', ylabel='$y$ (m)',
+               title='position in $xs$ plan')
         plt.plot(ps[:, 0], ps[:, 1], linewidth=2, c='black')
         plt.plot(hat_ps[:, 0], hat_ps[:, 1], c='blue')
         ax.legend([r'true position', r'UKF'])
         ax.axis('equal')
 
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.set(xlabel='$y$ (m)', ylabel='z (m)', title='position in $yz$ plan')
+        ax.set(xlabel='$y$ (m)', ylabel='$z$ (m)',
+               title='position in $yz$ plan')
         plt.plot(ps[:, 1], ps[:, 2], linewidth=2, c='black')
         plt.plot(hat_ps[:, 1], hat_ps[:, 2], c='blue')
         ax.legend([r'true position', r'UKF'])
         ax.axis('equal')
 
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.set(xlabel='$t$ (s)', ylabel='$x$ (m)', title=' $x$ position (m)')
+        ax.set(xlabel='$t$ (s)', ylabel='error (m)',
+               title=' position error (m)')
         plt.plot(t, errors, c='blue')
         plt.plot(t, ukf3sigma, c='blue', linestyle='dashed')
         ax.legend([r'UKF', r'$3\sigma$ UKF'])
@@ -280,4 +284,3 @@ class PENDULUM:
             Rots[n] = states[n].Rot
             us[n] = states[n].u
         return Rots, us
-

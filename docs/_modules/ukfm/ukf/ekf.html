@@ -152,7 +152,7 @@
     <span class="sd">&quot;&quot;&quot;The Extended Kalman Filter on (parallelizable) manifolds. </span>
 <span class="sd">    </span>
 <span class="sd">    This is the counterpart of the UKF on (parallelizable) manifolds, where </span>
-<span class="sd">    functions for computed Jacobian need to be provided.</span>
+<span class="sd">    functions for computing Jacobian need to be provided.</span>
 
 <span class="sd">    :arg model: model that contains propagation function :math:`f` and </span>
 <span class="sd">        observation function :math:`h`.</span>
@@ -165,7 +165,7 @@
 <span class="sd">    :ivar R: observation noise covariance matrix (static) :math:`\\mathbf{R}`.</span>
 <span class="sd">    :ivar state: state :math:`\\boldsymbol{\\hat{\\chi}}_n`, initialized at </span>
 <span class="sd">        ``state0``.</span>
-<span class="sd">    :ivar P: state error covariance :math:`\\mathbf{P}_n`, initialized at </span>
+<span class="sd">    :ivar P: state uncertainty covariance :math:`\\mathbf{P}_n`, initialized at </span>
 <span class="sd">        ``P0``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -183,9 +183,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">Id_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> 
 
 <div class="viewcode-block" id="EKF.propagation"><a class="viewcode-back" href="../../../filter.html#ukfm.EKF.propagation">[docs]</a>    <span class="k">def</span> <span class="nf">propagation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;UKF propagation step.</span>
+        <span class="sd">&quot;&quot;&quot;EKF propagation step.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">          \\boldsymbol{\\hat{\\chi}}_{n} &amp;\\leftarrow</span>
 <span class="sd">          \\boldsymbol{\\hat{\\chi}}_{n+1} =</span>
 <span class="sd">          f\\left(\\boldsymbol{\\hat{\\chi}}_{n}, </span>
@@ -209,6 +210,7 @@
         <span class="sd">&quot;&quot;&quot;EKF update step.</span>
 
 <span class="sd">        .. math::</span>
+<span class="sd">        </span>
 <span class="sd">          \\boldsymbol{\\hat{\\chi}}_{n} &amp;\\leftarrow </span>
 <span class="sd">          \\boldsymbol{\\hat{\\chi}}_{n}^{+} \\\\</span>
 <span class="sd">          \\mathbf{P}_{n} &amp;\\leftarrow \\mathbf{P}_{n}^{+} \\\\</span>

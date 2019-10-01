@@ -6,7 +6,7 @@ function [up_state, up_P] = attitude_ekf_update(state, P, y, R)
 % Inputs:
 %    state - state
 %    P - covariance matrix
-%    y - measurement, vector
+%    y - measurement
 %    R -  noise covariance matrix
 %
 % Outputs:
@@ -19,8 +19,8 @@ g = [0; 0; -9.81];
 b = [0.33; 0; -0.95];
 % Observability matrix
 H = zeros(6, 3);
-H(1:3, :) = -state.Rot'*so3_wedge(g);
-H(4:6, :) = -state.Rot'*so3_wedge(b);
+H(1:3, :) = state.Rot'*so3_wedge(g);
+H(4:6, :) = state.Rot'*so3_wedge(b);
 
 % measurement uncertainty matrix
 S = H*P*H' + R;

@@ -1,13 +1,13 @@
 function [chi] = se3_exp(xi)
-%SE3_EXP exponential map for SE(3)
+%SE3_EXP exponential
 %
 % Syntax:  [chi] = se3_exp(xi)
 %
 % Inputs:
-%    phi - vector of length 6
+%    phi - vector
 %
 % Outputs:
-%    chi - state matrix
+%    chi - matrix
 
 chi = [se3_exp(xi(1:3)), so3_left_jacobian(xi(1:3))*xi(4:6);
     zeros(1, 3) 1];

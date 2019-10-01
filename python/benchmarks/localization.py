@@ -2,13 +2,12 @@
 ********************************************************************************
 2D Robot Localization - Benchmark
 ********************************************************************************
-
 Goals of this script:
 
 - implement different UKFs on the 2D robot localization example.
 
-- design the Extended Kalman Filter (EKF) and the Invariant Extended
-  Kalman Filter (IEKF) :cite:`barrauInvariant2017` for the given problem.
+- design the Extended Kalman Filter (EKF) and the Invariant Extended Kalman
+  Filter (IEKF) :cite:`barrauInvariant2017`.
 
 - compare the different algorithms with Monte-Carlo simulations.
 
@@ -17,44 +16,40 @@ in the tutorial.*
 
 We previously designed an UKF with a standard uncertainty representation. An
 advantage of the versatility of the UKF is to speed up implementation, tests,
-and comparision UKF with different uncertainty representations. Indeed, for the
-given problem, three different UKFs emerge, defined respectively as:
+and comparision of algorithms with different uncertainty representations.
+Indeed, for the given problem, three different UKFs emerge, defined respectively
+as:
 
-1) The state is embedded in :math:`SO(2) \\times \mathbb{R}^2`, as in the
-   example, where:
+1) The state is embedded in :math:`SO(2) \\times \mathbb{R}^2`, where:
 
-   * the retraction :math:`\\varphi(.,.)` is the :math:`SO(2)` exponential map
-     for orientation and the standard vector addition for robot position.
+   * the retraction :math:`\\varphi(.,.)` is the :math:`SO(2)` exponential
+     for orientation and the vector addition for position.
 
    * the inverse retraction :math:`\\varphi^{-1}(.,.)` is the :math:`SO(2)`
-     logarithm for orientation and the standard vector subtraction for
-     position.
+     logarithm for orientation and the vector subtraction for position.
 
 2) The state is embedded in :math:`SE(2)` with left multiplication, i.e.
 
    - the retraction :math:`\\varphi(.,.)` is the :math:`SE(2)` exponential,
-     where the state multiplies on the left the retraction
+     where the state multiplies on the left the uncertainty
      :math:`\\boldsymbol{\\xi}`.
 
    - the inverse retraction :math:`\\varphi^{-1}(.,.)` is the :math:`SE(2)`
      logarithm.
 
    - this left UKF on :math:`SE(2)` corresponds to the Invariant Extended Kalman
-     Filter (IEKF) recommended in :cite:`barrauInvariant2017`. We have
-     theoretical reason to choose this retraction.
+     Filter (IEKF) recommended in :cite:`barrauInvariant2017`. 
 
 3) The state is embedded in :math:`SE(2)` with right multiplication, i.e.
 
    - the retraction :math:`\\varphi(.,.)` is the :math:`SE(2)` exponential,
-     where the state multiplies on the right the retraction
+     where the state multiplies on the right the uncertainty
      :math:`\\boldsymbol{\\xi}`.
 
    - the inverse retraction :math:`\\varphi^{-1}(.,.)` is the :math:`SE(2)`
      logarithm.
 
-We tests the different filters with the same noise parameter setting and on
-simulation with strong initial heading error. We will see how perform the
-filters compared to extended Kalman filters.
+We tests the filters on simulation with strong initial heading error.
 """
 
 ################################################################################
@@ -68,7 +63,7 @@ import matplotlib
 ukfm.utils.set_matplotlib_config()
 
 ################################################################################
-# We compare the different filters on a large number of Monte-Carlo runs.
+# We compare the filters on a large number of Monte-Carlo runs.
 
 # Monte-Carlo runs
 N_mc = 100
@@ -89,12 +84,10 @@ T = 40
 odo_freq = 100
 # create the model
 model = MODEL(T, odo_freq)
-
 # odometry noise standard deviation
 odo_std = np.array([0.01,  # speed (v/m)
                     0.01,  # speed (v/m)
                     1 / 180 * np.pi])  # angular speed (rad/s)
-
 # GPS frequency (Hz)
 gps_freq = 1
 # GPS noise standard deviation (m)
@@ -102,28 +95,25 @@ gps_std = 1
 # radius of the circle trajectory (m)
 radius = 5
 # initial heading error standard deviation
-theta0_std = 45 / 180 * np.pi
+theta0_std = 45/180*np.pi
 
 ################################################################################
 # Filter Design
 # ==============================================================================
-# Additionally to the three UKFs, we compare them to an Extended Kalman FIlter
-# (EKF) and an Invariant EKF (IEKF). The EKF has the same uncertainty
-# representation as the UKF with the retraction on :math:`SO(2) \times
-# \mathbb{R}^2`, whereas the IEKF has the same uncertainty representation as the
-# UKF with the left retraction on :math:`SE(2)`.
+# The UKFs are compared to an Extended Kalman FIlter (EKF) and an Invariant EKF
+# (IEKF). The EKF has the same uncertainty representation as the UKF with the
+# retraction on :math:`SO(2) \times \mathbb{R}^2`, whereas the IEKF has the same
+# uncertainty representation as the UKF with the left retraction on
+# :math:`SE(2)`.
 
-# propagation noise matrix
-Q = np.diag(odo_std ** 2)
-
-# measurement noise matrix
-R = gps_std ** 2 * np.eye(2)
-
+# propagation noise covariance matrix
+Q = np.diag(odo_std**2)
+# measurement noise covariance matrix
+R = gps_std**2*np.eye(2)
 # initial covariance matrix
 P0 = np.zeros((3, 3))
 # we take into account initial heading error
 P0[0, 0] = theta0_std ** 2
-
 # sigma point parameter
 alpha = np.array([1e-3, 1e-3, 1e-3])
 
@@ -154,10 +144,9 @@ ekf_nees = np.zeros_like(ukf_nees)
 #
 # .. note::
 #
-# We sample for each Monte-Carlo run an initial heading error from the true
-# distribution in :math:`\mathbf{P}_0`. This is the correct manner to compare
-# the filters but requires more  Monte-Carlo samples than a fixed value.
-#
+#     We sample for each Monte-Carlo run an initial heading error from the true
+#     distribution (:math:`\mathbf{P}_0`). This requires many Monte-Carlo
+#     samples.
 
 for n_mc in range(N_mc):
     print("Monte-Carlo iteration(s): " + str(n_mc + 1) + "/" + str(N_mc))
@@ -165,62 +154,31 @@ for n_mc in range(N_mc):
     states, omegas = model.simu_f(odo_std, radius)
     # simulate measurement
     ys, one_hot_ys = model.simu_h(states, gps_freq, gps_std)
-
     # initialize filter with inaccurate state
     state0 = model.STATE(
         Rot=states[0].Rot.dot(SO2.exp(theta0_std * np.random.randn(1))),
-        p=states[0].p
-    )
-
+        p=states[0].p)
     # define the filters
-    ukf = UKF(state0=state0,
-              P0=P0,
-              f=model.f,
-              h=model.h,
-              Q=Q,
-              R=R,
+    ukf = UKF(state0=state0, P0=P0, f=model.f, h=model.h, Q=Q, R=R,
               phi=model.phi,
               phi_inv=model.phi_inv,
               alpha=alpha)
-
-    left_ukf = UKF(state0=state0,
-                   P0=P0,
-                   f=model.f,
-                   h=model.h,
-                   Q=Q,
-                   R=R,
+    left_ukf = UKF(state0=state0, P0=P0, f=model.f, h=model.h, Q=Q, R=R,
                    phi=model.left_phi,
                    phi_inv=model.left_phi_inv,
                    alpha=alpha)
-
-    right_ukf = UKF(state0=state0,
-                    P0=P0,
-                    f=model.f,
-                    h=model.h,
-                    Q=Q,
-                    R=R,
+    right_ukf = UKF(state0=state0, P0=P0, f=model.f, h=model.h, Q=Q, R=R,
                     phi=model.right_phi,
                     phi_inv=model.right_phi_inv,
                     alpha=alpha)
-
-    iekf = EKF(model=model,
-               state0=state0,
-               P0=P0,  #  correct for your situation
+    iekf = EKF(model=model, state0=state0, P0=P0, Q=Q, R=R,
                FG_ana=model.iekf_FG_ana,
                H_ana=model.iekf_H_ana,
-               Q=Q,
-               R=R,
                phi=model.left_phi)
-
-    ekf = EKF(model=model,
-              state0=state0,
-              P0=P0,
+    ekf = EKF(model=model, state0=state0, P0=P0, Q=Q, R=R,
               FG_ana=model.ekf_FG_ana,
               H_ana=model.ekf_H_ana,
-              Q=Q,
-              R=R,
               phi=model.phi)
-
     # variables for recording estimates of the Monte-Carlo run
     ukf_states = [state0]
     left_states = [state0]
@@ -258,7 +216,6 @@ for n_mc in range(N_mc):
             iekf.update(ys[k])
             ekf.update(ys[k])
             k = k + 1
-
         ukf_states.append(ukf.state)
         left_states.append(left_ukf.state)
         right_states.append(right_ukf.state)
@@ -299,22 +256,20 @@ for n_mc in range(N_mc):
 ################################################################################
 # Results
 # ==============================================================================
-# Once simulations are done, we compare the algorithms. Let us first visualize
-# the results in term of estimated robot trajectory (for the last run) and the
-# errors w.r.t. orientation and position (averaged over Monte-Carlo). As
-# simulations have random process, the trajectory plot just gives us an
-# indication but not a proof of filter performances.
+# We first visualize the robot trajectory (for the last run) and the errors
+# w.r.t. orientation and position (averaged over Monte-Carlo). As simulations
+# have random process, the trajectory plot just gives us an indication but not a
+# proof of performances.
 
 ukf_e, left_ukf_e, right_ukf_e, iekf_e, ekf_e = model.benchmark_plot(
-    ukf_err, left_ukf_err, right_ukf_err, iekf_err, ekf_err, ps, ukf_ps, 
+    ukf_err, left_ukf_err, right_ukf_err, iekf_err, ekf_err, ps, ukf_ps,
     left_ukf_ps, right_ukf_ps, ekf_ps, iekf_ps)
 
 ################################################################################
-# A statement seem obvious, we have two groups of filters: group 1) consists of
-# EKF and :math:`SO(2) \times \mathbb{R}^2` UKF; and group 2) have IEKF, left
-# :math:`SE(2)` UKF and right :math:`SE(2)` UKF (the curves of these filters are
-# superposed). The second group is visibly highly better regarding position
-# estimation.
+# Two groups of filters emerge: group 1) consists of EKF and :math:`SO(2) \times
+# \mathbb{R}^2` UKF; and group 2) have IEKF, left :math:`SE(2)` UKF and right
+# :math:`SE(2)` UKF (the curves of these filters are superposed). The second
+# group is visibly highly better regarding position estimation.
 #
 # More statictical is to compute the results averaged over all the Monte-Carlo.
 # Let us compute the Root Mean Squared Error (RMSE) for each method both for the
@@ -323,7 +278,7 @@ ukf_e, left_ukf_e, right_ukf_e, iekf_e, ekf_e = model.benchmark_plot(
 model.benchmark_print(ukf_e, left_ukf_e, right_ukf_e, iekf_e, ekf_e)
 
 ################################################################################
-# They confirm the the results on the plot.
+# They confirm the results on the plot.
 #
 # A consistency metric is the Normalized Estimation Error Squared (NEES).
 # Classical criteria used to evaluate the performance of an estimation method,
@@ -340,23 +295,17 @@ model.nees_print(ukf_nees, left_ukf_nees, right_ukf_nees, iekf_nees, ekf_nees)
 # w.r.t. position, we compute NEES only after 20 s for avoiding numerical issues
 # (during the first secondes of the trajectory the covariance matrix
 # :math:`\mathbf{P}_n` is very low so inverting it leads to insignificantly high
-# numbers). Results are clear, IEKF and :math:`SE(2)` are the more consistent.
-# For the considered example, it seems that the UKFs are slightly less
-# optimistic that their EKF counterparts.
+# numbers). Results are clear, the :math:`SE(2)` UKF are the more consistent.
 
 ################################################################################
-# **Which filter is the best ?** We expected it is the left UKF as it takes
-# advantage of both theory of IEKF uncertainty representation and better
-# non-linearity noise incorporation of UKF compared to (I)EKF. Depending on
-# which source of error (sensor noise, initial condition) is the most important,
-# it can lead to different results. Indeed, in this setting, **left IEKF**,
-# **right UKF** and **IEKF** filters obtain similar accurate results, that
-# clearly outperform :math:`SO(2) \times \mathbb{R}^2` UKF, and one could expect
-# encounter situations where the left UKF outperforms the right UKF.
+# **Which filter is the best ?** In this setting, the **left UKF**, the
+# **right UKF** and the IEKF filters obtain similar accurate results, that
+# clearly outperform :math:`SO(2) \times \mathbb{R}^2` UKF, and EKF, whereas the
+# two UKFs are the more consistent.
 #
 # .. note::
 #
-#    We have set all the filters with the same "true" noise covariance 
+#    We have set all the filters with the same "true" noise covariance
 #    parameters. However, both EKF and UKF based algorithms may better deal  ,
 #    with non-linearity  by e.g. inflated propagation noise covariance.
 #
@@ -369,16 +318,13 @@ model.nees_print(ukf_nees, left_ukf_nees, right_ukf_nees, iekf_nees, ekf_nees)
 # EKF represent the first group; and the left :math:`SE(2)` UKF, the right
 # :math:`SE(2)` UKF and the IEKF constitute the second group. For the considered
 # set of parameters, it is evident that embedded the state in :math:`SE(2)` is
-# advantageous for state estimation. Choosing then between left UKF, right UKF
-# or IEKF has negligible effect (with the considered simulation setting).
+# advantageous for state estimation.
 #
 # You can now:
 #
 # * compare the filters in different scenarios. Indeed, UKF and their (I)EKF
 #   counterparts may obtain different results when noise is e.g. inflated or
-#   with different initial conditions or trajectory.
+#   with different initial conditions or different trajectory.
 #
-# * testing the filters in a slightly different model (e.g. with orientation
+# * test the filters in a slightly different model (e.g. with orientation
 #   measurement), which is straightforward for the UKFs.
-#
-# * address the problem of 3D attitude estimations, see the Examples section.

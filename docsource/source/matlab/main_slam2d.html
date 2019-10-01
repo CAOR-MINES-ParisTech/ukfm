@@ -6,7 +6,7 @@
    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>2D Robot SLAM - Example</title><meta name="generator" content="MATLAB 9.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-09-23"><meta name="DC.source" content="main_slam2d.m"><style type="text/css">
+      --><title>2D Robot SLAM - Example</title><meta name="generator" content="MATLAB 9.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-09-30"><meta name="DC.source" content="main_slam2d.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,7 +66,7 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>2D Robot SLAM - Example</h1><!--introduction--><p>Goals of this script:</p><div><ul><li>apply the UKF for performing 2D SLAM (Simultaneous Localization And   Mapping).</li></ul></div><div><ul><li>discover a computationally alternative way for performing UKF insipred   from [HMR13]. This alternative leads to computational speed improvement   when only a part of the state is involved in a propagation or in update   step.</li></ul></div><div><ul><li>augment the state when a new landmark is observed in a UKF   derivative-free way.</li></ul></div><p><i>We assume the reader is already familiar with the approach described in the tutorial.</i></p><p>This script considers the 2D robot SLAM problem where the robot is equipped with wheel odometry and observes unknown landmark measurements. The robot state is propagated through the odometry model and landmark observations are used in the UKF measurement step. Landmarks are static and we assume no error coming from data association. We reproduce the simulations that are described in [HMR10], [HMR13].</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Initialization</a></li><li><a href="#2">Simulation</a></li><li><a href="#5">Filter Design and Initialization</a></li><li><a href="#6">Filtering</a></li><li><a href="#7">Results</a></li><li><a href="#9">Conclusion</a></li></ul></div><h2 id="1">Initialization</h2><p>Start by cleaning the workspace.</p><pre class="codeinput">clear <span class="string">all</span>;
+  </style></head><body><div class="content"><h1>2D Robot SLAM - Example</h1><!--introduction--><p>Goals of this script:</p><div><ul><li>apply the UKF for performing 2D SLAM (Simultaneous Localization And   Mapping).</li><li>discover a computationally alternative way for performing UKF insipred   from [HMR13]. This alternative leads to computational speed improvement   when only a part of the state is involved in a propagation or in update   step.</li><li>augment the state when a new landmark is observed in a UKF derivative-free   way.</li></ul></div><p><i>We assume the reader is already familiar with the approach described in the tutorial.</i></p><p>This script considers the 2D robot SLAM problem where the robot is equipped with wheel odometry and observes unknown landmark measurements. The robot state is propagated through the odometry model and landmark observations are used in the UKF measurement step. Landmarks are static and we assume no error coming from data association. We reproduce the simulations that are described in [HMR10], [HMR13].</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Initialization</a></li><li><a href="#2">Simulation</a></li><li><a href="#7">Filter Design and Initialization</a></li><li><a href="#9">Filtering</a></li><li><a href="#10">Results</a></li><li><a href="#12">Conclusion</a></li></ul></div><h2 id="1">Initialization</h2><p>Start by cleaning the workspace.</p><pre class="codeinput">clear <span class="string">all</span>;
 close <span class="string">all</span>;
 </pre><h2 id="2">Simulation</h2><p>The trajectory of the robot consists of turning at constant speed.</p><pre class="codeinput"><span class="comment">% sequence time (s)</span>
 T = 2500;
@@ -81,95 +81,79 @@ odo_noise_std = [0.05*v/sqrt(2);    <span class="comment">% speed (v/m)</span>
                  0.05*v*sqrt(2)*2]; <span class="comment">% angular speed (rad/s)</span>
 <span class="comment">% observation noise standard deviation (m)</span>
 obs_noise_std = 0.1;
-
 <span class="comment">% total number of timestamps</span>
 N = T*odo_freq;
-<span class="comment">% time between succesive timestamps (s)</span>
+<span class="comment">% integration step (s)</span>
 dt = 1/odo_freq;
-</pre><p>When simulating data, we generate a map. The map consists of landmarks constantly spaced on a circle with slightly higher radius than the radius of the robot trajectory.simulate true trajectory and noisy input</p><pre class="codeinput">[states, omegas, ldks] = slam2d_simu_f(T, odo_freq, odo_noise_std, <span class="keyword">...</span>
-    v, gyro);
+</pre><p>When simulating data, we generate a map. The map consists of landmarks constantly spaced on a circle with slightly higher radius than the radius of the robot trajectory.</p><pre class="codeinput"><span class="comment">% simulate true trajectory and noisy input</span>
+[states, omegas, ldks] = slam2d_simu_f(T, odo_freq, odo_noise_std, v, gyro);
 <span class="comment">% number of landmarks</span>
 N_ldk = size(ldks, 2);
-<span class="comment">% simulate landmark measurements</span>
-ys = slam2d_simu_h(states, obs_noise_std, N_ldk, ldks);
 </pre><p>The state and the input contain the following variables:</p><pre class="language-matlab">states(n).Rot      <span class="comment">% orientation (matrix)</span>
 states(n).p        <span class="comment">% robot position</span>
 states(n).p_l      <span class="comment">% landmark positions</span>
 omegas(n).gyro     <span class="comment">% robot angular velocity</span>
 omegas(n).v        <span class="comment">% robot speed</span>
+</pre><p>We compute noisy landmark measurements based on the true states.</p><pre class="codeinput"><span class="comment">% simulate landmark measurements</span>
+ys = slam2d_simu_h(states, obs_noise_std, N_ldk, ldks);
 </pre><p>A measurement contains observation of all visible landmarks as:</p><pre class="language-matlab">y = ys(:, :, n)  <span class="comment">% measurement at timestamp n</span>
 y_k = n(:, k)    <span class="comment">% k-th observed landmark at instant n, where y_k(3)</span>
                  <span class="comment">% is the landmark indice</span>
-</pre><h2 id="5">Filter Design and Initialization</h2><p>We choose to embed the robot state in <span class="MathJax_Preview"><img src="main_slam2d_eq11736377486177990312.png" alt="$SO(2) \times R^2$"></span><script type="math/tex">SO(2) \times R^2</script> and each landmark position in <span class="MathJax_Preview"><img src="main_slam2d_eq02243227017317752302.png" alt="$R^2$"></span><script type="math/tex">R^2</script>, such that:</p><div><ul><li>the retraction <span class="MathJax_Preview"><img src="main_slam2d_eq17465938644384765962.png" alt="$\varphi(.,.)$"></span><script type="math/tex">\varphi(.,.)</script> is the <span class="MathJax_Preview"><img src="main_slam2d_eq03814562234001690102.png" alt="$SO(2)$"></span><script type="math/tex">SO(2)</script> exponential map for   orientation, i.e. and the standard vector addition for robot and   landmark positions.</li></ul></div><div><ul><li>the inverse retraction <span class="MathJax_Preview"><img src="main_slam2d_eq03493348614921386861.png" alt="$\varphi^{-1}(.,.)$"></span><script type="math/tex">\varphi^{-1}(.,.)</script> is the <span class="MathJax_Preview"><img src="main_slam2d_eq03814562234001690102.png" alt="$SO(2)$"></span><script type="math/tex">SO(2)</script>   logarithm for orientation and the standard vector subtraction for   robot and landmark positions.</li></ul></div><pre class="codeinput"><span class="comment">% propagation noise matrix</span>
-ukf_Q = diag(odo_noise_std.^2);
-<span class="comment">% measurement noise matrix</span>
-ukf_R = obs_noise_std.^2 * eye(2);
-<span class="comment">% initial error matrix</span>
-ukf_P0 = zeros(3, 3); <span class="comment">% The state is perfectly initialized without landmark</span>
+</pre><h2 id="7">Filter Design and Initialization</h2><p>We choose to embed the robot state in <span class="MathJax_Preview"><img src="main_slam2d_eq11736377486177990312.png" alt="$SO(2) \times R^2$"></span><script type="math/tex">SO(2) \times R^2</script> and each landmark position in <span class="MathJax_Preview"><img src="main_slam2d_eq02243227017317752302.png" alt="$R^2$"></span><script type="math/tex">R^2</script>, such that:</p><div><ul><li>the retraction <span class="MathJax_Preview"><img src="main_slam2d_eq17465938644384765962.png" alt="$\varphi(.,.)$"></span><script type="math/tex">\varphi(.,.)</script> is the <span class="MathJax_Preview"><img src="main_slam2d_eq03814562234001690102.png" alt="$SO(2)$"></span><script type="math/tex">SO(2)</script> exponential for orientation,   i.e. and the vector addition for robot and landmark positions.</li><li>the inverse retraction <span class="MathJax_Preview"><img src="main_slam2d_eq14481068494169685032.png" alt="$\varphi^{-1}_.(.)$"></span><script type="math/tex">\varphi^{-1}_.(.)</script> is the <span class="MathJax_Preview"><img src="main_slam2d_eq03814562234001690102.png" alt="$SO(2)$"></span><script type="math/tex">SO(2)</script> logarithm for   orientation and the vector subtraction for robot and landmark positions.</li></ul></div><pre class="codeinput"><span class="comment">% propagation noise covariance matrix</span>
+Q = diag(odo_noise_std.^2);
+<span class="comment">% measurement noise covariance matrix</span>
+R = obs_noise_std.^2 * eye(2);
+<span class="comment">% initial uncertainty matrix</span>
+P0 = zeros(3, 3); <span class="comment">% The state is perfectly initialized without landmark</span>
 <span class="comment">% sigma point parameters</span>
-ukf_alpha = [1e-3, 1e-3, 1e-3];
-
-<span class="comment">% Regarding implementation, we use the Jacobian UKF (JUKF) that is adapted</span>
-<span class="comment">% to the problem, as it spare some time when only a part of the space is</span>
-<span class="comment">% involved in a propagation or update step. See the Python documentation.</span>
-
-<span class="comment">% asses UKF function</span>
-ukf_f = @slam2d_f;
-ukf_h = @slam2d_h;
-<span class="comment">% reduced error used during propagation</span>
-ukf_red_phi = @slam2d_red_phi;
-ukf_red_phi_inv = @slam2d_red_phi_inv;
-<span class="comment">% error used during update</span>
-ukf_up_phi = @slam2d_phi;
+alpha = [1e-3, 1e-3, 1e-3];
+</pre><p>Regarding implementation, we use the Jacobian UKF (JUKF) that spares time when only a part of the space is involved in a propagation or update step.</p><pre class="codeinput"><span class="comment">% define UKF functions</span>
+f = @slam2d_f;
+h = @slam2d_h;
+<span class="comment">% reduced retraction used during propagation</span>
+red_phi = @slam2d_red_phi;
+red_phi_inv = @slam2d_red_phi_inv;
+<span class="comment">% retraction used during update</span>
+up_phi = @slam2d_phi;
 <span class="comment">% we do not need phi_inv fonction for update</span>
-<span class="comment">% error used for augmenting state</span>
-ukf_z = @slam2d_z;
-ukf_z_aug = @slam2d_z_aug;
-ukf_aug_phi = @slam2d_aug_phi;
-
+<span class="comment">% retraction used for augmenting state</span>
+z_aug = @slam2d_z_aug;
+aug_phi = @slam2d_aug_phi;
+aug_phi_inv = @slam2d_aug_phi_inv;
 <span class="comment">% reduced weights during propagation</span>
-ukf_red_weights = ukf_set_weight(3, 2, ukf_alpha);
-ukf_red_idxs = 1:3; <span class="comment">% indices corresponding to the robot state in P</span>
+red_weights = ukf_set_weight(3, 2, alpha);
+red_idxs = 1:3; <span class="comment">% indices corresponding to the robot state in P</span>
 <span class="comment">% weights during update</span>
-ukf_weights = ukf_set_weight(5, 2, ukf_alpha);
-ukf_aug_weights = ukf_set_weight(3, 2, ukf_alpha);
-ukf_aug_idxs = 1:3; <span class="comment">% indices corresponding to the robot state in P</span>
-ukf_cholQ = chol(ukf_Q);
-
+weights = ukf_set_weight(5, 2, alpha);
+aug_weights = ukf_set_weight(3, 2, alpha);
+aug_idxs = 1:3; <span class="comment">% indices corresponding to the robot state in P</span>
+cholQ = chol(Q);
 <span class="comment">% initialize the filter</span>
 ukf_state = states(1);
 ukf_state.p_l = [];
-ukf_P = ukf_P0;
-
+ukf_P = P0;
 <span class="comment">% set variables for recording estimates along the full trajectory</span>
 ukf_states = ukf_state;
 ukf_Ps = zeros(N, length(ukf_P), length(ukf_P));
 ukf_Ps(1, 1:length(ukf_P), 1:length(ukf_P)) = ukf_P;
-
 <span class="comment">% indices of already observed landmarks</span>
 ukf_lmk = [];
-</pre><h2 id="6">Filtering</h2><p>The UKF proceeds as a standard Kalman filter with a simple for loop.</p><pre class="codeinput"><span class="keyword">for</span> n = 2:N
+</pre><h2 id="9">Filtering</h2><p>The UKF proceeds as a standard Kalman filter with a for loop.</p><pre class="codeinput"><span class="keyword">for</span> n = 2:N
     <span class="comment">% propagation</span>
     [ukf_state, ukf_P] = ukf_jacobian_propagation(ukf_state, ukf_P, <span class="keyword">...</span>
-    omegas(n-1), ukf_f, dt, ukf_red_phi, ukf_red_phi_inv, ukf_cholQ, <span class="keyword">...</span>
-    ukf_red_weights, ukf_red_idxs);
-
+        omegas(n-1), f, dt, red_phi, red_phi_inv, cholQ, red_weights, red_idxs);
     y = ys(:, :, n);
     N_y = length(find(y(3, :) &gt; 0));
-
     <span class="comment">% set observalibity matrice and residual</span>
     H = zeros(0, length(ukf_P));
     res = zeros(0);
-
     <span class="comment">% set ukf state for update</span>
     ukf_up_state.Rot = ukf_state.Rot;
     ukf_up_state.p = ukf_state.p;
     Rot = ukf_state.Rot;
     p = ukf_state.p;
-
     <span class="comment">% update each landmark already in the filter</span>
     <span class="keyword">for</span> i = 1:N_y
-
         idx = find(~(ukf_lmk - y(3, i)));
         <span class="keyword">if</span> isempty(idx)
             <span class="keyword">continue</span>
@@ -178,21 +162,18 @@ ukf_lmk = [];
         up_idxs = [1:3 2+(2*idx:2*idx+1)];
         ukf_up_state.p_l = ukf_state.p_l(:, idx);
         <span class="comment">% compute observability matrices and residual</span>
-        [H_i, res_i] = ukf_jacobian_update(ukf_up_state, ukf_P, <span class="keyword">...</span>
-            y(1:2, i), ukf_h, ukf_up_phi, ukf_weights, up_idxs);
+        [H_i, res_i] = ukf_jacobian_update(ukf_up_state, ukf_P, y(1:2, i), <span class="keyword">...</span>
+            h, up_phi, weights, up_idxs);
         <span class="comment">% increase observabily matrix and residual</span>
         H = [H; H_i];
         res = [res; res_i];
     <span class="keyword">end</span>
-
     <span class="comment">% update only if some landmards have been observed</span>
     <span class="keyword">if</span> size(H, 1) &gt; 0
         R_n = obs_noise_std^2 * eye(size(H, 1));
         <span class="comment">% update state and covariance with Kalman update</span>
-        [ukf_state, ukf_P] = kf_update(ukf_state, ukf_P, H, res, <span class="keyword">...</span>
-            R_n, ukf_up_phi);
+        [ukf_state, ukf_P] = kf_update(ukf_state, ukf_P, H, res, R_n, up_phi);
     <span class="keyword">end</span>
-
     <span class="comment">% augment the state with new landmark</span>
     <span class="keyword">for</span> i = 1:N_y
         idx = find(~(ukf_lmk - y(3, i)));
@@ -204,59 +185,48 @@ ukf_lmk = [];
         <span class="comment">% indices of the new landmark</span>
         idx = find(~(ukf_lmk - y(3, i)));
         up_idxs = [1:3 2+(2*idx:2*idx+1)];
-
         <span class="comment">% new landmark position</span>
         p_l = p + Rot*y(1:2, i);
         ukf_up_state.p_l = p_l;
         ukf_state.p_l = [ukf_state.p_l p_l];
-
         <span class="comment">% get Jacobian and then covariance following [2]</span>
         R_n = obs_noise_std^2 * eye(2);
-        [~, ukf_P] = ukf_aug(ukf_state, ukf_P, y(1:2, i), ukf_z, <span class="keyword">...</span>
-            ukf_z_aug, ukf_aug_phi, ukf_aug_weights, ukf_aug_idxs, R_n);
+        [~, ukf_P] = ukf_aug(ukf_state, ukf_P, y(1:2, i), z_aug, aug_phi, <span class="keyword">...</span>
+            aug_phi_inv, aug_weights, aug_idxs, R_n);
     <span class="keyword">end</span>
-
     <span class="comment">% save estimates</span>
     ukf_states(n) = ukf_state;
     ukf_Ps(n, 1:length(ukf_P), 1:length(ukf_P)) = ukf_P;
 <span class="keyword">end</span>
-</pre><h2 id="7">Results</h2><pre class="codeinput">slam2d_results_plot(ukf_states, ukf_Ps, states, dt, ldks);
-</pre><pre class="codeoutput error">Undefined function or variable 'fig'.
-
-Error in slam2d_results_plot (line 41)
-print(fig, 'matlab/examples/html/main_slam2d_01', '-dpng', '-r600')
-
-Error in main_slam2d (line 218)
-slam2d_results_plot(ukf_states, ukf_Ps, states, dt, ldks);
-</pre><p>As UKF estimates the covariance of the error, we have plotted the 95 % confident interval (<span class="MathJax_Preview"><img src="main_slam2d_eq09036583483978579715.png" alt="$3\sigma$"></span><script type="math/tex">3\sigma</script>). We expect the error keeps behind this interval, and note note the confidence interval decreases along time.</p><h2 id="9">Conclusion</h2><p>This script shows how the UKF on parallelizable manifolds can be used for 2D SLAM. By leveraging numerical Jacobian inference, one obtains a computationally more efficient filter. The UKF works apparently well for this example, but consistency issues happear at the end of the trajectory.</p><p>You can now:</p><div><ul><li>consider non-linear range and bearing measurement.</li></ul></div><div><ul><li>benchmark the UKF with different function error and compare it to the   extended Kalman filter and invariant extended Kalman filter of   [BB17].</li></ul></div><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019a</a><br></p></div><!--
+</pre><h2 id="10">Results</h2><pre class="codeinput">slam2d_results_plot(ukf_states, ukf_Ps, states, dt, ldks);
+</pre><img vspace="5" height="400" hspace="5" src="main_slam2d_01.png" alt=""> <img vspace="5" height="400" hspace="5" src="main_slam2d_02.png" alt=""> <img vspace="5" height="400" hspace="5" src="main_slam2d_03.png" alt=""> <p>We note the <span class="MathJax_Preview"><img src="main_slam2d_eq09036583483978579715.png" alt="$3\sigma$"></span><script type="math/tex">3\sigma</script> confidence interval decreases along time.</p><h2 id="12">Conclusion</h2><p>This script shows how the UKF on parallelizable manifolds can be used for 2D SLAM. By leveraging numerical Jacobian inference, one obtains a computationally more efficient filter. The UKF works for this example, but consistency issues happear at the end of the trajectory.</p><p>You can now:</p><div><ul><li>consider non-linear range and bearing measurement.</li><li>benchmark the UKF with different retractions and compare it to the   extended Kalman filter and the invariant extended Kalman filter of [BB17].</li></ul></div><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019a</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% 2D Robot SLAM - Example
 % 
 % Goals of this script:
-% 
+%
 % * apply the UKF for performing 2D SLAM (Simultaneous Localization And
 %   Mapping).
-% 
 % * discover a computationally alternative way for performing UKF insipred
 %   from [HMR13]. This alternative leads to computational speed improvement
 %   when only a part of the state is involved in a propagation or in update
 %   step.
-% 
-% * augment the state when a new landmark is observed in a UKF 
-%   derivative-free way.
-% 
+% * augment the state when a new landmark is observed in a UKF derivative-free
+%   way.
+%   
 % _We assume the reader is already familiar with the approach described in
 % the tutorial._
 % 
-% This script considers the 2D robot SLAM problem where the robot is
-% equipped with wheel odometry and observes unknown landmark measurements.
-% The robot state is propagated through the odometry model and landmark
-% observations are used in the UKF measurement step. Landmarks are static
-% and we assume no error coming from data association. We reproduce the
-% simulations that are described in [HMR10], [HMR13].
+% This script considers the 2D robot SLAM problem where the robot is equipped
+% with wheel odometry and observes unknown landmark measurements. The robot
+% state is propagated through the odometry model and landmark observations are
+% used in the UKF measurement step. Landmarks are static and we assume no error
+% coming from data association. We reproduce the simulations that are described
+% in [HMR10], [HMR13].
 
 %% Initialization
 % Start by cleaning the workspace.
+
 clear all;
 close all;
 
@@ -276,23 +246,20 @@ odo_noise_std = [0.05*v/sqrt(2);    % speed (v/m)
                  0.05*v*sqrt(2)*2]; % angular speed (rad/s)
 % observation noise standard deviation (m)
 obs_noise_std = 0.1;
-
 % total number of timestamps
 N = T*odo_freq;
-% time between succesive timestamps (s)
+% integration step (s)
 dt = 1/odo_freq;
 
 %%
 % When simulating data, we generate a map. The map consists of landmarks
 % constantly spaced on a circle with slightly higher radius than the radius
-% of the robot trajectory.simulate true trajectory and noisy input
+% of the robot trajectory.
 
-[states, omegas, ldks] = slam2d_simu_f(T, odo_freq, odo_noise_std, ...
-    v, gyro);
+% simulate true trajectory and noisy input
+[states, omegas, ldks] = slam2d_simu_f(T, odo_freq, odo_noise_std, v, gyro);
 % number of landmarks
 N_ldk = size(ldks, 2);
-% simulate landmark measurements
-ys = slam2d_simu_h(states, obs_noise_std, N_ldk, ldks);
 
 %%
 % The state and the input contain the following variables:
@@ -302,7 +269,14 @@ ys = slam2d_simu_h(states, obs_noise_std, N_ldk, ldks);
 %   states(n).p_l      % landmark positions
 %   omegas(n).gyro     % robot angular velocity
 %   omegas(n).v        % robot speed
-%
+
+%%
+% We compute noisy landmark measurements based on the true states.
+
+% simulate landmark measurements
+ys = slam2d_simu_h(states, obs_noise_std, N_ldk, ldks);
+
+%%
 % A measurement contains observation of all visible landmarks as:
 %
 %   y = ys(:, :, n)  % measurement at timestamp n
@@ -311,90 +285,78 @@ ys = slam2d_simu_h(states, obs_noise_std, N_ldk, ldks);
 
 %% Filter Design and Initialization
 %
-% We choose to embed the robot state in $SO(2) \times R^2$ and
-% each landmark position in $R^2$, such that:
+% We choose to embed the robot state in $SO(2) \times R^2$ and each landmark
+% position in $R^2$, such that:
 %
-% * the retraction $\varphi(.,.)$ is the $SO(2)$ exponential map for
-%   orientation, i.e. and the standard vector addition for robot and 
-%   landmark positions.
-%
-% * the inverse retraction $\varphi^{-1}(.,.)$ is the $SO(2)$
-%   logarithm for orientation and the standard vector subtraction for 
-%   robot and landmark positions.
+% * the retraction $\varphi(.,.)$ is the $SO(2)$ exponential for orientation,
+%   i.e. and the vector addition for robot and landmark positions.
+% * the inverse retraction $\varphi^{-1}_.(.)$ is the $SO(2)$ logarithm for
+%   orientation and the vector subtraction for robot and landmark positions.
 
-% propagation noise matrix
-ukf_Q = diag(odo_noise_std.^2);
-% measurement noise matrix
-ukf_R = obs_noise_std.^2 * eye(2);
-% initial error matrix
-ukf_P0 = zeros(3, 3); % The state is perfectly initialized without landmark
+% propagation noise covariance matrix
+Q = diag(odo_noise_std.^2);
+% measurement noise covariance matrix
+R = obs_noise_std.^2 * eye(2);
+% initial uncertainty matrix
+P0 = zeros(3, 3); % The state is perfectly initialized without landmark
 % sigma point parameters
-ukf_alpha = [1e-3, 1e-3, 1e-3];
+alpha = [1e-3, 1e-3, 1e-3];
 
-% Regarding implementation, we use the Jacobian UKF (JUKF) that is adapted
-% to the problem, as it spare some time when only a part of the space is
-% involved in a propagation or update step. See the Python documentation.
+%%
+% Regarding implementation, we use the Jacobian UKF (JUKF) that spares time when
+% only a part of the space is involved in a propagation or update step.
 
-% asses UKF function
-ukf_f = @slam2d_f;
-ukf_h = @slam2d_h;
-% reduced error used during propagation
-ukf_red_phi = @slam2d_red_phi;
-ukf_red_phi_inv = @slam2d_red_phi_inv;
-% error used during update
-ukf_up_phi = @slam2d_phi;
+% define UKF functions
+f = @slam2d_f;
+h = @slam2d_h;
+% reduced retraction used during propagation
+red_phi = @slam2d_red_phi;
+red_phi_inv = @slam2d_red_phi_inv;
+% retraction used during update
+up_phi = @slam2d_phi;
 % we do not need phi_inv fonction for update
-% error used for augmenting state
-ukf_z = @slam2d_z;
-ukf_z_aug = @slam2d_z_aug;
-ukf_aug_phi = @slam2d_aug_phi;
-
+% retraction used for augmenting state
+z_aug = @slam2d_z_aug;
+aug_phi = @slam2d_aug_phi;
+aug_phi_inv = @slam2d_aug_phi_inv;
 % reduced weights during propagation
-ukf_red_weights = ukf_set_weight(3, 2, ukf_alpha);
-ukf_red_idxs = 1:3; % indices corresponding to the robot state in P
+red_weights = ukf_set_weight(3, 2, alpha);
+red_idxs = 1:3; % indices corresponding to the robot state in P
 % weights during update
-ukf_weights = ukf_set_weight(5, 2, ukf_alpha);
-ukf_aug_weights = ukf_set_weight(3, 2, ukf_alpha);
-ukf_aug_idxs = 1:3; % indices corresponding to the robot state in P
-ukf_cholQ = chol(ukf_Q);
-
+weights = ukf_set_weight(5, 2, alpha);
+aug_weights = ukf_set_weight(3, 2, alpha);
+aug_idxs = 1:3; % indices corresponding to the robot state in P
+cholQ = chol(Q);
 % initialize the filter
 ukf_state = states(1);
 ukf_state.p_l = [];
-ukf_P = ukf_P0;
-
+ukf_P = P0;
 % set variables for recording estimates along the full trajectory
 ukf_states = ukf_state;
 ukf_Ps = zeros(N, length(ukf_P), length(ukf_P));
 ukf_Ps(1, 1:length(ukf_P), 1:length(ukf_P)) = ukf_P;
-
 % indices of already observed landmarks
 ukf_lmk = [];
 
 %% Filtering
-% The UKF proceeds as a standard Kalman filter with a simple for loop.
+% The UKF proceeds as a standard Kalman filter with a for loop.
+
 for n = 2:N
     % propagation
     [ukf_state, ukf_P] = ukf_jacobian_propagation(ukf_state, ukf_P, ...
-    omegas(n-1), ukf_f, dt, ukf_red_phi, ukf_red_phi_inv, ukf_cholQ, ...
-    ukf_red_weights, ukf_red_idxs);
-    
+        omegas(n-1), f, dt, red_phi, red_phi_inv, cholQ, red_weights, red_idxs);
     y = ys(:, :, n);
     N_y = length(find(y(3, :) > 0));
-    
     % set observalibity matrice and residual
     H = zeros(0, length(ukf_P));
     res = zeros(0);
-    
     % set ukf state for update
     ukf_up_state.Rot = ukf_state.Rot;
     ukf_up_state.p = ukf_state.p;
     Rot = ukf_state.Rot;
     p = ukf_state.p;
- 
     % update each landmark already in the filter
     for i = 1:N_y
-        
         idx = find(~(ukf_lmk - y(3, i)));
         if isempty(idx)
             continue
@@ -403,21 +365,18 @@ for n = 2:N
         up_idxs = [1:3 2+(2*idx:2*idx+1)];
         ukf_up_state.p_l = ukf_state.p_l(:, idx);
         % compute observability matrices and residual
-        [H_i, res_i] = ukf_jacobian_update(ukf_up_state, ukf_P, ...
-            y(1:2, i), ukf_h, ukf_up_phi, ukf_weights, up_idxs);
+        [H_i, res_i] = ukf_jacobian_update(ukf_up_state, ukf_P, y(1:2, i), ...
+            h, up_phi, weights, up_idxs);
         % increase observabily matrix and residual
         H = [H; H_i];
         res = [res; res_i];
     end
-    
     % update only if some landmards have been observed
     if size(H, 1) > 0
         R_n = obs_noise_std^2 * eye(size(H, 1));
         % update state and covariance with Kalman update
-        [ukf_state, ukf_P] = kf_update(ukf_state, ukf_P, H, res, ...
-            R_n, ukf_up_phi);
+        [ukf_state, ukf_P] = kf_update(ukf_state, ukf_P, H, res, R_n, up_phi);
     end
-    
     % augment the state with new landmark
     for i = 1:N_y
         idx = find(~(ukf_lmk - y(3, i)));
@@ -429,18 +388,15 @@ for n = 2:N
         % indices of the new landmark
         idx = find(~(ukf_lmk - y(3, i)));
         up_idxs = [1:3 2+(2*idx:2*idx+1)];
-        
         % new landmark position
         p_l = p + Rot*y(1:2, i);
         ukf_up_state.p_l = p_l;
-        ukf_state.p_l = [ukf_state.p_l p_l];
-        
+        ukf_state.p_l = [ukf_state.p_l p_l];  
         % get Jacobian and then covariance following [2]
         R_n = obs_noise_std^2 * eye(2);
-        [~, ukf_P] = ukf_aug(ukf_state, ukf_P, y(1:2, i), ukf_z, ...
-            ukf_z_aug, ukf_aug_phi, ukf_aug_weights, ukf_aug_idxs, R_n);
+        [~, ukf_P] = ukf_aug(ukf_state, ukf_P, y(1:2, i), z_aug, aug_phi, ...
+            aug_phi_inv, aug_weights, aug_idxs, R_n);
     end
-   
     % save estimates
     ukf_states(n) = ukf_state;
     ukf_Ps(n, 1:length(ukf_P), 1:length(ukf_P)) = ukf_P;
@@ -450,23 +406,19 @@ end
 slam2d_results_plot(ukf_states, ukf_Ps, states, dt, ldks);
 
 %%
-% As UKF estimates the covariance of the error, we have plotted the 95 %
-% confident interval ($3\sigma$). We expect the error keeps behind this
-% interval, and note note the confidence interval decreases along time.
+% We note the $3\sigma$ confidence interval decreases along time.
 
 %% Conclusion
-% This script shows how the UKF on parallelizable manifolds can be used for
-% 2D SLAM. By leveraging numerical Jacobian inference, one obtains a
-% computationally more efficient filter. The UKF works apparently well for
-% this example, but consistency issues happear at the end of the
-% trajectory.
-%
+% This script shows how the UKF on parallelizable manifolds can be used for 2D
+% SLAM. By leveraging numerical Jacobian inference, one obtains a
+% computationally more efficient filter. The UKF works for this example, but
+% consistency issues happear at the end of the trajectory.
+% 
 % You can now:
 %
 % * consider non-linear range and bearing measurement.
-% 
-% * benchmark the UKF with different function error and compare it to the
-%   extended Kalman filter and invariant extended Kalman filter of
-%   [BB17].
+% * benchmark the UKF with different retractions and compare it to the
+%   extended Kalman filter and the invariant extended Kalman filter of [BB17].
+
 ##### SOURCE END #####
 --></body></html>

@@ -202,8 +202,8 @@ features (using for instance a depth camera) are addressed.</p>
 </div>
 <div class="section" id="model-and-simulation">
 <h2>Model and Simulation<a class="headerlink" href="#model-and-simulation" title="Permalink to this headline">¶</a></h2>
-<p>This script uses the <code class="docutils literal notranslate"><span class="pre">INERTIAL_NAVIGATION</span></code> model class that requires  the
-sequence time and the IMU frequency to create an instance of the model.</p>
+<p>This script uses the <a class="reference internal" href="../model.html#ukfm.INERTIAL_NAVIGATION" title="ukfm.INERTIAL_NAVIGATION"><code class="xref py py-meth docutils literal notranslate"><span class="pre">INERTIAL_NAVIGATION()</span></code></a> model that requires
+the sequence time and the IMU frequency.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sequence time (s)</span>
 <span class="n">T</span> <span class="o">=</span> <span class="mi">30</span>
 <span class="c1"># IMU frequency (Hz)</span>
@@ -214,11 +214,10 @@ sequence time and the IMU frequency to create an instance of the model.</p>
 </div>
 <p>The true trajectory is computed along with noisy inputs after we define the
 noise standard deviation affecting the (accurate) IMU.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># IMU standard-deviation noise (noise is isotropic)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># IMU noise standard deviation (noise is isotropic)</span>
 <span class="n">imu_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.01</span><span class="p">,</span>   <span class="c1"># gyro (rad/s)</span>
-                    <span class="mf">0.01</span><span class="p">])</span>  <span class="c1"># accelerometer (m/s**2)</span>
-
-<span class="c1"># simulate true trajectory and noised input</span>
+                    <span class="mf">0.01</span><span class="p">])</span>  <span class="c1"># accelerometer (m/s^2)</span>
+<span class="c1"># simulate true states and noisy inputs</span>
 <span class="n">states</span><span class="p">,</span> <span class="n">omegas</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simu_f</span><span class="p">(</span><span class="n">imu_std</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -232,11 +231,10 @@ noise standard deviation affecting the (accurate) IMU.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The IMU is assumed unbiased. IMU biases are addressed on the IMU-GNSS fusion
-problem with real KITTI data.</p>
+<p>The IMU is assumed unbiased. IMU biases are addressed on the IMU-GNSS
+sensor-fusion problem.</p>
 </div>
-<p>We compute noisy measurements at low frequency based on the true state
-sequence.</p>
+<p>We compute noisy measurements at low frequency based on the true states.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># observation frequency (Hz)</span>
 <span class="n">obs_freq</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="c1"># observation noise standard deviation (m)</span>
@@ -245,51 +243,39 @@ sequence.</p>
 <span class="n">ys</span><span class="p">,</span> <span class="n">one_hot_ys</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simu_h</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">obs_freq</span><span class="p">,</span> <span class="n">obs_std</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>A measurement <code class="docutils literal notranslate"><span class="pre">ys[k]</span></code> contains stacked observation of all visible landmarks.
-In this example, we have defined three landmarks that are always visible.</p>
+<p>A measurement <code class="docutils literal notranslate"><span class="pre">ys[k]</span></code> contains stacked observations of all visible
+landmarks. In this example, we have defined three landmarks that are always
+visible.</p>
 <div class="section" id="filter-design-and-initialization">
 <h3>Filter Design and Initialization<a class="headerlink" href="#filter-design-and-initialization" title="Permalink to this headline">¶</a></h3>
 <p>We now design the UKF on parallelizable manifolds. This script embeds the
 state in <span class="math notranslate nohighlight">\(SO(3) \times \mathbb{R}^6\)</span>, such that:</p>
 <ul class="simple">
 <li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(3)\)</span> exponential for
-orientation, and the standard vector addition for the vehicle velocity and
-position.</p></li>
-<li><p>the inverse retraction <span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(3)\)</span>
-logarithm for orientation and the standard vector subtraction for the
-vehicle velocity and position.</p></li>
+orientation, and the vector addition for the vehicle velocity and position.</p></li>
+<li><p>the inverse retraction <span class="math notranslate nohighlight">\(\varphi^{-1}_.(.)\)</span> is the <span class="math notranslate nohighlight">\(SO(3)\)</span>
+logarithm for orientation and the vector subtraction for the vehicle
+velocity and position.</p></li>
 </ul>
 <p>Remaining parameter setting is standard. The initial errors are set around 10
-degrees for attitude and 1 meter for position standard deviation. These
-initial conditions are challenging.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># propagation noise matrix</span>
+degrees for attitude and 1 meter for position in term of standard deviation.
+These initial conditions are challenging.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># propagation noise covariance matrix</span>
 <span class="n">Q</span> <span class="o">=</span> <span class="n">block_diag</span><span class="p">(</span><span class="n">imu_std</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">imu_std</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-<span class="c1"># measurement noise matrix</span>
+<span class="c1"># measurement noise covariance matrix</span>
 <span class="n">R</span> <span class="o">=</span> <span class="n">obs_std</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">N_ldk</span><span class="p">)</span>
-
-<span class="c1"># initial error matrix such that the state is not perfectly initialized</span>
+<span class="c1"># initial uncertainty matrix such that the state is not perfectly initialized</span>
 <span class="n">P0</span> <span class="o">=</span> <span class="n">block_diag</span><span class="p">((</span><span class="mi">10</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">180</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
 <span class="c1"># sigma point parameters</span>
 <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">])</span>
-
-<span class="c1"># start by initializing the filter with a string error state</span>
+<span class="c1"># start by initializing the filter with an unaccurate state</span>
 <span class="n">state0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
     <span class="n">Rot</span><span class="o">=</span><span class="n">ukfm</span><span class="o">.</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span><span class="p">),</span>
     <span class="n">v</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">v</span><span class="p">,</span>
-    <span class="n">p</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">p</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">])</span>
-<span class="p">)</span>
-
+    <span class="n">p</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">p</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]))</span>
 <span class="c1"># create the UKF</span>
-<span class="n">ukf</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span>
-               <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>
-               <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span>
-               <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
-               <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
-               <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
-               <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi</span><span class="p">,</span>
-               <span class="n">phi_inv</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi_inv</span><span class="p">,</span>
-               <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
-
+<span class="n">ukf</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span> <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
+               <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi</span><span class="p">,</span> <span class="n">phi_inv</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi_inv</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
 <span class="c1"># set variables for recording estimates along the full trajectory</span>
 <span class="n">ukf_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">state0</span><span class="p">]</span>
 <span class="n">ukf_Ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
@@ -300,7 +286,7 @@ initial conditions are challenging.</p>
 </div>
 <div class="section" id="filtering">
 <h2>Filtering<a class="headerlink" href="#filtering" title="Permalink to this headline">¶</a></h2>
-<p>The UKF proceeds as a standard Kalman filter with a simple for loop.</p>
+<p>The UKF proceeds as a standard Kalman filter with a for loop.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># measurement iteration number</span>
 <span class="n">k</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
@@ -318,9 +304,8 @@ initial conditions are challenging.</p>
 <div class="section" id="results">
 <h3>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h3>
 <p>We plot the trajectory, the position of the landmarks and the estimated
-trajectory, along with attitude error, position error, and confidence
-interval. Since we plot position in the horizontal plan, two landmarks are
-superposed.</p>
+trajectory in the same plot, the attitude error, the position error, and their
+confidence interval.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">plot_results</span><span class="p">(</span><span class="n">ukf_states</span><span class="p">,</span> <span class="n">ukf_Ps</span><span class="p">,</span> <span class="n">states</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -332,31 +317,29 @@ superposed.</p>
 <li><img alt="../_images/sphx_glr_inertial_navigation_0031.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_inertial_navigation_0031.png" />
 </li>
 </ul>
-<p>It seems that the proposed UKF meets strong difficulties and takes some time
-to converge due to the challenging initial conditions. A major problem of the
-UKF (in this problem and with this choice of retraction) is to be
-particularly overoptimism regarding attitude error, which is clearly outside
-the confidence intervals.</p>
+<p>It seems that the proposed UKF meets difficulties and takes some time to
+converge due to the challenging initial conditions. A major problem of the UKF
+(in this problem and with this choice of retraction) is to be particularly
+overoptimism regarding attitude error, which is clearly outside the confidence
+intervals.</p>
 </div>
 </div>
 <div class="section" id="conclusion">
 <h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
-<p>This script readily implements an UKF for estimation the 3D pose and velocity
+<p>This script readily implements an UKF for estimating the 3D pose and velocity
 of a platform. Results are not particularly satisfying, since the filter
 difficultly converges to the true state even at the end of the trajectory. But
 is it not possible to improve the filter accuracy and consistency performances
 by inflating sensor noise parameters of the filter, or better, by defining a
-retraction more adapted to the considered problem ?</p>
-<p>You are now able to:</p>
+new retraction more adapted to the considered problem ?</p>
+<p>You can now:</p>
 <ul class="simple">
-<li><p>benchmark the UKF and compare it to the extended Kalman filter and invariant
-extended Kalman filter of <a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id3">[BB17]</a>.</p></li>
-<li><p>modify the measurement model with a non-linear range and bearing
-measurement.</p></li>
-<li><p>add sensor biases both on the gyro and accelerometer measurements, and
-estimate them.</p></li>
+<li><p>benchmark the UKF and compare it to the extended Kalman filter and the
+invariant extended Kalman filter of <a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id3">[BB17]</a>.</p></li>
+<li><p>modify the model with a non-linear range and bearing measurement.</p></li>
+<li><p>add and estimate sensor biases on the gyro and accelerometer measurements.</p></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  14.075 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  13.803 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-inertial-navigation-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/28a752ccbb5579cc2549d06f4c001b98/inertial_navigation.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">inertial_navigation.py</span></code></a></p>

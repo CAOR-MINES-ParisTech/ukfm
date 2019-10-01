@@ -174,10 +174,12 @@ texinfo_documents = [
 # -- Extension configuration -------------------------------------------------
 autodoc_member_order = 'bysource'
 
-# '../../python/benchmarks', 'auto_benchmark', 
+#'../../python/benchmarks', 'auto_benchmark',
 sphinx_gallery_conf = {
-     'examples_dirs': ['../../python/examples'],   # path to your example scripts 
-     'gallery_dirs': ['auto_examples'],  # path where to save gallery generated output
+     'examples_dirs': ['../../python/benchmarks', '../../python/examples'],   
+     # path to your example scripts 
+     'gallery_dirs': ['auto_benchmark', 'auto_examples'],  
+     # path where to save gallery generated output
      'filename_pattern': '/',
      'ignore_pattern': r'__init__\.py',
 }

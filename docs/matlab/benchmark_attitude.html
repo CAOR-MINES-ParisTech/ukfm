@@ -1,0 +1,511 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>3D Attitude Estimation - Benchmark</title><meta name="generator" content="MATLAB 9.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-09-30"><meta name="DC.source" content="benchmark_attitude.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>3D Attitude Estimation - Benchmark</h1><!--introduction--><p>Goals of this script:</p><div><ul><li>implement two different UKFs on the 3D attitude estimation example.</li><li>design the Extended Kalman Filter (EKF).</li><li>compare the different algorithms with Monte-Carlo simulations.</li></ul></div><p><i>We assume the reader is already familiar with the considered problem described in the related example.</i></p><p>For the given problem, two different UKFs emerge, defined respectively as:</p><div><ol><li>The state is embedded in <span class="MathJax_Preview"><img src="benchmark_attitude_eq17232210486186811875.png" alt="$SO(3)$"></span><script type="math/tex">SO(3)</script> with left multiplication, i.e. the   retraction <span class="MathJax_Preview"><img src="benchmark_attitude_eq17465938644384765962.png" alt="$\varphi(.,.)$"></span><script type="math/tex">\varphi(.,.)</script> is the <span class="MathJax_Preview"><img src="benchmark_attitude_eq17232210486186811875.png" alt="$SO(3)$"></span><script type="math/tex">SO(3)</script> exponential where uncertainty is   multiplied on the left by the state. The inverse retraction   <span class="MathJax_Preview"><img src="benchmark_attitude_eq14481068494169685032.png" alt="$\varphi^{-1}_.(.)$"></span><script type="math/tex">\varphi^{-1}_.(.)</script> is the <span class="MathJax_Preview"><img src="benchmark_attitude_eq17232210486186811875.png" alt="$SO(3)$"></span><script type="math/tex">SO(3)</script> logarithm.</li><li>The state is embedded in <span class="MathJax_Preview"><img src="benchmark_attitude_eq17232210486186811875.png" alt="$SO(3)$"></span><script type="math/tex">SO(3)</script> with right multiplication, i.e. the   retraction <span class="MathJax_Preview"><img src="benchmark_attitude_eq17465938644384765962.png" alt="$\varphi(.,.)$"></span><script type="math/tex">\varphi(.,.)</script> is the <span class="MathJax_Preview"><img src="benchmark_attitude_eq17232210486186811875.png" alt="$SO(3)$"></span><script type="math/tex">SO(3)</script> exponential where uncertainty is   multiplied on the right by the state. The inverse retraction   <span class="MathJax_Preview"><img src="benchmark_attitude_eq14481068494169685032.png" alt="$\varphi^{-1}_.(.)$"></span><script type="math/tex">\varphi^{-1}_.(.)</script> is the <span class="MathJax_Preview"><img src="benchmark_attitude_eq17232210486186811875.png" alt="$SO(3)$"></span><script type="math/tex">SO(3)</script> logarithm.</li></ol></div><p>We tests the different algorithms with the same noise parameter setting and on simulation with moderate initial heading error.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Initialization</a></li><li><a href="#2">Simulation Setting</a></li><li><a href="#4">Filter Design</a></li><li><a href="#6">Monte-Carlo runs</a></li><li><a href="#7">Results</a></li><li><a href="#13">Conclusion</a></li></ul></div><h2 id="1">Initialization</h2><p>Start by cleaning the workspace.</p><pre class="codeinput">clear <span class="string">all</span>;
+close <span class="string">all</span>;
+</pre><h2 id="2">Simulation Setting</h2><p>We compare the filters on a large number of Monte-Carlo runs.</p><pre class="codeinput"><span class="comment">% Monte-Carlo runs</span>
+N_mc = 100;
+</pre><p>The initial values of the heading error has 10 degree standard deviation.</p><pre class="codeinput"><span class="comment">% sequence time (s)</span>
+T = 100;
+<span class="comment">% IMU frequency (Hz)</span>
+imu_freq = 100;
+<span class="comment">% IMU noise standard deviation (noise is isotropic)</span>
+imu_noise_std = [5/180*pi; <span class="comment">% gyro (rad/s)</span>
+                0.4;       <span class="comment">% accelerometer (m/s^2)</span>
+                0.3];      <span class="comment">% magnetometer</span>
+<span class="comment">% total number of timestamps</span>
+N = T*imu_freq;
+<span class="comment">% integration step (s)</span>
+dt = 1/imu_freq;
+</pre><h2 id="4">Filter Design</h2><p>Additionnaly to the UKFs, we compare them to an EKF. The EKF has the same uncertainty representation as the UKF with right uncertainty representation.</p><pre class="codeinput"><span class="comment">% propagation noise covariance matrix</span>
+Q = imu_noise_std(1).^2*eye(3);
+<span class="comment">% measurement noise covariance matrix</span>
+R = blkdiag(imu_noise_std(2).^2*eye(3), imu_noise_std(3).^2*eye(3));
+<span class="comment">% initial uncertainty matrix</span>
+P0 = (10/180*pi)^2 * eye(3); <span class="comment">% The state is perfectly initialized</span>
+<span class="comment">% sigma point parameters</span>
+alpha = [1e-3, 1e-3, 1e-3];
+<span class="comment">% asses UKF function</span>
+f = @attitude_f;
+h = @attitude_h;
+left_phi = @attitude_phi;
+left_phi_inv = @attitude_phi_inv;
+right_phi = @attitude_right_phi;
+right_phi_inv = @attitude_right_phi_inv;
+weights = ukf_set_weight(length(P0), length(R), alpha);
+cholQ = chol(Q);
+</pre><p>We set error variables before launching Monte-Carlo simulations</p><pre class="codeinput">ukf_left_errs = zeros(3, N, N_mc);
+ukf_right_errs = zeros(size(ukf_left_errs));
+ekf_errs = zeros(size(ukf_left_errs));
+
+left_ukf_nees = zeros(N, N_mc);
+right_ukf_nees = zeros(size(left_ukf_nees));
+ekf_nees = zeros(size(left_ukf_nees));
+</pre><h2 id="6">Monte-Carlo runs</h2><p>We run the Monte-Carlo through a for loop.</p><pre class="codeinput"><span class="keyword">for</span> n_mc = 1:N_mc
+    disp(<span class="string">"Monte-Carlo iteration(s): "</span> + num2str(n_mc) + <span class="string">"/"</span> + num2str(N_mc));
+    <span class="comment">% simulate states and noisy inputs</span>
+    [states, omegas] = attitude_simu_f(T, imu_freq, imu_noise_std);
+    <span class="comment">% simulate accelerometer and magnetometer measurements</span>
+    ys = attitude_simu_h(states, T, imu_freq, imu_noise_std);
+
+    <span class="comment">% initialize filter with true state</span>
+    ekf_state = states(1);
+    ukf_left_state = ekf_state(1);
+    ukf_right_state = ekf_state(1);
+
+    state0 = states(1);
+    state0.Rot = state0.Rot * so3_exp(10/180*pi*randn(3, 1));
+    ukf_left_P = state0.Rot*P0*state0.Rot';
+    ukf_right_P = P0;
+    ekf_P = P0;
+
+    <span class="comment">% variables for recording estimates of the Monte-Carlo run</span>
+    ukf_left_states = ukf_left_state;
+    ukf_right_states = ukf_right_state;
+    ekf_states = ekf_state;
+
+    ukf_left_Ps = zeros(N, 3, 3);
+    ukf_right_Ps = zeros(size(ukf_left_Ps));
+    ekf_Ps = zeros(size(ukf_left_Ps));
+
+    ukf_left_Ps(1, :, :) = ukf_left_P;
+    ukf_right_Ps(1, :, :) = ukf_right_P;
+    ekf_Ps(1, :, :) = ekf_P;
+
+    <span class="comment">% filtering loop</span>
+    <span class="keyword">for</span> n = 2:N
+        <span class="comment">% propagation;</span>
+        [ukf_left_state, ukf_left_P] = ukf_propagation(ukf_left_state, <span class="keyword">...</span>
+            ukf_left_P, omegas(n-1), f, dt, left_phi, <span class="keyword">...</span>
+            left_phi_inv, cholQ, weights);
+        [ukf_right_state, ukf_right_P] = ukf_propagation(<span class="keyword">...</span>
+            ukf_right_state, ukf_right_P, omegas(n-1), <span class="keyword">...</span>
+            f, dt, right_phi, right_phi_inv, cholQ, weights);
+        [ekf_state, ekf_P] = attitude_ekf_propagation(ekf_state, <span class="keyword">...</span>
+            ekf_P, omegas(n-1), dt, Q);
+        <span class="comment">% update</span>
+       [ukf_left_state, ukf_left_P] = ukf_update(ukf_left_state, <span class="keyword">...</span>
+           ukf_left_P, ys(:, n), h, left_phi, R, weights);
+       [ukf_right_state, ukf_right_P] = ukf_update(ukf_right_state, <span class="keyword">...</span>
+           ukf_right_P, ys(:, n), h, right_phi, <span class="keyword">...</span>
+           R, weights);
+       [ekf_state, ekf_P] = attitude_ekf_update(ekf_state, <span class="keyword">...</span>
+           ekf_P, ys(:, n), R);
+        <span class="comment">% save estimates</span>
+        ukf_left_states(n) = ukf_left_state;
+        ukf_right_states(n) = ukf_right_state;
+        ekf_states(n) = ekf_state;
+
+        ukf_left_Ps(n, :, :) = ukf_left_P;
+        ukf_right_Ps(n, :, :) = ukf_right_P;
+        ekf_Ps(n, :, :) = ekf_P;
+    <span class="keyword">end</span>
+    <span class="comment">% get state trajectory</span>
+    Rots = attitude_get_states(states);
+    ukf_left_Rots = attitude_get_states(ukf_left_states);
+    ukf_right_Rots = attitude_get_states(ukf_right_states);
+    ekf_Rots = attitude_get_states(ekf_states);
+
+    <span class="comment">% record errors</span>
+    ukf_left_errs(:, :, n_mc) = attitude_errors(Rots, ukf_left_Rots);
+    ukf_right_errs(:, :, n_mc) = attitude_errors(Rots, ukf_right_Rots);
+    ekf_errs(:, :, n_mc) = attitude_errors(Rots, ekf_Rots);
+
+    <span class="comment">% record NEES</span>
+    left_ukf_nees(:, n_mc) = attitude_nees(ukf_left_errs(:, :, n_mc), <span class="keyword">...</span>
+        ukf_left_Ps, ukf_left_Rots, <span class="string">"LEFT"</span>);
+    right_ukf_nees(:, n_mc) = attitude_nees(<span class="keyword">...</span>
+        ukf_right_errs(:, :, n_mc), ukf_right_Ps, ukf_right_Rots, <span class="string">"RIGHT"</span>);
+    ekf_nees(:, n_mc) = attitude_nees(ekf_errs(:, :, n_mc), ekf_Ps, <span class="keyword">...</span>
+        ekf_Rots, <span class="string">"RIGHT"</span>);
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Monte-Carlo iteration(s): 1/100
+Monte-Carlo iteration(s): 2/100
+Monte-Carlo iteration(s): 3/100
+Monte-Carlo iteration(s): 4/100
+Monte-Carlo iteration(s): 5/100
+Monte-Carlo iteration(s): 6/100
+Monte-Carlo iteration(s): 7/100
+Monte-Carlo iteration(s): 8/100
+Monte-Carlo iteration(s): 9/100
+Monte-Carlo iteration(s): 10/100
+Monte-Carlo iteration(s): 11/100
+Monte-Carlo iteration(s): 12/100
+Monte-Carlo iteration(s): 13/100
+Monte-Carlo iteration(s): 14/100
+Monte-Carlo iteration(s): 15/100
+Monte-Carlo iteration(s): 16/100
+Monte-Carlo iteration(s): 17/100
+Monte-Carlo iteration(s): 18/100
+Monte-Carlo iteration(s): 19/100
+Monte-Carlo iteration(s): 20/100
+Monte-Carlo iteration(s): 21/100
+Monte-Carlo iteration(s): 22/100
+Monte-Carlo iteration(s): 23/100
+Monte-Carlo iteration(s): 24/100
+Monte-Carlo iteration(s): 25/100
+Monte-Carlo iteration(s): 26/100
+Monte-Carlo iteration(s): 27/100
+Monte-Carlo iteration(s): 28/100
+Monte-Carlo iteration(s): 29/100
+Monte-Carlo iteration(s): 30/100
+Monte-Carlo iteration(s): 31/100
+Monte-Carlo iteration(s): 32/100
+Monte-Carlo iteration(s): 33/100
+Monte-Carlo iteration(s): 34/100
+Monte-Carlo iteration(s): 35/100
+Monte-Carlo iteration(s): 36/100
+Monte-Carlo iteration(s): 37/100
+Monte-Carlo iteration(s): 38/100
+Monte-Carlo iteration(s): 39/100
+Monte-Carlo iteration(s): 40/100
+Monte-Carlo iteration(s): 41/100
+Monte-Carlo iteration(s): 42/100
+Monte-Carlo iteration(s): 43/100
+Monte-Carlo iteration(s): 44/100
+Monte-Carlo iteration(s): 45/100
+Monte-Carlo iteration(s): 46/100
+Monte-Carlo iteration(s): 47/100
+Monte-Carlo iteration(s): 48/100
+Monte-Carlo iteration(s): 49/100
+Monte-Carlo iteration(s): 50/100
+Monte-Carlo iteration(s): 51/100
+Monte-Carlo iteration(s): 52/100
+Monte-Carlo iteration(s): 53/100
+Monte-Carlo iteration(s): 54/100
+Monte-Carlo iteration(s): 55/100
+Monte-Carlo iteration(s): 56/100
+Monte-Carlo iteration(s): 57/100
+Monte-Carlo iteration(s): 58/100
+Monte-Carlo iteration(s): 59/100
+Monte-Carlo iteration(s): 60/100
+Monte-Carlo iteration(s): 61/100
+Monte-Carlo iteration(s): 62/100
+Monte-Carlo iteration(s): 63/100
+Monte-Carlo iteration(s): 64/100
+Monte-Carlo iteration(s): 65/100
+Monte-Carlo iteration(s): 66/100
+Monte-Carlo iteration(s): 67/100
+Monte-Carlo iteration(s): 68/100
+Monte-Carlo iteration(s): 69/100
+Monte-Carlo iteration(s): 70/100
+Monte-Carlo iteration(s): 71/100
+Monte-Carlo iteration(s): 72/100
+Monte-Carlo iteration(s): 73/100
+Monte-Carlo iteration(s): 74/100
+Monte-Carlo iteration(s): 75/100
+Monte-Carlo iteration(s): 76/100
+Monte-Carlo iteration(s): 77/100
+Monte-Carlo iteration(s): 78/100
+Monte-Carlo iteration(s): 79/100
+Monte-Carlo iteration(s): 80/100
+Monte-Carlo iteration(s): 81/100
+Monte-Carlo iteration(s): 82/100
+Monte-Carlo iteration(s): 83/100
+Monte-Carlo iteration(s): 84/100
+Monte-Carlo iteration(s): 85/100
+Monte-Carlo iteration(s): 86/100
+Monte-Carlo iteration(s): 87/100
+Monte-Carlo iteration(s): 88/100
+Monte-Carlo iteration(s): 89/100
+Monte-Carlo iteration(s): 90/100
+Monte-Carlo iteration(s): 91/100
+Monte-Carlo iteration(s): 92/100
+Monte-Carlo iteration(s): 93/100
+Monte-Carlo iteration(s): 94/100
+Monte-Carlo iteration(s): 95/100
+Monte-Carlo iteration(s): 96/100
+Monte-Carlo iteration(s): 97/100
+Monte-Carlo iteration(s): 98/100
+Monte-Carlo iteration(s): 99/100
+Monte-Carlo iteration(s): 100/100
+</pre><h2 id="7">Results</h2><p>We visualize the results averaged over Monte-Carlo sequences, and compute the Root Mean Squared Error (RMSE) averaged over all Monte-Carlo.</p><pre class="codeinput">benchmark_attitude_helper;
+</pre><pre class="codeoutput"> 
+Root Mean Square Error w.r.t. orientation (deg)
+    -left UKF    : 1.09
+    -right UKF   : 1.08
+    -EKF         : 1.08
+</pre><img height="400" vspace="5" hspace="5" src="benchmark_attitude_01.png" alt=""> <p>All the curves have the same shape. Filters obtain the same performances.</p><p>We finally compare the filters in term of consistency (Normalized Estimation Error Squared, NEES), as in the localization benchmark.</p><p>We finally compare the filters in term of consistency (Normalized Estimation Error Squared, NEES), as in the localization benchmark.</p><pre class="codeinput">benchmark_attitude_helper_nees;
+</pre><pre class="codeoutput"> 
+Normalized Estimation Error Squared (NEES)
+    -left UKF : 1.03
+    -right UKF: 1.02
+    -EKF      : 1.02
+</pre><img height="400" vspace="5" hspace="5" src="benchmark_attitude_02.png" alt=""> <p>All the filters obtain the same NEES and are consistent.</p><p>Which filter is the best ? For the considered problem, <b>left UKF</b>, <b>right UKF</b>, and <b>EKF</b> obtain the same performances. This is expected as when the state consists of an orientation only, left and right UKFs are implicitely the same. The EKF obtains similar results as it is also based on a retraction build on <span class="MathJax_Preview"><img src="benchmark_attitude_eq17232210486186811875.png" alt="$SO(3)$"></span><script type="math/tex">SO(3)</script> (not with Euler angles).</p><h2 id="13">Conclusion</h2><p>This script compares two UKFs and one EKF for the problem of attitude estimation. All the filters obtain similar performances as the state involves only the orientation of the platform.</p><p>You can now:</p><div><ul><li>compare the filters in different noise setting to see if the filters still   get the same performances.</li><li>address the problem of 3D inertial navigation, where the state is defined   as the oriention of the vehicle along with its velocity and its position.</li></ul></div><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% 3D Attitude Estimation - Benchmark
+%
+% Goals of this script:
+%
+% * implement two different UKFs on the 3D attitude estimation example.
+% * design the Extended Kalman Filter (EKF).
+% * compare the different algorithms with Monte-Carlo simulations.
+%
+% _We assume the reader is already familiar with the considered problem
+% described in the related example._
+%
+% For the given problem, two different UKFs emerge, defined respectively as:
+%
+% # The state is embedded in $SO(3)$ with left multiplication, i.e. the 
+%   retraction $\varphi(.,.)$ is the $SO(3)$ exponential where uncertainty is 
+%   multiplied on the left by the state. The inverse retraction 
+%   $\varphi^{-1}_.(.)$ is the $SO(3)$ logarithm.
+% # The state is embedded in $SO(3)$ with right multiplication, i.e. the
+%   retraction $\varphi(.,.)$ is the $SO(3)$ exponential where uncertainty is
+%   multiplied on the right by the state. The inverse retraction 
+%   $\varphi^{-1}_.(.)$ is the $SO(3)$ logarithm.
+%
+% We tests the different algorithms with the same noise parameter setting and on
+% simulation with moderate initial heading error.
+
+%% Initialization
+% Start by cleaning the workspace.
+clear all;
+close all;
+
+%% Simulation Setting
+% We compare the filters on a large number of Monte-Carlo runs.
+
+% Monte-Carlo runs
+N_mc = 100;
+
+%%
+% The initial values of the heading error has 10 degree standard deviation.
+
+% sequence time (s)
+T = 100; 
+% IMU frequency (Hz)
+imu_freq = 100; 
+% IMU noise standard deviation (noise is isotropic)
+imu_noise_std = [5/180*pi; % gyro (rad/s)
+                0.4;       % accelerometer (m/s^2)
+                0.3];      % magnetometer
+% total number of timestamps
+N = T*imu_freq;
+% integration step (s)
+dt = 1/imu_freq;
+
+%% Filter Design
+% Additionnaly to the UKFs, we compare them to an EKF. The EKF has the same
+% uncertainty representation as the UKF with right uncertainty representation.
+
+% propagation noise covariance matrix
+Q = imu_noise_std(1).^2*eye(3);
+% measurement noise covariance matrix
+R = blkdiag(imu_noise_std(2).^2*eye(3), imu_noise_std(3).^2*eye(3));
+% initial uncertainty matrix
+P0 = (10/180*pi)^2 * eye(3); % The state is perfectly initialized
+% sigma point parameters
+alpha = [1e-3, 1e-3, 1e-3];
+% asses UKF function
+f = @attitude_f;
+h = @attitude_h;
+left_phi = @attitude_phi;
+left_phi_inv = @attitude_phi_inv;
+right_phi = @attitude_right_phi;
+right_phi_inv = @attitude_right_phi_inv;
+weights = ukf_set_weight(length(P0), length(R), alpha);
+cholQ = chol(Q);
+
+%%
+% We set error variables before launching Monte-Carlo simulations
+ukf_left_errs = zeros(3, N, N_mc);
+ukf_right_errs = zeros(size(ukf_left_errs));
+ekf_errs = zeros(size(ukf_left_errs));
+
+left_ukf_nees = zeros(N, N_mc);
+right_ukf_nees = zeros(size(left_ukf_nees));
+ekf_nees = zeros(size(left_ukf_nees));
+
+%% Monte-Carlo runs
+% We run the Monte-Carlo through a for loop.
+
+for n_mc = 1:N_mc
+    disp("Monte-Carlo iteration(s): " + num2str(n_mc) + "/" + num2str(N_mc));
+    % simulate states and noisy inputs
+    [states, omegas] = attitude_simu_f(T, imu_freq, imu_noise_std);
+    % simulate accelerometer and magnetometer measurements
+    ys = attitude_simu_h(states, T, imu_freq, imu_noise_std);    
+
+    % initialize filter with true state
+    ekf_state = states(1);
+    ukf_left_state = ekf_state(1);
+    ukf_right_state = ekf_state(1);
+
+    state0 = states(1);
+    state0.Rot = state0.Rot * so3_exp(10/180*pi*randn(3, 1));
+    ukf_left_P = state0.Rot*P0*state0.Rot';
+    ukf_right_P = P0;
+    ekf_P = P0;
+    
+    % variables for recording estimates of the Monte-Carlo run
+    ukf_left_states = ukf_left_state;
+    ukf_right_states = ukf_right_state;
+    ekf_states = ekf_state;
+    
+    ukf_left_Ps = zeros(N, 3, 3);
+    ukf_right_Ps = zeros(size(ukf_left_Ps));
+    ekf_Ps = zeros(size(ukf_left_Ps));
+    
+    ukf_left_Ps(1, :, :) = ukf_left_P;
+    ukf_right_Ps(1, :, :) = ukf_right_P;
+    ekf_Ps(1, :, :) = ekf_P;
+
+    % filtering loop
+    for n = 2:N
+        % propagation;
+        [ukf_left_state, ukf_left_P] = ukf_propagation(ukf_left_state, ...
+            ukf_left_P, omegas(n-1), f, dt, left_phi, ...
+            left_phi_inv, cholQ, weights);
+        [ukf_right_state, ukf_right_P] = ukf_propagation(...
+            ukf_right_state, ukf_right_P, omegas(n-1), ...
+            f, dt, right_phi, right_phi_inv, cholQ, weights);
+        [ekf_state, ekf_P] = attitude_ekf_propagation(ekf_state, ...
+            ekf_P, omegas(n-1), dt, Q);
+        % update
+       [ukf_left_state, ukf_left_P] = ukf_update(ukf_left_state, ...
+           ukf_left_P, ys(:, n), h, left_phi, R, weights);           
+       [ukf_right_state, ukf_right_P] = ukf_update(ukf_right_state, ...
+           ukf_right_P, ys(:, n), h, right_phi, ...
+           R, weights);
+       [ekf_state, ekf_P] = attitude_ekf_update(ekf_state, ...
+           ekf_P, ys(:, n), R);
+        % save estimates
+        ukf_left_states(n) = ukf_left_state;
+        ukf_right_states(n) = ukf_right_state;
+        ekf_states(n) = ekf_state;
+        
+        ukf_left_Ps(n, :, :) = ukf_left_P;
+        ukf_right_Ps(n, :, :) = ukf_right_P;
+        ekf_Ps(n, :, :) = ekf_P;
+    end
+    % get state trajectory
+    Rots = attitude_get_states(states);
+    ukf_left_Rots = attitude_get_states(ukf_left_states);
+    ukf_right_Rots = attitude_get_states(ukf_right_states);
+    ekf_Rots = attitude_get_states(ekf_states);
+    
+    % record errors
+    ukf_left_errs(:, :, n_mc) = attitude_errors(Rots, ukf_left_Rots);
+    ukf_right_errs(:, :, n_mc) = attitude_errors(Rots, ukf_right_Rots);
+    ekf_errs(:, :, n_mc) = attitude_errors(Rots, ekf_Rots);
+    
+    % record NEES
+    left_ukf_nees(:, n_mc) = attitude_nees(ukf_left_errs(:, :, n_mc), ...
+        ukf_left_Ps, ukf_left_Rots, "LEFT");
+    right_ukf_nees(:, n_mc) = attitude_nees(...
+        ukf_right_errs(:, :, n_mc), ukf_right_Ps, ukf_right_Rots, "RIGHT");
+    ekf_nees(:, n_mc) = attitude_nees(ekf_errs(:, :, n_mc), ekf_Ps, ...
+        ekf_Rots, "RIGHT");
+end
+
+%% Results
+% We visualize the results averaged over Monte-Carlo sequences, and compute the
+% Root Mean Squared Error (RMSE) averaged over all Monte-Carlo.
+
+benchmark_attitude_helper;
+
+%%
+% All the curves have the same shape. Filters obtain the same performances.
+
+%%
+% We finally compare the filters in term of consistency (Normalized Estimation
+% Error Squared, NEES), as in the localization benchmark.
+
+%%
+% We finally compare the filters in term of consistency (Normalized Estimation
+% Error Squared, NEES), as in the localization benchmark.
+
+benchmark_attitude_helper_nees;
+
+%%
+% All the filters obtain the same NEES and are consistent.
+
+%%
+% Which filter is the best ? For the considered problem, *left UKF*, *right
+% UKF*, and *EKF* obtain the same performances. This is expected as when the
+% state consists of an orientation only, left and right UKFs are implicitely the
+% same. The EKF obtains similar results as it is also based on a retraction
+% build on $SO(3)$ (not with Euler angles).
+
+%% Conclusion
+% This script compares two UKFs and one EKF for the problem of attitude
+% estimation. All the filters obtain similar performances as the state involves
+% only the orientation of the platform.
+% 
+% You can now:
+% 
+% * compare the filters in different noise setting to see if the filters still
+%   get the same performances.
+% * address the problem of 3D inertial navigation, where the state is defined
+%   as the oriention of the vehicle along with its velocity and its position.
+
+
+
+##### SOURCE END #####
+--></body></html>

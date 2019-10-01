@@ -1,11 +1,10 @@
 Models
 ================================================================================
-This page contains the classes that describe the models considered in the
-examples. Each class contains propagation and measurement functions, different
-choices of retractions and their inverse retractions. You can also obtain in the
-source code useful functions specifically related to the problem, e.g. Jacobian
-for EKF, and helper functions.
-
+This page describes the models considered in the examples. Each class contains
+propagation and measurement functions, different choices of retractions and
+their inverse retractions. You can also obtain in the source code useful
+functions specifically related to the problem, e.g. Jacobian for EKF, and helper
+functions.
 
 2D Robot Localization
 --------------------------------------------------------------------------------
@@ -36,5 +35,3 @@ Spherical Pendulum
 --------------------------------------------------------------------------------
 .. autoclass:: ukfm.PENDULUM
     :members:
-
-

@@ -4,14 +4,14 @@ function [w] = ukf_set_weight(d, q, alpha)
 % Syntax: [w] = ukf_set_weight(d, q, alpha)
 %
 % Inputs:
-%    d - error state dimension
+%    d - uncertainty state dimension
 %    q - noise dimension
 %    alpha - parameters
 %
 % Outputs:
 %    w  - weights
 
-% parameters for state propagation w.r.t. state error
+% parameters for state propagation w.r.t. state uncertainty
 lambda = (alpha(1)^2 -1) * d;
 w_d.lambda = lambda;
 w_d.sqrt_d_lambda = sqrt(d + lambda);

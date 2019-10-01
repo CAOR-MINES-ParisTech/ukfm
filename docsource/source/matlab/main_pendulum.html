@@ -1,0 +1,287 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Pendulum Example</title><meta name="generator" content="MATLAB 9.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-09-30"><meta name="DC.source" content="main_pendulum.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Pendulum Example</h1><!--introduction--><p>The set of all points in the Euclidean space <span class="MathJax_Preview"><img src="main_pendulum_eq15536056282694963881.png" alt="$R^{3}$"></span><script type="math/tex">R^{3}</script>, that lie on the surface of the unit ball about the origin belong to the two-sphere manifold,</p><p><span class="MathJax_Preview"><img src="main_pendulum_eq07468372326065671692.png" alt="$$ S^2 = \left\{ \mathbf{x} \in R^3 \mid \|\mathbf{x}\|_2 = 1 \right\}, $$"></span><script type="math/tex"> S^2 = \left\{ \mathbf{x} \in R^3 \mid \|\mathbf{x}\|_2 = 1 \right\}, </script></p><p>which is a two-dimensional manifold. Many mechanical systems such as a spherical pendulum, double pendulum, quadrotor with a cable-suspended load, evolve on either <span class="MathJax_Preview"><img src="main_pendulum_eq05526264830804864393.png" alt="$S^2$"></span><script type="math/tex">S^2</script> or products comprising of <span class="MathJax_Preview"><img src="main_pendulum_eq05526264830804864393.png" alt="$S^2$"></span><script type="math/tex">S^2</script>.</p><p>In this script, we estimate the state of a system living on the sphere but where observations are standard vectors. You can have a text description of the spherical pendulum dynamics in [SE19], Section 7, and [KS19].</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Initialization</a></li><li><a href="#2">Model and Simulation</a></li><li><a href="#6">Filter Design and Initialization</a></li><li><a href="#7">Filtering</a></li><li><a href="#8">Results</a></li><li><a href="#10">Conclusion</a></li></ul></div><h2 id="1">Initialization</h2><p>Start by cleaning the workspace.</p><pre class="codeinput">clear <span class="string">all</span>;
+close <span class="string">all</span>;
+</pre><h2 id="2">Model and Simulation</h2><pre class="codeinput"><span class="comment">% sequence time (s)</span>
+T = 10;
+<span class="comment">% model frequency (Hz)</span>
+freq = 100;
+<span class="comment">% model noise standard deviation (noise is isotropic)</span>
+model_noise_std = [1/180*pi;  <span class="comment">% orientation (rad)</span>
+                  1/180*pi];  <span class="comment">% orientation velocity (rad/s)</span>
+<span class="comment">% simulate true states and noisy inputs</span>
+[states, omegas] = pendulum_simu_f(T, freq, model_noise_std);
+<span class="comment">% total number of timestamps</span>
+N = T*freq;
+<span class="comment">% integration step (s)</span>
+dt = 1/freq;
+</pre><p>The state and the input contain the following variables:</p><pre class="language-matlab">states(n).Rot  <span class="comment">% 3d orientation (matrix)</span>
+states(n).u    <span class="comment">% 3d angular velocity</span>
+omegas(n)      <span class="comment">% empty input</span>
+</pre><p>The model dynamics is based on the Euler equations of pendulum motion.</p><p>We compute noisy measurements at low frequency based on the true states.</p><pre class="codeinput"><span class="comment">% observation frequency (Hz)</span>
+obs_freq = 20;
+<span class="comment">% observation noise standard deviation (m)</span>
+obs_std = 0.02;
+<span class="comment">% simulate measurements</span>
+[ys, one_hot_ys] = pendulum_simu_h(states, T, freq, obs_freq, obs_std);
+</pre><p>We assume observing only the position of the state only in the <span class="MathJax_Preview"><img src="main_pendulum_eq17093813241717430543.png" alt="$yz$"></span><script type="math/tex">yz</script> plan.</p><h2 id="6">Filter Design and Initialization</h2><p>We embed the state in <span class="MathJax_Preview"><img src="main_pendulum_eq06383926719627996559.png" alt="$SO(3) \times R^3$"></span><script type="math/tex">SO(3) \times R^3</script> with left multiplication, such that:</p><div><ul><li>the retraction <span class="MathJax_Preview"><img src="main_pendulum_eq17465938644384765962.png" alt="$\varphi(.,.)$"></span><script type="math/tex">\varphi(.,.)</script> is the <span class="MathJax_Preview"><img src="main_pendulum_eq17232210486186811875.png" alt="$SO(3)$"></span><script type="math/tex">SO(3)</script> exponential for orientation   where the state multiplies the uncertainty on the left, and the vector   addition for the  velocity.</li><li>the inverse retraction <span class="MathJax_Preview"><img src="main_pendulum_eq14481068494169685032.png" alt="$\varphi^{-1}_.(.)$"></span><script type="math/tex">\varphi^{-1}_.(.)</script> is the <span class="MathJax_Preview"><img src="main_pendulum_eq17232210486186811875.png" alt="$SO(3)$"></span><script type="math/tex">SO(3)</script> logarithm for   orientation and the vector subtraction for the velocity.</li></ul></div><p>Remaining parameter setting is standard.</p><pre class="codeinput"><span class="comment">% propagation noise covariance matrix</span>
+Q = blkdiag(model_noise_std(1)^2*eye(3), model_noise_std(2)^2*eye(3));
+<span class="comment">% measurement noise covariance matrix</span>
+R = obs_std^2*eye(2);
+<span class="comment">% initial uncertainty matrix</span>
+P0 = blkdiag((45/180*pi)^2*eye(3), (10/180*pi)^2*eye(3));
+<span class="comment">% sigma point parameters</span>
+alpha = [1e-3; 1e-3; 1e-3];
+<span class="comment">% define the UKF propagation and measurement functions</span>
+f = @pendulum_f;
+h = @pendulum_h;
+phi = @pendulum_phi;
+phi_inv = @pendulum_phi_inv;
+<span class="comment">% get UKF weight parameters</span>
+weights = ukf_set_weight(6, 6, alpha);
+<span class="comment">% compute Cholewski decomposition of Q only once</span>
+cholQ = chol(Q);
+
+ukf_state = states(1);
+ukf_state.Rot = eye(3);
+ukf_state.u = zeros(3, 1);
+ukf_P = P0;
+
+<span class="comment">% set variables for recording estimates along the full trajectory</span>
+ukf_states = ukf_state;
+ukf_Ps = zeros(N, length(ukf_P), length(ukf_P));
+ukf_Ps(1, :, :) = ukf_P;
+</pre><h2 id="7">Filtering</h2><p>The UKF proceeds as a standard Kalman filter with a for loop.</p><pre class="codeinput">k = 2;
+<span class="keyword">for</span> n = 2:N
+    <span class="comment">% propagation</span>
+    [ukf_state, ukf_P] = ukf_propagation(ukf_state, ukf_P, omegas(n-1), <span class="keyword">...</span>
+        f, dt, phi, phi_inv, cholQ, weights);
+    <span class="comment">% update only if a measurement is received</span>
+    <span class="keyword">if</span> one_hot_ys(n) == 1
+        [ukf_state, ukf_P] = ukf_update(ukf_state, ukf_P, ys(:, k), <span class="keyword">...</span>
+            h, phi, R, weights);
+        k = k + 1;
+    <span class="keyword">end</span>
+    <span class="comment">% save estimates</span>
+    ukf_states(n) = ukf_state;
+    ukf_Ps(n, :, :) = ukf_P;
+<span class="keyword">end</span>
+</pre><h2 id="8">Results</h2><p>We plot the position of the pendulum as function of time, the position in the <span class="MathJax_Preview"><img src="main_pendulum_eq11972524620536672613.png" alt="$xy$"></span><script type="math/tex">xy</script> plan and the position in the <span class="MathJax_Preview"><img src="main_pendulum_eq17093813241717430543.png" alt="$yz$"></span><script type="math/tex">yz</script> plan (we are more interested in the position of the pendulum than its orientation). We compute the <span class="MathJax_Preview"><img src="main_pendulum_eq09036583483978579715.png" alt="$3\sigma$"></span><script type="math/tex">3\sigma</script> interval confidence by leveraging the <i>covariance retrieval</i> proposed in [BBB19], Section V-B.</p><pre class="codeinput">pendulum_results_plot(ukf_states, ukf_Ps, states, dt);
+</pre><img vspace="5" height="400" hspace="5" height="400" src="main_pendulum_01.png" alt=""> <img vspace="5" height="400" hspace="5"  height="400" src="main_pendulum_02.png" alt=""> <img vspace="5" height="400" hspace="5"  height="400" src="main_pendulum_03.png" alt=""> <img vspace="5" height="400" hspace="5"  height="400" src="main_pendulum_04.png" alt=""> <p>On the first plot, we observe that even if the state if unaccurately initialized, the filter estimates the depth position (<span class="MathJax_Preview"><img src="main_pendulum_eq12428413953531653171.png" alt="$x$"></span><script type="math/tex">x</script> axis) of the pendulum whereas only the <span class="MathJax_Preview"><img src="main_pendulum_eq17093813241717430543.png" alt="$yz$"></span><script type="math/tex">yz</script> position of the pendulum is observed.</p><p>The second and third plots show how the filter converges to the true state. Finally, the last plot reveals the consistency of the filter, where the interval confidence encompasses the error.</p><h2 id="10">Conclusion</h2><p>This script shows how well works the UKF on parallelizable manifolds for estimating the position of a spherical pendulum where only two components of the pendulum are measured. The filter is accurate, robust to strong initial errors, and obtains consistent covariance estimates with the method proposed in [BBB19].</p><p>You can now:</p><div><ul><li>address the same problem with another retraction, e.g. with right   multiplication.</li><li>modify the measurement with 3D position.</li><li>consider the mass of the system as unknown and estimate it.</li></ul></div><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Pendulum Example
+% The set of all points in the Euclidean space $R^{3}$, that lie on the surface
+% of the unit ball about the origin belong to the two-sphere manifold,
+% 
+% $$ S^2 = \left\{ \mathbf{x} \in R^3 \mid \|\mathbf{x}\|_2 = 1 \right\}, $$
+% 
+% which is a two-dimensional manifold. Many mechanical systems such as a
+% spherical pendulum, double pendulum, quadrotor with a cable-suspended load,
+% evolve on either $S^2$ or products comprising of $S^2$.
+% 
+% In this script, we estimate the state of a system living on the sphere but
+% where observations are standard vectors. You can have a text description of
+% the spherical pendulum dynamics in [SE19], Section 7, and [KS19].
+
+%% Initialization
+% Start by cleaning the workspace.
+
+clear all;
+close all;
+
+%% Model and Simulation
+
+% sequence time (s)
+T = 10;
+% model frequency (Hz)
+freq = 100;
+% model noise standard deviation (noise is isotropic)
+model_noise_std = [1/180*pi;  % orientation (rad) 
+                  1/180*pi];  % orientation velocity (rad/s)
+% simulate true states and noisy inputs
+[states, omegas] = pendulum_simu_f(T, freq, model_noise_std);
+% total number of timestamps
+N = T*freq;
+% integration step (s)
+dt = 1/freq;
+
+%%
+% The state and the input contain the following variables:
+%
+%   states(n).Rot  % 3d orientation (matrix)
+%   states(n).u    % 3d angular velocity
+%   omegas(n)      % empty input
+%
+% The model dynamics is based on the Euler equations of pendulum motion.
+
+%%
+% We compute noisy measurements at low frequency based on the true states.
+
+% observation frequency (Hz)
+obs_freq = 20;
+% observation noise standard deviation (m)
+obs_std = 0.02;
+% simulate measurements
+[ys, one_hot_ys] = pendulum_simu_h(states, T, freq, obs_freq, obs_std);
+
+%%
+% We assume observing only the position of the state only in the $yz$ plan.
+
+%% Filter Design and Initialization
+% We embed the state in $SO(3) \times R^3$ with left multiplication, such that:
+%
+% * the retraction $\varphi(.,.)$ is the $SO(3)$ exponential for orientation
+%   where the state multiplies the uncertainty on the left, and the vector
+%   addition for the  velocity.
+% * the inverse retraction $\varphi^{-1}_.(.)$ is the $SO(3)$ logarithm for
+%   orientation and the vector subtraction for the velocity.
+%
+% Remaining parameter setting is standard.
+
+% propagation noise covariance matrix
+Q = blkdiag(model_noise_std(1)^2*eye(3), model_noise_std(2)^2*eye(3));
+% measurement noise covariance matrix
+R = obs_std^2*eye(2);
+% initial uncertainty matrix
+P0 = blkdiag((45/180*pi)^2*eye(3), (10/180*pi)^2*eye(3));
+% sigma point parameters
+alpha = [1e-3; 1e-3; 1e-3];
+% define the UKF propagation and measurement functions
+f = @pendulum_f;
+h = @pendulum_h;
+phi = @pendulum_phi;
+phi_inv = @pendulum_phi_inv;
+% get UKF weight parameters
+weights = ukf_set_weight(6, 6, alpha);
+% compute Cholewski decomposition of Q only once
+cholQ = chol(Q);
+
+ukf_state = states(1);
+ukf_state.Rot = eye(3);
+ukf_state.u = zeros(3, 1);
+ukf_P = P0;
+
+% set variables for recording estimates along the full trajectory
+ukf_states = ukf_state;
+ukf_Ps = zeros(N, length(ukf_P), length(ukf_P));
+ukf_Ps(1, :, :) = ukf_P;
+
+%% Filtering
+% The UKF proceeds as a standard Kalman filter with a for loop.
+
+k = 2;
+for n = 2:N
+    % propagation
+    [ukf_state, ukf_P] = ukf_propagation(ukf_state, ukf_P, omegas(n-1), ...
+        f, dt, phi, phi_inv, cholQ, weights);
+    % update only if a measurement is received
+    if one_hot_ys(n) == 1
+        [ukf_state, ukf_P] = ukf_update(ukf_state, ukf_P, ys(:, k), ...
+            h, phi, R, weights);
+        k = k + 1;
+    end
+    % save estimates
+    ukf_states(n) = ukf_state;
+    ukf_Ps(n, :, :) = ukf_P;
+end
+
+%% Results
+% We plot the position of the pendulum as function of time, the position in the
+% $xy$ plan and the position in the $yz$ plan (we are more interested in the
+% position of the pendulum than its orientation). We compute the $3\sigma$
+% interval confidence by leveraging the _covariance retrieval_ proposed in
+% [BBB19], Section V-B.
+
+pendulum_results_plot(ukf_states, ukf_Ps, states, dt);
+
+%%
+% On the first plot, we observe that even if the state if unaccurately
+% initialized, the filter estimates the depth position ($x$ axis) of the
+% pendulum whereas only the $yz$ position of the pendulum is observed.
+%
+% The second and third plots show how the filter converges to the true state.
+% Finally, the last plot reveals the consistency of the filter, where the
+% interval confidence encompasses the error.
+
+%% Conclusion
+% This script shows how well works the UKF on parallelizable manifolds for
+% estimating the position of a spherical pendulum where only two components of
+% the pendulum are measured. The filter is accurate, robust to strong initial
+% errors, and obtains consistent covariance estimates with the method proposed
+% in [BBB19].
+%
+% You can now:
+%
+% * address the same problem with another retraction, e.g. with right
+%   multiplication.
+% * modify the measurement with 3D position.
+% * consider the mass of the system as unknown and estimate it.
+
+##### SOURCE END #####
+--></body></html>

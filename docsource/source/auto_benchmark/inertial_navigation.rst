@@ -10,52 +10,46 @@
 ********************************************************************************
 Navigation on Flat Earth - Benchmark
 ********************************************************************************
-
 Goals of this script:
 
 - implement different UKFs on the navigation on flat Earth example.
 
-- design the Extended Kalman Filter (EKF) and the Invariant Extended.
-  Kalman Filter (IEKF) :cite:`barrauInvariant2017` for the given problem.
+- design the Extended Kalman Filter (EKF) and the Invariant Extended. Kalman
+  Filter (IEKF) :cite:`barrauInvariant2017`.
 
 - compare the different algorithms with Monte-Carlo simulations.
 
-*We assume the reader is already familiar with the considered
-problem described in the related example.*
+*We assume the reader is already familiar with the considered problem described
+in the related example.*
 
-This script searches to estimate the 3D attitude, the velocity, and the
-position of a rigid body in space from inertial sensors and relative
-observations of points having known locations. For the given problem, three
-different UKFs emerge, defined respectively as:
+This script searches to estimate the 3D attitude, the velocity, and the position
+of a rigid body in space from inertial sensors and relative observations of
+points having known locations. For the given problem, three different UKFs
+emerge, defined respectively as:
 
 1) The state is embedded  in :math:`SO(3) \times \mathbb{R}^6`, i.e.
 
    - the retraction :math:`\varphi(.,.)` is the :math:`SO(3)` exponential for
-     orientation, and the standard vector addition for robot velocity and
+     orientation, and the vector addition for robot velocity and
      position.
 
    - the inverse retraction :math:`\varphi^{-1}(.,.)` is the :math:`SO(3)`
-     logarithm for orientation and the standard vector subtraction for velocity
+     logarithm for orientation and the vector subtraction for velocity
      and position.
-
-   - it is the :math:`SO(3) \times \mathbb{R}^6` UKF that was defined in the
-     example.
 
 2) The state is embedded in :math:`SE_2(3)` with left multiplication, i.e.
 
    - the retraction :math:`\varphi(.,.)` is the :math:`SE_2(3)` exponential,
-     where the state multiplies on the left the error
+     where the state multiplies on the left the uncertainty
      :math:`\boldsymbol{\xi}`.
 
    - the inverse retraction :math:`\varphi^{-1}(.,.)` is the :math:`SE_2(3)`
      logarithm.
-   
-   - we call it the left UKF (rather than :math:`SE_2(3)` left UKF).
 
 3) The state is embedded in :math:`SE_2(3)` with right multiplication, i.e.
 
    - the retraction :math:`\varphi(.,.)` is the :math:`SE_2(3)` exponential,
-     where state multiplies on the right the error
+     where the state multiplies on the right the uncertainty 
      :math:`\boldsymbol{\xi}`.
 
    - the inverse retraction :math:`\varphi^{-1}(.,.)` is the :math:`SE_2(3)`
@@ -91,7 +85,7 @@ Import
 
 Simulation Setting
 ==============================================================================
-We compare the different filters on a large number of Monte-Carlo runs.
+We compare the filters on a large number of Monte-Carlo runs.
 
 
 .. code-block:: default
@@ -120,10 +114,9 @@ features  every second while receiving high-frequency inertial measurements
     imu_freq = 100
     # create the model
     model = MODEL(T, imu_freq)
-
     # observation frequency (Hz)
     obs_freq = 1
-    # IMU standard-deviation noise (noise is isotropic)
+    # IMU noise standard deviation (noise is isotropic)
     imu_std = np.array([0.01,   # gyro (rad/s), not  0.6 deg/s
                         0.01])  # accelerometer (m/s^2)
     # observation noise standard deviation (m)
@@ -149,16 +142,14 @@ All the filters have the same parameters.
 .. code-block:: default
 
 
-    # propagation noise matrix
+    # propagation noise covariance matrix
     Q = block_diag(imu_std[0]**2*np.eye(3), imu_std[1]**2*np.eye(3))
-    # measurement noise matrix
+    # measurement noise covariance matrix
     R = obs_std**2 * np.eye(3*model.N_ldk)
-
-    # initial error matrix such that the state is not perfectly initialized
+    # initial uncertainty matrix such that the state is not perfectly initialized
     Rot0_std = 15/np.sqrt(3)*np.pi/180
     p0_std = 1/np.sqrt(3)
     P0 = block_diag(Rot0_std**2*np.eye(3), np.zeros((3, 3)), p0_std**2 * np.eye(3))
-
     # sigma point parameter
     alpha = np.array([1e-3, 1e-3, 1e-3])
 
@@ -203,69 +194,31 @@ We run the Monte-Carlo through a for loop.
 
     for n_mc in range(N_mc):
         print("Monte-Carlo iteration(s): " + str(n_mc+1) + "/" + str(N_mc))
-        # simulate true trajectory and noised input
+        # simulate true states and noisy inputs
         states, omegas = model.simu_f(imu_std)
         # simulate measurements
         ys, one_hot_ys = model.simu_h(states, obs_freq, obs_std)
-
-        # initialize filter with inaccurate state
+        # initialize filters
         state0 = model.STATE(
             Rot=states[0].Rot.dot(SO3.exp(Rot0_std*np.random.randn(3))),
             v=states[0].v,
-            p=states[0].p + p0_std*np.random.randn(3)
-        )
-
+            p=states[0].p + p0_std*np.random.randn(3))
         # IEKF and right UKF covariance need to be turned
         J = np.eye(9)
-        J[6:9, :3] = -SO3.wedge(state0.p)
+        J[6:9, :3] = SO3.wedge(state0.p)
         right_P0 = J.dot(P0).dot(J.T)
-
-        ukf = UKF(state0=state0,
-                  P0=P0,
-                  f=model.f,
-                  h=model.h,
-                  Q=Q,
-                  R=R,
-                  phi=model.phi,
-                  phi_inv=model.phi_inv,
-                  alpha=alpha)
-
-        left_ukf = UKF(state0=state0,
-                       P0=P0,
-                       f=model.f,
-                       h=model.h,
-                       Q=Q,
-                       R=R,
-                       phi=model.left_phi,
-                       phi_inv=model.left_phi_inv,
-                       alpha=alpha)
-
-        right_ukf = UKF(state0=state0,
-                        P0=right_P0,
-                        f=model.f,
-                        h=model.h,
-                        Q=Q,
-                        R=R,
-                        phi=model.right_phi,
-                        phi_inv=model.right_phi_inv,
+        ukf = UKF(state0=state0, P0=P0, f=model.f, h=model.h, Q=Q, R=R,
+                  phi=model.phi, phi_inv=model.phi_inv, alpha=alpha)
+        left_ukf = UKF(state0=state0, P0=P0, f=model.f, h=model.h, Q=Q, R=R,
+                       phi=model.left_phi, phi_inv=model.left_phi_inv, alpha=alpha)
+        right_ukf = UKF(state0=state0, P0=P0, f=model.f, h=model.h, Q=Q, R=R,
+                        phi=model.right_phi, phi_inv=model.right_phi_inv,
                         alpha=alpha)
-
-        iekf = EKF(model=model,
-                   state0=state0,
-                   P0=right_P0,
-                   FG_ana=model.iekf_FG_ana,
-                   H_ana=model.iekf_H_ana,
-                   Q=Q,
-                   R=R,
+        iekf = EKF(model=model, state0=state0, P0=right_P0, Q=Q, R=R,
+                   FG_ana=model.iekf_FG_ana, H_ana=model.iekf_H_ana,
                    phi=model.right_phi)
-
-        ekf = EKF(model=model,
-                  state0=state0,
-                  P0=P0,
-                  FG_ana=model.ekf_FG_ana,
-                  H_ana=model.ekf_H_ana,
-                  Q=Q,
-                  R=R,
+        ekf = EKF(model=model, state0=state0, P0=right_P0, Q=Q, R=R,
+                  FG_ana=model.ekf_FG_ana, H_ana=model.ekf_H_ana,
                   phi=model.phi)
 
         ukf_states = [state0]
@@ -288,7 +241,6 @@ We run the Monte-Carlo through a for loop.
 
         # measurement iteration number
         k = 1
-
         # filtering loop
         for n in range(1, model.N):
             # propagation
@@ -305,20 +257,17 @@ We run the Monte-Carlo through a for loop.
                 iekf.update(ys[k])
                 ekf.update(ys[k])
                 k += 1
-
             # save estimates
             ukf_states.append(ukf.state)
             left_ukf_states.append(left_ukf.state)
             right_ukf_states.append(right_ukf.state)
             iekf_states.append(iekf.state)
             ekf_states.append(ekf.state)
-
             ukf_Ps[n] = ukf.P
             left_ukf_Ps[n] = left_ukf.P
             right_ukf_Ps[n] = right_ukf.P
             iekf_Ps[n] = iekf.P
             ekf_Ps[n] = ekf.P
-
         # get state
         Rots, vs, ps = model.get_states(states, model.N)
         ukf_Rots, ukf_vs, ukf_ps = model.get_states(ukf_states,  model.N)
@@ -340,15 +289,17 @@ We run the Monte-Carlo through a for loop.
 
         # record NEES
         ukf_nees[n_mc] = model.nees(ukf_err[n_mc], ukf_Ps, ukf_Rots, ukf_vs,
-                ukf_ps, 'STD')
-        left_ukf_nees[n_mc] = model.nees(left_ukf_err[n_mc], left_ukf_Ps, 
-                left_ukf_Rots, left_ukf_vs, left_ukf_ps, 'LEFT')
+                                    ukf_ps, 'STD')
+        left_ukf_nees[n_mc] = model.nees(left_ukf_err[n_mc], left_ukf_Ps,
+                                         left_ukf_Rots, left_ukf_vs, left_ukf_ps, 
+                                         'LEFT')
         right_ukf_nees[n_mc] = model.nees(right_ukf_err[n_mc], right_ukf_Ps,
-                right_ukf_Rots, right_ukf_vs, right_ukf_ps, 'RIGHT')
+                                          right_ukf_Rots, right_ukf_vs, 
+                                          right_ukf_ps, 'RIGHT')
         iekf_nees[n_mc] = model.nees(iekf_err[n_mc], iekf_Ps, iekf_Rots, iekf_vs,
-                iekf_ps, 'RIGHT')
+                                     iekf_ps, 'RIGHT')
         ekf_nees[n_mc] = model.nees(ekf_err[n_mc], ekf_Ps, ekf_Rots, ekf_vs,
-                ekf_ps, 'STD')
+                                    ekf_ps, 'STD')
 
 
 
@@ -466,8 +417,8 @@ We run the Monte-Carlo through a for loop.
 Results
 ==============================================================================
 We first visualize the trajectory results for the last run, where the vehicle
-start in the above center of the plot. As simulations have random process,
-they just give us an indication but not a proof of filter performances. We
+starts in the above center of the plot. As the simulation has random process,
+the plot gives us an indication but not a proof of performances. We
 then plot the orientation and position errors averaged over Monte-Carlo.
 
 
@@ -475,7 +426,7 @@ then plot the orientation and position errors averaged over Monte-Carlo.
 
 
     ukf_err, left_ukf_err, right_ukf_err, iekf_err, ekf_err = model.benchmark_plot(
-        ukf_err, left_ukf_err, right_ukf_err, iekf_err, ekf_err, ps, ukf_ps, 
+        ukf_err, left_ukf_err, right_ukf_err, iekf_err, ekf_err, ps, ukf_ps,
         left_ukf_ps, right_ukf_ps, ekf_ps, iekf_ps)
 
 
@@ -527,18 +478,18 @@ both for the orientation and the position.
 
  
     Root Mean Square Error w.r.t. orientation (deg)
-        -SO(3) x R^6 UKF  : 2.99
-        -left SE_2(3) UKF : 2.92
-        -right SE_2(3) UKF: 2.94
-        -EKF              : 3.48
-        -IEKF             : 2.93
+        -SO(3) x R^6 UKF  : 2.89
+        -left SE_2(3) UKF : 2.84
+        -right SE_2(3) UKF: 2.83
+        -EKF              : 3.20
+        -IEKF             : 2.83
  
     Root Mean Square Error w.r.t. position (m)
-        -SO(3) x R^6 UKF  : 0.31
+        -SO(3) x R^6 UKF  : 0.29
         -left SE_2(3) UKF : 0.24
-        -right SE_2(3) UKF: 0.26
-        -EKF              : 1.01
-        -IEKF             : 0.25
+        -right SE_2(3) UKF: 0.24
+        -EKF              : 0.82
+        -IEKF             : 0.24
 
 
 
@@ -579,32 +530,28 @@ We now compare the filters in term of consistency (NEES).
 
  
      Normalized Estimation Error Squared (NEES) w.r.t. orientation
-        -SO(3) x R^6 UKF  :  2.53 
-        -left SE_2(3) UKF :  1.05 
-        -right SE_2(3) UKF:  1.14 
-        -EKF              :  17.70 
+        -SO(3) x R^6 UKF  :  2.16 
+        -left SE_2(3) UKF :  1.07 
+        -right SE_2(3) UKF:  1.08 
+        -EKF              :  11.35 
         -IEKF             :  1.14 
  
      Normalized Estimation Error Squared (NEES) w.r.t. position
-        -SO(3) x R^6 UKF  :  4.13 
-        -left SE_2(3) UKF :  1.16 
-        -right SE_2(3) UKF:  1.46 
-        -EKF              :  438.05 
-        -IEKF             :  1.56 
+        -SO(3) x R^6 UKF  :  3.27 
+        -left SE_2(3) UKF :  1.11 
+        -right SE_2(3) UKF:  1.16 
+        -EKF              :  276.29 
+        -IEKF             :  1.37 
 
 
 
 The :math:`SO(3) \times \mathbb{R}^6` UKF and EKF are too optimistic. Left
-UKF, right UKF and IEKF obtain similar NEES and are really consistent filters
-after some secondes. A (tricky) way for solving this issue just consists in
-inflating initial covariance :math:`\mathbf{P}_0.`
+UKF, right UKF and IEKF obtain similar NEES, UKFs are slightly better on the
+first secondes.
 
-**Which filter is the best ?** For the considered problem, **left
-:math:`SE_2(3)` UKF**, **right :math:`SE_2(3)` UKF**, and the IEKF obtain
-roughly similar accurate results, where the :math:`SE_2(3)` UKFs seem better,
-and that clearly outperform standard UKF. One could expect encounter
-situations, typically long term experiments, where the right UKF outperforms
-the left UKF.
+**Which filter is the best ?** IEKF, **Left UKF** and **right UKF** obtain 
+roughly similar accurate results, whereas these two UKFs are the more
+consistent.
 
 Conclusion
 ==============================================================================
@@ -617,7 +564,7 @@ You can now:
 - confirm (or infirm) the obtained results on massive Monte-Carlo
   simulations. Another relevant comparision consists in testing the filters
   when propagation noise is very low (standard deviation of :math:`10^{-4}`),
-  as suggested in :cite:`barrauInvariant2017`. 
+  as suggested in :cite:`barrauInvariant2017`.
 
 - address the problem of 2D SLAM, where the UKF is, among other, leveraged to
   augment the state when a novel landmark is observed.
@@ -625,7 +572,7 @@ You can now:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 79 minutes  6.873 seconds)
+   **Total running time of the script:** ( 81 minutes  49.077 seconds)
 
 
 .. _sphx_glr_download_auto_benchmark_inertial_navigation.py:

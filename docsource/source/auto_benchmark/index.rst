@@ -15,7 +15,7 @@ on parallelizable manifolds.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Goals of this script:">
+    <div class="sphx-glr-thumbcontainer" tooltip="* implement two different UKFs on the 3D attitude estimation example.">
 
 .. only:: html
 
@@ -35,7 +35,7 @@ on parallelizable manifolds.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Goals of this script:">
+    <div class="sphx-glr-thumbcontainer" tooltip="- implement different UKFs on the 2D robot localization example.">
 
 .. only:: html
 
@@ -55,7 +55,7 @@ on parallelizable manifolds.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Goals of this script:">
+    <div class="sphx-glr-thumbcontainer" tooltip="- implement different UKFs on the navigation on flat Earth example.">
 
 .. only:: html
 
@@ -75,7 +75,7 @@ on parallelizable manifolds.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Goals of this script:">
+    <div class="sphx-glr-thumbcontainer" tooltip="* implement three different UKFs on the 2D robot SLAM problem.">
 
 .. only:: html
 

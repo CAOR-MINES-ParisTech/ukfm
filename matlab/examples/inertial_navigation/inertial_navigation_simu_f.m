@@ -11,9 +11,8 @@ function [states, omegas] = inertial_navigation_simu_f(T, imu_freq, ...
 %    imu_noise_std - IMU noise standard deviation
 %
 % Outputs:
-%    states - true state for the sequence, array of structure
-%    omegas - noisy input of the sequence array of structure
-%    timestamp n is at column n-1
+%    states - states
+%    omegas - noisy inputs
 
 % total number of timestamps
 N = T*imu_freq;
@@ -33,7 +32,6 @@ t = 0:dt:T-dt;
 p = r*[sin(t/T*2*pi); cos(t/T*2*pi); zeros(1, N)];
 v = [zeros(3,1),diff(p,1,2)]/dt;
 acc = [zeros(3,1),diff(v,1,2)]/dt;
-
 
 % init variables at zero and do for loop
 omegas(N) = struct;

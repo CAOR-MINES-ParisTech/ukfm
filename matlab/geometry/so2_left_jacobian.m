@@ -1,5 +1,5 @@
 function [J] = so2_left_jacobian(phi)
-%SO2_LEFT_JACOBIAN Jacobian for SO(2)
+%SO2_LEFT_JACOBIAN Jacobian
 %
 % Syntax:  [J] = so2_left_jacobian(phi)
 %

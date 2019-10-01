@@ -154,6 +154,7 @@
     <span class="sd">&quot;&quot;&quot;Homogeneous transformation matrix in :math:`SE_k(3)`.</span>
 
 <span class="sd">    .. math::</span>
+
 <span class="sd">        SE_k(3) &amp;= \\left\\{ \\mathbf{T}=</span>
 <span class="sd">                \\begin{bmatrix}</span>
 <span class="sd">                    \\mathbf{C} &amp; \\mathbf{r_1} &amp; \\cdots &amp;\\mathbf{r}_k \\\\</span>
@@ -180,6 +181,7 @@
 <span class="sd">        from a tangent vector:</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \\mathbf{T}(\\boldsymbol{\\xi}) =</span>
 <span class="sd">            \\exp(\\boldsymbol{\\xi}^\\wedge) =</span>
 <span class="sd">            \\begin{bmatrix}</span>
@@ -202,13 +204,14 @@
     <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">chi</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Inverse map for :math:`SE_k(3)`.</span>
 
-<span class="sd">                .. math::</span>
-<span class="sd">                    \\mathbf{T}^{-1} =</span>
-<span class="sd">                    \\begin{bmatrix}</span>
-<span class="sd">                        \\mathbf{C}^T  &amp; -\\mathbf{C}^T \\boldsymbol{\\rho}_1  &amp;</span>
-<span class="sd">                         \\cdots &amp; &amp; -\\mathbf{C}^T \\boldsymbol{\\rho}_k \\\\</span>
-<span class="sd">                        \\mathbf{0} ^ T &amp; &amp; \\mathbf{I} &amp;</span>
-<span class="sd">                    \\end{bmatrix}</span>
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \\mathbf{T}^{-1} =</span>
+<span class="sd">            \\begin{bmatrix}</span>
+<span class="sd">                \\mathbf{C}^T  &amp; -\\mathbf{C}^T \\boldsymbol{\\rho}_1  &amp;</span>
+<span class="sd">                    \\cdots &amp; &amp; -\\mathbf{C}^T \\boldsymbol{\\rho}_k \\\\</span>
+<span class="sd">                \\mathbf{0} ^ T &amp; &amp; \\mathbf{I} &amp;</span>
+<span class="sd">            \\end{bmatrix}</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">k</span> <span class="o">=</span> <span class="n">chi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">3</span>
@@ -223,6 +226,7 @@
 <span class="sd">        from a transformation:</span>
 
 <span class="sd">        .. math::</span>
+<span class="sd">        </span>
 <span class="sd">            \\boldsymbol{\\xi}(\\mathbf{T}) =</span>
 <span class="sd">            \\ln(\\mathbf{T})^\\vee =</span>
 <span class="sd">            \\begin{bmatrix}</span>
@@ -237,8 +241,6 @@
         <span class="n">Xi</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">inv_left_jacobian</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">chi</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">:])</span>
         <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">phi</span><span class="p">,</span> <span class="n">Xi</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="s1">&#39;F&#39;</span><span class="p">)])</span>
         <span class="k">return</span> <span class="n">xi</span></div></div>
-    
-    
 </pre></div>
 
            </div>

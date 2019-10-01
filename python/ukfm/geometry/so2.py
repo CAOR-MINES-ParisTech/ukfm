@@ -5,12 +5,14 @@ class SO2:
     """Rotation matrix in :math:`SO(2)`.
 
     .. math::
+
         SO(2) &= \\left\\{ \\mathbf{C} 
         \\in \\mathbb{R}^{2 \\times 2} ~\\middle|~ 
         \\mathbf{C}\\mathbf{C}^T = \\mathbf{1}, \\det \\mathbf{C} = 
         1 \\right\\} \\\\
         \\mathfrak{so}(2) &= \\left\\{ \\boldsymbol{\\Phi} = \\phi^\\wedge \\in 
         \\mathbb{R}^{2 \\times 2} ~\\middle|~ \\phi \\in \\mathbb{R} \\right\\}
+
     """
 
     TOL = 1e-8
@@ -21,6 +23,7 @@ class SO2:
         from a tangent vector:
 
         .. math::
+
             \\mathbf{C}(\\phi) =
             \\exp(\\phi^\\wedge) =
             \\cos \\phi \\mathbf{1} + \\sin \\phi 1^\\wedge =
@@ -43,6 +46,7 @@ class SO2:
         """:math:`SO(2)` inverse left Jacobian.
 
         .. math::
+
             \\mathbf{J}^{-1}(\\phi) =
             \\begin{cases}
                 \\mathbf{1} - \\frac{1}{2} \\phi^\wedge, & \\text{if } \\phi 
@@ -50,6 +54,7 @@ class SO2:
                 \\frac{\\phi}{2} \\cot \\frac{\\phi}{2} \\mathbf{1} -
                 \\frac{\\phi}{2} 1^\\wedge, & \\text{otherwise}
             \\end{cases}
+
         """
         if np.linalg.norm(phi) < cls.TOL:
             J = np.eye(2) - 1/2 * cls.wedge(phi)
@@ -64,6 +69,7 @@ class SO2:
         """:math:`SO(2)` left Jacobian.
 
         .. math::
+
             \\mathbf{J}(\\phi) =
             \\begin{cases}
                 \\mathbf{1} + \\frac{1}{2} \\phi^\wedge, & \\text{if } \\phi 
@@ -71,6 +77,7 @@ class SO2:
                 \\frac{\\sin \\phi}{\\phi} \\mathbf{1} -
                 \\frac{1 - \\cos \\phi}{\\phi} 1^\\wedge, & \\text{otherwise}
             \\end{cases}
+
         """
         if np.linalg.norm(phi) < cls.TOL:
             # Near |phi|==0, use first order Taylor expansion
@@ -86,6 +93,7 @@ class SO2:
         from a transformation:
 
         .. math::
+
             \\phi(\\mathbf{C}) =
             \\ln(\\mathbf{C})^\\vee =
             \\text{atan2}(C_{1,0}, C_{0,0})
@@ -100,12 +108,14 @@ class SO2:
         """:math:`SO(2)` wedge (skew-symmetric) operator.
 
         .. math::
+        
             \\boldsymbol{\\Phi} =
             \\phi^\\wedge =
             \\begin{bmatrix}
                 0 & -\\phi \\\\
                 \\phi & 0
             \\end{bmatrix}
+            
         """
         Phi = np.array([[0, -phi],
                         [phi, 0]])

@@ -1,5 +1,5 @@
 function [phi] = so3_log(Rot)
-%SO3_LOG logarithm map for SO(3)
+%SO3_LOG logarithm
 %
 % Syntax:  [phi] = so3_log(Rot)
 %
@@ -7,7 +7,7 @@ function [phi] = so3_log(Rot)
 %    Rot - rotation matrix
 %
 % Outputs:
-%    phi - vector of length 3
+%    phi - vector
 
 TOL = 1e-9;
 cos_angle = 0.5 * trace(Rot) - 0.5;

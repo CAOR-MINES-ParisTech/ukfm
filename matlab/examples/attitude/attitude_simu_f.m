@@ -9,16 +9,13 @@ function [states, omegas] = attitude_simu_f(T, imu_freq, imu_noise_std)
 %    imu_noise_std - IMU noise standard deviation
 %
 % Outputs:
-%    states - true state for the sequence
-%    omegas - noisy input of the sequence
+%    states - states
+%    omegas - noisy inputs
 
 % total number of timestamps
 N = T*imu_freq;
 % integration step (s)
 dt = 1/imu_freq;
-
-% The robot is 2 s stationnary and then have constant angular velocity
-% around gravity
 
 n_T = 0; % increment for angular velocity
 omega_T = zeros(3, 1); % first velocity (robot is first stationnary)

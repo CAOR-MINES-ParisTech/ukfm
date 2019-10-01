@@ -25,7 +25,7 @@ for i = 1:N_y
     if ~isempty(idx)
         continue
     end
-    p_l = slam2d_z(aug_state, y(1:2, i));
+    p_l = aug_state.Rot*y(1:2, i) + aug_state.p;
     aug_state.p_l = [aug_state.p_l p_l];
     % augment the landmark state
     iekf_lmk = [iekf_lmk; y(3, i)];
@@ -37,7 +37,7 @@ for i = 1:N_y
     HL = state.Rot';
     
     iHL = inv(HL);
-    P_aug_aug = iHL*(HR*aug_P*H' + R)*iHL';
+    P_aug_aug = iHL*(HR*aug_P*HR' + R)*iHL';
     P_aug_prev = -iHL*HR*aug_P;
     aug_P = [aug_P P_aug_prev';
         P_aug_prev P_aug_aug];

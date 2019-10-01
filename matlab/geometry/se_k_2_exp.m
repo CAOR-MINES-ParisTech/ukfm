@@ -1,13 +1,13 @@
 function [chi] = se_k_2_exp(xi)
-%SE_K_2_EXP exponential map for SE_k(2)
+%SE_K_2_EXP exponential
 %
 % Syntax:  [chi] = se_k_2_exp(xi)
 %
 % Inputs:
-%    phi - vector of length 1 + 2*k
+%    phi - vector
 %
 % Outputs:
-%    chi - state matrix
+%    chi - matrix
 
 k = (length(xi)-1)/2;
 Xi = reshape(xi(2:end), 2, k);

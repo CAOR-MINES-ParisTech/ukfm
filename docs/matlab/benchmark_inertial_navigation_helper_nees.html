@@ -1,0 +1,233 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>benchmark_inertial_navigation_helper_nees</title><meta name="generator" content="MATLAB 9.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-09-30"><meta name="DC.source" content="benchmark_inertial_navigation_helper_nees.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput">f = @(x) squeeze(mean(x, 3));
+ukf_nees = f(ukf_nees);
+ukf_left_nees = f(ukf_left_nees);
+ukf_right_nees = f(ukf_right_nees);
+iekf_nees = f(iekf_nees);
+ekf_nees = f(ekf_nees);
+
+fig4 = figure;
+set(gca, <span class="string">'YScale'</span>, <span class="string">'log'</span>)
+title(<span class="string">'Orientation NEES'</span>)
+xlabel(<span class="string">'$t$ (s)'</span>)
+ylabel(<span class="string">'orientation NEES'</span>)
+hold <span class="string">on</span>;
+grid <span class="string">on</span>;
+plot(t, ukf_nees(1, :), <span class="string">'m'</span>);
+plot(t, ukf_left_nees(1, :), <span class="string">'g'</span>);
+plot(t, ukf_right_nees(1, :), <span class="string">'c'</span>);
+plot(t, iekf_nees(1, :), <span class="string">'r'</span>);
+plot(t, ekf_nees(1, :), <span class="string">'b'</span>);
+legend(<span class="string">'$SO(3)$ UKF'</span>, <span class="string">'$SE_2(3)$ \textbf{left UKF}'</span>, <span class="keyword">...</span>
+    <span class="string">'$SE_2(3)$ \textbf{right UKF}'</span>, <span class="string">'EKF'</span>, <span class="string">'IEKF [BB17]'</span>);
+
+fig5 = figure;
+set(gca, <span class="string">'YScale'</span>, <span class="string">'log'</span>)
+title(<span class="string">'Robot position NEES'</span>)
+xlabel(<span class="string">'$t$ (s)'</span>)
+ylabel(<span class="string">'position NEES'</span>)
+hold <span class="string">on</span>;
+grid <span class="string">on</span>;
+plot(t, ukf_nees(1, :), <span class="string">'m'</span>);
+plot(t, ukf_left_nees(1, :), <span class="string">'g'</span>);
+plot(t, ukf_right_nees(1, :), <span class="string">'c'</span>);
+plot(t, iekf_nees(1, :), <span class="string">'r'</span>);
+plot(t, ekf_nees(1, :), <span class="string">'b'</span>);
+legend(<span class="string">'$SO(3)$ UKF'</span>, <span class="string">'$SE_2(3)$ \textbf{left UKF}'</span>, <span class="keyword">...</span>
+    <span class="string">'$SE_2(3)$ \textbf{right UKF}'</span>, <span class="keyword">...</span>
+    <span class="string">'EKF'</span>, <span class="string">'IEKF [BB17]'</span>);
+
+f_rot = @(x) sprintf(<span class="string">'%0.2f'</span>, mean(x(1, :)));
+f_p = @(x) sprintf(<span class="string">'%0.2f'</span>, mean(x(2, :)));
+
+ukf_nees_Rot = f_rot(ukf_nees);
+ukf_nees_p = f_p(ukf_nees);
+ukf_left_nees_Rot = f_rot(ukf_left_nees);
+ukf_left_nees_p = f_p(ukf_left_nees);
+ukf_right_nees_Rot = f_rot(ukf_right_nees);
+ukf_right_nees_p = f_p(ukf_right_nees);
+ekf_nees_Rot = f_rot(ekf_nees);
+ekf_nees_p = f_p(ekf_nees);
+iekf_nees_Rot = f_rot(iekf_nees);
+iekf_nees_p = f_p(iekf_nees);
+
+<span class="keyword">if</span> cur_folder == <span class="string">"matlab"</span>
+    print(fig4, <span class="string">'benchmarks/html/figures/benchmark_localization_04'</span>, <span class="keyword">...</span>
+        <span class="string">'-dpng'</span>, <span class="string">'-r600'</span>)
+    print(fig5, <span class="string">'benchmarks/html/figures/benchmark_localization_05'</span>, <span class="keyword">...</span>
+        <span class="string">'-dpng'</span>, <span class="string">'-r600'</span>)
+<span class="keyword">end</span>
+disp(<span class="string">' '</span>)
+disp(<span class="string">'Normalized Estimation Error Squared (NEES) w.r.t. orientation'</span>);
+disp(<span class="string">"    -SO(3) x R^6 UKF  : "</span> + ukf_nees_Rot);
+disp(<span class="string">"    -left SE_2(3) UKF : "</span> + ukf_left_nees_Rot);
+disp(<span class="string">"    -right SE_2(3) UKF: "</span> + ukf_right_nees_Rot);
+disp(<span class="string">"    -EKF              : "</span> + ekf_nees_Rot);
+disp(<span class="string">"    -IEKF             : "</span> + iekf_nees_Rot);
+
+disp(<span class="string">' '</span>)
+disp(<span class="string">'Normalized Estimation Error Squared (NEES) w.r.t. position'</span>)
+disp(<span class="string">"    -SO(3) x R^6 UKF  : "</span> + ukf_nees_p);
+disp(<span class="string">"    -left SE_2(3) UKF : "</span> + ukf_left_nees_p);
+disp(<span class="string">"    -right SE_2(3) UKF: "</span> + ukf_right_nees_p);
+disp(<span class="string">"    -EKF              : "</span> + ekf_nees_p);
+disp(<span class="string">"    -IEKF             : "</span> + iekf_nees_p);
+</pre><pre class="codeoutput"> 
+Normalized Estimation Error Squared (NEES) w.r.t. orientation
+    -SO(3) x R^6 UKF  : 1.34
+    -left SE_2(3) UKF : 0.61
+    -right SE_2(3) UKF: 0.64
+    -EKF              : 2.38
+    -IEKF             : 0.75
+ 
+Normalized Estimation Error Squared (NEES) w.r.t. position
+    -SO(3) x R^6 UKF  : 1.41
+    -left SE_2(3) UKF : 0.78
+    -right SE_2(3) UKF: 0.76
+    -EKF              : 122.64
+    -IEKF             : 1.40
+</pre><img vspace="5" hspace="5" src="benchmark_inertial_navigation_helper_nees_01.png" alt=""> <img vspace="5" hspace="5" src="benchmark_inertial_navigation_helper_nees_02.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+
+f = @(x) squeeze(mean(x, 3));
+ukf_nees = f(ukf_nees);
+ukf_left_nees = f(ukf_left_nees);
+ukf_right_nees = f(ukf_right_nees);
+iekf_nees = f(iekf_nees);
+ekf_nees = f(ekf_nees);
+
+fig4 = figure;
+set(gca, 'YScale', 'log')
+title('Orientation NEES')
+xlabel('$t$ (s)')
+ylabel('orientation NEES')
+hold on;
+grid on;
+plot(t, ukf_nees(1, :), 'm');
+plot(t, ukf_left_nees(1, :), 'g');
+plot(t, ukf_right_nees(1, :), 'c');
+plot(t, iekf_nees(1, :), 'r');
+plot(t, ekf_nees(1, :), 'b');
+legend('$SO(3)$ UKF', '$SE_2(3)$ \textbf{left UKF}', ...
+    '$SE_2(3)$ \textbf{right UKF}', 'EKF', 'IEKF [BB17]');
+
+fig5 = figure;
+set(gca, 'YScale', 'log')
+title('Robot position NEES')
+xlabel('$t$ (s)')
+ylabel('position NEES')
+hold on;
+grid on;
+plot(t, ukf_nees(1, :), 'm');
+plot(t, ukf_left_nees(1, :), 'g');
+plot(t, ukf_right_nees(1, :), 'c');
+plot(t, iekf_nees(1, :), 'r');
+plot(t, ekf_nees(1, :), 'b');
+legend('$SO(3)$ UKF', '$SE_2(3)$ \textbf{left UKF}', ...
+    '$SE_2(3)$ \textbf{right UKF}', ...
+    'EKF', 'IEKF [BB17]');
+
+f_rot = @(x) sprintf('%0.2f', mean(x(1, :)));
+f_p = @(x) sprintf('%0.2f', mean(x(2, :)));
+
+ukf_nees_Rot = f_rot(ukf_nees);
+ukf_nees_p = f_p(ukf_nees);
+ukf_left_nees_Rot = f_rot(ukf_left_nees);
+ukf_left_nees_p = f_p(ukf_left_nees);
+ukf_right_nees_Rot = f_rot(ukf_right_nees);
+ukf_right_nees_p = f_p(ukf_right_nees);
+ekf_nees_Rot = f_rot(ekf_nees);
+ekf_nees_p = f_p(ekf_nees);
+iekf_nees_Rot = f_rot(iekf_nees);
+iekf_nees_p = f_p(iekf_nees);
+
+if cur_folder == "matlab"
+    print(fig4, 'benchmarks/html/figures/benchmark_localization_04', ...
+        '-dpng', '-r600')
+    print(fig5, 'benchmarks/html/figures/benchmark_localization_05', ...
+        '-dpng', '-r600')
+end
+disp(' ')
+disp('Normalized Estimation Error Squared (NEES) w.r.t. orientation');
+disp("    -SO(3) x R^6 UKF  : " + ukf_nees_Rot);
+disp("    -left SE_2(3) UKF : " + ukf_left_nees_Rot);
+disp("    -right SE_2(3) UKF: " + ukf_right_nees_Rot);
+disp("    -EKF              : " + ekf_nees_Rot);
+disp("    -IEKF             : " + iekf_nees_Rot);
+
+disp(' ')
+disp('Normalized Estimation Error Squared (NEES) w.r.t. position')
+disp("    -SO(3) x R^6 UKF  : " + ukf_nees_p);
+disp("    -left SE_2(3) UKF : " + ukf_left_nees_p);
+disp("    -right SE_2(3) UKF: " + ukf_right_nees_p);
+disp("    -EKF              : " + ekf_nees_p);
+disp("    -IEKF             : " + iekf_nees_p);
+##### SOURCE END #####
+--></body></html>

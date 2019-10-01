@@ -149,12 +149,12 @@
 <h1>Unscented Kalman Filtering on (Parallelizable) Manifolds<a class="headerlink" href="#unscented-kalman-filtering-on-parallelizable-manifolds" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="about">
 <h2>About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h2>
-<p><strong>UKF-M</strong>, for Unscented Kalman Filtering on (parallelizable) Manifolds, is a
-novel methodology for implementing unscented Kalman filter both  on manifold and
-Lie groups. Beyond <em>filtering performances</em>, the main interests of the approach
-are its <em>versatility</em>, as the method applies to numerous state estimation
-problems, and its <em>simplicity of implementation</em> for practitioners not being
-necessarily familiar with manifolds and Lie groups.</p>
+<p><strong>UKF-M</strong>, for Unscented Kalman Filtering on (Parallelizable) Manifolds, is a
+novel methodology for implementing unscented Kalman filters both  on manifolds
+and Lie groups. Beyond <em>filtering performances</em>, the main advantages of the
+approach are its <em>versatility</em>, as the method applies to numerous state
+estimation problems, and its <em>simplicity of implementation</em> for practitioners
+which are not necessarily familiar with manifolds and Lie groups.</p>
 <p>This repo contains two independent Python and Matlab implementations - we
 recommend Python - for quickly implementing and testing the approach. If you use
 this project for your research, please cite:</p>
@@ -170,28 +170,29 @@ this project for your research, please cite:</p>
 </div>
 <div class="section" id="download">
 <h2>Download<a class="headerlink" href="#download" title="Permalink to this headline">¶</a></h2>
-<p>The repo contains tutorials, documentation and that can be downloaded from
+<p>The repo contains tutorials, documentation and can be downloaded from
 <a class="reference external" href="https://github.com/CAOR-MINES-ParisTech/ukfm">https://github.com/CAOR-MINES-ParisTech/ukfm</a>.</p>
-<p>The paper <em>A Code for Unscented Kalman Filtering on Manifolds (UKF-M)</em> related
-to this code is available at this <a class="reference external" href="https://cloud.mines-paristech.fr/index.php/s/uUjOhxaKp4v9yJT/download">url</a>.</p>
+<p>The paper <em>A Code for Unscented Kalman Filtering on Manifolds (UKF-M)</em>
+related to this code is available at this <a class="reference external" href="https://cloud.mines-paristech.fr/index.php/s/uUjOhxaKp4v9yJT/download">url</a>.</p>
 </div>
 <div class="section" id="getting-started">
 <h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
 <p>1. Download the latest source code from <a class="reference external" href="https://github.com/CAOR-MINES-ParisTech/ukfm">GitHub</a> (see <a class="reference internal" href="install.html#installation"><span class="std std-ref">Installation</span></a>).</p>
 <p>2. Follow  the <a class="reference internal" href="auto_examples/localization.html#localization-tutorial"><span class="std std-ref">Tutorial</span></a> for an introduction to
 the methodology.</p>
-<p>The rest of this documentation is build on and for Python usages. For the Matlab
-user, see the referred <a class="reference internal" href="matlab.html#matlab"><span class="std std-ref">Section</span></a>.</p>
+<p>The rest of the documentation is build on the Python code. For the Matlab
+user, see <a class="reference internal" href="matlab.html#matlab"><span class="std std-ref">here</span></a>.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>Below is a list of examples from which the unscented Kalman filter on
-parallelizable manifolds has been implemented.</p>
+parallelizable manifolds has been implemented:</p>
 <ul class="simple">
-<li><p>2D robot localization (for introduction on simulated data and on real data).</p></li>
+<li><p>2D robot localization (both for introduction on simulated data and on real
+data).</p></li>
 <li><p>3D Attitude estimation with an Inertial Measurement Unit (IMU) equipped with
 gyros, accelerometers and magnetometers.</p></li>
-<li><p>3D Inertial navigation on flat Earth with observations of known landmarks.</p></li>
+<li><p>3D inertial navigation on flat Earth with observations of known landmarks.</p></li>
 <li><p>2D Simultaneous Localization And Mapping (SLAM).</p></li>
 <li><p>IMU-GNSS sensor-fusion for a vehicle on the KITTI dataset.</p></li>
 <li><p>Spherical pendulum example, where the state lives on the 2-sphere manifold.</p></li>

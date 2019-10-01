@@ -7,8 +7,8 @@ manifolds, which is wholly independent from the python code.
 Installation
 --------------------------------------------------------------------------------
 
-The Matlab code has been tested with version R2019a without required particular
-toolbox. To install:
+The Matlab code has been tested with version R2019a without requiring any 
+particular toolbox. To install:
 
 1.  Download the repo
 ```
@@ -22,7 +22,6 @@ git clone https://github.com/CAOR-MINES-ParisTech/ukfm.git
 
 Get Started
 --------------------------------------------------------------------------------
-  
 Follow the 2D robot localization example (tutorial): in the Matlab prompt
 execute
 ```
@@ -31,18 +30,17 @@ main_localization
   
 Usage
 --------------------------------------------------------------------------------
-
 In contrast to Python, the code is implemented without class and has only
 functions.
 
-The file for designed an UKF are given in the ``ukfm`` folder and useful
+The file for designing an UKF are given in the ``ukfm`` folder and useful
 geometry (Lie groups) functions are provided in the ``geometry`` folder.
 
 We provide scripts for reproducing the examples and benchmarks respectively in
-the ``examples`` and ``benchmarks``. Models functions are organized in suborder
-of example: for e.g. the 2D robot localization model, see in
-``examples/localization``. You can use the Matlab publish tool for better
-rendering and obtain the published scripts 
+the ``examples`` and ``benchmarks`` folders. Models functions are organizedin
+subfolder of the example folder: for e.g. the 2D robot localization model, see
+in ``examples/localization``. You can use the Matlab publish tool for better
+rendering and obtain the published scripts
 [here](https://caor-mines-paristech.github.io/ukfm/matlab.html).
 
 Function naming mimics the dot operator of class. To get the exponential of
@@ -51,7 +49,6 @@ respectively ``se3_exp`` and ``localization_f``.
 
 Citation
 --------------------------------------------------------------------------------
-
 If you use this project for your research, please please cite
 ```
 @article{brossard2019Code,

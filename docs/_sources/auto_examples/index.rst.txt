@@ -14,7 +14,7 @@ on parallelizable manifolds.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Goal of this script:">
+    <div class="sphx-glr-thumbcontainer" tooltip="- applying the UKF for estimating 3D attitude from an IMU.">
 
 .. only:: html
 
@@ -34,7 +34,7 @@ on parallelizable manifolds.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="which is a two-dimensional manifold. Many mechanical systems such as a spherical pendulum, doub...">
+    <div class="sphx-glr-thumbcontainer" tooltip="    \mathbb{S}^2 = \left\{ \mathbf{x} \in      \mathbb{R}^3 \mid \|\mathbf{x}\|_2 = 1     \righ...">
 
 .. only:: html
 
@@ -54,7 +54,7 @@ on parallelizable manifolds.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Goals of this script:">
+    <div class="sphx-glr-thumbcontainer" tooltip="- apply the UKF on parallelizable manifolds for estimating the 3D attitude,   velocity and posi...">
 
 .. only:: html
 
@@ -74,7 +74,7 @@ on parallelizable manifolds.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Goals of this script:">
+    <div class="sphx-glr-thumbcontainer" tooltip="- apply the UKF for the 2D robot localization example on real data.">
 
 .. only:: html
 
@@ -94,7 +94,7 @@ on parallelizable manifolds.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This tutorial introduces the main aspects of **UKF-M**.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Goals of this script:">
 
 .. only:: html
 
@@ -114,7 +114,7 @@ on parallelizable manifolds.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Goals of this script:">
+    <div class="sphx-glr-thumbcontainer" tooltip="- apply the UKF for estimating the 3D pose, velocity and sensor biases of a   vehicle on real d...">
 
 .. only:: html
 
@@ -134,7 +134,7 @@ on parallelizable manifolds.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Goals of this script:">
+    <div class="sphx-glr-thumbcontainer" tooltip="- apply the UKF for performing 2D SLAM (Simultaneous Localization And Mapping).">
 
 .. only:: html
 

@@ -33,5 +33,4 @@ G(1:3, 1:3) = state.Rot*dt;
 G(4:6, 4:6) = state.Rot*dt;
 
 new_P = F*P*F' + G*Q*G';
-
 end

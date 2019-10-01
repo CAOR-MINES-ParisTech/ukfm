@@ -7,8 +7,8 @@ import os
 
 class LOCALIZATION:
     """2D Robot localization based on odometry and GNSS (robot position) 
-    measurements. You can have a text description in
-    :cite:`barrauInvariant2017`, Section IV.
+    measurements. See a text description in :cite:`barrauInvariant2017`, Section
+    IV.
 
     :var T: sequence time (s).
     :var odo_freq: odometry frequency (Hz).
@@ -21,9 +21,10 @@ class LOCALIZATION:
     class STATE:
         """State of the system.
 
-        It represents the orientation and position of the robot.
+        It represents the orientation and the position of the robot.
 
         .. math::
+
             \\boldsymbol{\\chi} \in \\mathcal{M} = \\left\\{ \\begin{matrix} 
            \\mathbf{C} \in SO(2),
             \\mathbf{p} \in \\mathbb R^2
@@ -40,11 +41,12 @@ class LOCALIZATION:
     class INPUT:
         """Input of the propagation model.
 
-        The input are robot velocities that can be obtained from a differential
-        wheel system.
+        The input are the robot velocities that can be obtained from a
+        differential wheel system.
 
-        .. math:: 
-            \\boldsymbol{\\omega} \in \\mathcal{M} = \\left\\{ \\begin{matrix}
+        .. math::
+
+            \\boldsymbol{\\omega} \in \\mathcal{U} = \\left\\{ \\begin{matrix}
             \\mathbf{v} \in \\mathbb R^2,
             \\omega \in \\mathbb R 
             \\end{matrix} \\right\\}
@@ -72,6 +74,7 @@ class LOCALIZATION:
         """ Propagation function.
 
         .. math::
+
             \\mathbf{C}_{n+1}  &= \\mathbf{C}_{n} \\exp\\left(\\left(\\omega + 
             \\mathbf{w}^{(2)} \\right) dt\\right)  \\\\
             \\mathbf{p}_{n+1}  &= \\mathbf{p}_{n} + \\left( \\mathbf{v}_{n} + 
@@ -93,6 +96,7 @@ class LOCALIZATION:
         """ Observation function.
 
         .. math::
+
             h\\left(\\boldsymbol{\\chi}\\right)  = \\mathbf{p}
 
         :var state: state :math:`\\boldsymbol{\\chi}`.
@@ -105,6 +109,7 @@ class LOCALIZATION:
         """Retraction.
 
         .. math::
+
           \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) = 
           \\left( \\begin{matrix}
             \\mathbf{C} \\exp\\left(\\boldsymbol{\\xi}^{(0)}\\right) \\\\
@@ -131,6 +136,7 @@ class LOCALIZATION:
         """Inverse retraction.
 
         .. math::
+
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}
           \\right) = \\left( \\begin{matrix}
             \\log\\left(\\mathbf{C} \\mathbf{\\hat{C}}^T\\right) \\\\
@@ -191,6 +197,7 @@ class LOCALIZATION:
         """Inverse retraction.
 
         .. math::
+
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}
           \\right) = \\log\\left(
               \\boldsymbol{\chi}^{-1} \\boldsymbol{\\hat{\\chi}} \\right)
@@ -223,6 +230,7 @@ class LOCALIZATION:
         where
 
         .. math::
+        
                 \\mathbf{T} = \\exp\\left(\\boldsymbol{\\xi}\\right) 
                 = \\begin{bmatrix}
                     \\mathbf{C}_\\mathbf{T} &\\mathbf{r} \\\\
@@ -250,6 +258,7 @@ class LOCALIZATION:
         """Inverse retraction.
 
         .. math::
+
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}
           \\right) = \\log\\left(
               \\boldsymbol{\\hat{\\chi}}^{-1} \\boldsymbol{\\chi} \\right)
@@ -379,7 +388,7 @@ class LOCALIZATION:
         plt.plot(t, 180/np.pi*ukf3sigma, c='blue', linestyle='dashed')
         plt.plot(t, 180/np.pi*(-ukf3sigma), c='blue', linestyle='dashed')
         ax.legend([r'UKF', r'$3\sigma$ UKF'])
-        ax.set_xlim(0, t[-1]) 
+        ax.set_xlim(0, t[-1])
 
         ukf3sigma = 3*np.sqrt(ukf_Ps[:, 2, 2] + ukf_Ps[:, 1, 1])
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -407,8 +416,8 @@ class LOCALIZATION:
         def rmse(errs):
             err = np.zeros((errs.shape[1], 2))
             err[:, 0] = np.sqrt(np.mean(errs[:, :, 0]**2, axis=0))
-            err[:, 1] = np.sqrt(np.mean(errs[:, :, 1]**2 \
-                        + errs[:, :, 2]**2, axis=0))
+            err[:, 1] = np.sqrt(np.mean(errs[:, :, 1]**2
+                                        + errs[:, :, 2]**2, axis=0))
             return err
 
         ukf_e = rmse(ukf_err)
@@ -432,7 +441,7 @@ class LOCALIZATION:
         plt.plot(iekf_ps[:, 0], iekf_ps[:, 1], c='blue')
         ax.axis('equal')
         ax.legend([r'true position', r'$SO(2) \times \mathbb{R}^2$ UKF',
-                   r'\textbf{$SE(2)$ UKF (left)}', 
+                   r'\textbf{$SE(2)$ UKF (left)}',
                    r'\textbf{$SE(2)$ UKF (right)}', r'EKF', r'IEKF [BB17]'])
 
         # plot attitude error
@@ -446,11 +455,11 @@ class LOCALIZATION:
         plt.plot(t, 180/np.pi*right_ukf_e[:, 0], c='cyan')
         plt.plot(t, 180/np.pi*ekf_e[:, 0], c='red')
         plt.plot(t, 180/np.pi*iekf_e[:, 0], c='blue')
-        ax.legend([r'$SO(2) \times \mathbb{R}^2$ UKF', 
-        r'\textbf{$SE(2)$ UKF (left)}', 
-        r'\textbf{$SE(2)$ UKF (right)}', r'EKF', r'IEKF [BB17]'])
+        ax.legend([r'$SO(2) \times \mathbb{R}^2$ UKF',
+                   r'\textbf{$SE(2)$ UKF (left)}',
+                   r'\textbf{$SE(2)$ UKF (right)}', r'EKF', r'IEKF [BB17]'])
         ax.set_ylim(bottom=0)
-        ax.set_xlim(0, t[-1]) 
+        ax.set_xlim(0, t[-1])
 
         # plot position error
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -463,11 +472,12 @@ class LOCALIZATION:
         plt.plot(t, right_ukf_e[:, 1], c='cyan')
         plt.plot(t, ekf_e[:, 1], c='red')
         plt.plot(t, iekf_e[:, 1], c='blue')
-        ax.legend([r'$SO(2) \times \mathbb{R}^2$ UKF', 
-        r'\textbf{$SE(2)$ UKF (left)}', r'\textbf{$SE(2)$ UKF (right)}', 
-        r'EKF', r'IEKF [BB17]'])
+        ax.legend([r'$SO(2) \times \mathbb{R}^2$ UKF',
+                   r'\textbf{$SE(2)$ UKF (left)}', 
+                   r'\textbf{$SE(2)$ UKF (right)}',
+                   r'EKF', r'IEKF [BB17]'])
         ax.set_ylim(bottom=0)
-        ax.set_xlim(0, t[-1]) 
+        ax.set_xlim(0, t[-1])
         return ukf_e, left_ukf_e, right_ukf_e, iekf_e, ekf_e
 
     def benchmark_print(self, ukf_e, left_ukf_e, right_ukf_e, iekf_e, ekf_e):
@@ -500,7 +510,6 @@ class LOCALIZATION:
         print("    -right SE(2) UKF: " + right_ukf_err_p)
         print("    -EKF            : " + ekf_err_p)
         print("    -IEKF           : " + iekf_err_p)
-
 
     def nees(self, err, Ps, Rots, ps, name):
 
@@ -545,33 +554,34 @@ class LOCALIZATION:
         # plot orientation nees
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.set(xlabel='$t$ (s)', ylabel='orientation NEES',
-                title='Robot orientation NEES', yscale="log")
-
+               title='Robot orientation NEES', yscale="log")
 
         plt.plot(t[m:], ukf_nees[m:, 0], c='magenta')
         plt.plot(t[m:], left_ukf_nees[m:, 0], c='green')
         plt.plot(t[m:], right_ukf_nees[m:, 0], c='cyan')
         plt.plot(t[m:], ekf_nees[m:, 0], c='red')
         plt.plot(t[m:], iekf_nees[m:, 0], c='blue')
-        ax.legend([r'$SO(2) \times \mathbb{R}^2$ UKF', 
-        r'\textbf{$SE(2)$ UKF (left)}', r'\textbf{$SE(2)$ UKF (right)}', 
-        r'EKF', r'IEKF [BB17]'])
-        ax.set_xlim(t[m], t[-1]) 
+        ax.legend([r'$SO(2) \times \mathbb{R}^2$ UKF',
+                   r'\textbf{$SE(2)$ UKF (left)}', 
+                   r'\textbf{$SE(2)$ UKF (right)}',
+                   r'EKF', r'IEKF [BB17]'])
+        ax.set_xlim(t[m], t[-1])
 
         # plot position nees
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.set(xlabel='$t$ (s)', ylabel='position NEES',
-                title='Robot position NEES', yscale="log")
+               title='Robot position NEES', yscale="log")
 
         plt.plot(t[m:], ukf_nees[m:, 1], c='magenta')
         plt.plot(t[m:], left_ukf_nees[m:, 1], c='green')
         plt.plot(t[m:], right_ukf_nees[m:, 1], c='cyan')
         plt.plot(t[m:], ekf_nees[m:, 1], c='red')
         plt.plot(t[m:], iekf_nees[m:, 1], c='blue')
-        ax.legend([r'$SO(2) \times \mathbb{R}^2$ UKF',  
-        r'\textbf{$SE(2)$ UKF (left)}', r'\textbf{$SE(2)$ UKF (right)}', 
-        r'EKF', r'IEKF [BB17]'])
-        ax.set_xlim(t[m], t[-1]) 
+        ax.legend([r'$SO(2) \times \mathbb{R}^2$ UKF',
+                   r'\textbf{$SE(2)$ UKF (left)}', 
+                   r'\textbf{$SE(2)$ UKF (right)}',
+                   r'EKF', r'IEKF [BB17]'])
+        ax.set_xlim(t[m], t[-1])
 
         def g(x):
             # only after 20 s

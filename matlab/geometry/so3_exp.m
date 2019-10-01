@@ -1,10 +1,10 @@
 function [Rot] = so3_exp(phi)
-%SO3_EXP exponential map for SO(3)
+%SO3_EXP exponential
 %
 % Syntax:  [Rot] = so3_exp(phi)
 %
 % Inputs:
-%    phi - vector of length 3
+%    phi - vector
 %
 % Outputs:
 %    Rot - rotation matrix

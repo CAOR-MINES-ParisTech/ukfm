@@ -4,7 +4,7 @@ class EKF:
     """The Extended Kalman Filter on (parallelizable) manifolds. 
     
     This is the counterpart of the UKF on (parallelizable) manifolds, where 
-    functions for computed Jacobian need to be provided.
+    functions for computing Jacobian need to be provided.
 
     :arg model: model that contains propagation function :math:`f` and 
         observation function :math:`h`.
@@ -17,7 +17,7 @@ class EKF:
     :ivar R: observation noise covariance matrix (static) :math:`\\mathbf{R}`.
     :ivar state: state :math:`\\boldsymbol{\\hat{\\chi}}_n`, initialized at 
         ``state0``.
-    :ivar P: state error covariance :math:`\\mathbf{P}_n`, initialized at 
+    :ivar P: state uncertainty covariance :math:`\\mathbf{P}_n`, initialized at 
         ``P0``.
     """
 
@@ -35,9 +35,10 @@ class EKF:
         self.Id_d = np.eye(self.P.shape[0]) 
 
     def propagation(self, omega, dt):
-        """UKF propagation step.
+        """EKF propagation step.
 
         .. math::
+
           \\boldsymbol{\\hat{\\chi}}_{n} &\\leftarrow
           \\boldsymbol{\\hat{\\chi}}_{n+1} =
           f\\left(\\boldsymbol{\\hat{\\chi}}_{n}, 
@@ -61,6 +62,7 @@ class EKF:
         """EKF update step.
 
         .. math::
+        
           \\boldsymbol{\\hat{\\chi}}_{n} &\\leftarrow 
           \\boldsymbol{\\hat{\\chi}}_{n}^{+} \\\\
           \\mathbf{P}_{n} &\\leftarrow \\mathbf{P}_{n}^{+} \\\\

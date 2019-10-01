@@ -10,13 +10,14 @@
 ********************************************************************************
 IMU-GNSS Sensor-Fusion on the KITTI Dataset
 ********************************************************************************
-
 Goals of this script:
 
 - apply the UKF for estimating the 3D pose, velocity and sensor biases of a
   vehicle on real data.
+
 - efficiently propagate the filter when one part of the Jacobian is already
   known. 
+
 - efficiently update the system for GNSS position.
 
 *We assume the reader is already familiar with the approach described in the
@@ -50,8 +51,7 @@ Import
 
 Model and Data
 ==============================================================================
-
-This script uses the ``IMUGNSS`` model class that will load the KITTI data
+This script uses the :meth:`~ukfm.IMUGNSS` model that loads the KITTI data
 from text files. The model is the standard 3D kinematics model based on
 inertial inputs.
 
@@ -60,15 +60,12 @@ inertial inputs.
 
 
     MODEL = ukfm.IMUGNSS
-
     # observation frequency (Hz)
     GNSS_freq = 1
-
     # load data
     omegas, ys, one_hot_ys, t = MODEL.load(GNSS_freq)
     N = t.shape[0]
-
-    # IMU standard-deviation noise (noise is isotropic)
+    # IMU noise standard deviation (noise is isotropic)
     imu_std = np.array([0.01,     # gyro (rad/s)
                         0.05,     # accelerometer (m/s^2)
                         0.000001, # gyro bias (rad/s^2)
@@ -82,7 +79,7 @@ inertial inputs.
 
 
 
-The state and the input of the model contain the following variables:
+The state and the input contain the following variables:
 
 .. highlight:: python
 .. code-block:: python
@@ -103,12 +100,12 @@ We now design the UKF on parallelizable manifolds. This script embeds the
 state in :math:`SO(3) \times \mathbb{R}^{12}`, such that:
 
 * the retraction :math:`\varphi(.,.)` is the :math:`SO(3)` exponential for
-  orientation, and the standard vector addition for the remaining part of the
+  orientation, and the vector addition for the remaining part of the
   state.
 
-* the inverse retraction :math:`\varphi^{-1}(.,.)` is the :math:`SO(3)`
-  logarithm for orientation and the standard vector subtraction for the
-  remaining part of the state.
+* the inverse retraction :math:`\varphi^{-1}_.(.)` is the :math:`SO(3)`
+  logarithm for orientation and the vector subtraction for the remaining part
+  of the state.
 
 Remaining parameter setting is standard.
 
@@ -116,12 +113,11 @@ Remaining parameter setting is standard.
 .. code-block:: default
 
 
-    # propagation noise matrix
+    # propagation noise covariance matrix
     Q = block_diag(imu_std[0]**2*np.eye(3), imu_std[1]**2*np.eye(3),
                    imu_std[2]**2*np.eye(3), imu_std[3]**2*np.eye(3))
-    # measurement noise matrix
+    # measurement noise covariance matrix
     R = GNSS_std**2 * np.eye(3)
-
 
 
 
@@ -138,7 +134,6 @@ the 2D SLAM example.
 
     # sigma point parameters
     alpha = np.array([1e-3, 1e-3, 1e-3, 1e-3, 1e-3])
-
     # for propagation we need the all state
     red_idxs = np.arange(15)  # indices corresponding to the full state in P
     # for update we need only the state corresponding to the position
@@ -150,18 +145,17 @@ the 2D SLAM example.
 
 
 
-We initialize the state at the origin with zeros biases. The initial
-covariance is non-null as the state is not perfectly known.
+We initialize the state with zeros biases. The initial covariance is non-null
+as the state is not perfectly known.
 
 
 .. code-block:: default
 
 
-    # initial error matrix
+    # initial uncertainty matrix
     P0 = block_diag(0.01*np.eye(3), 1*np.eye(3), 1*np.eye(3),
                     0.001*np.eye(3), 0.001*np.eye(3))
-
-    # start by initializing the filter with a string error state
+    # initial state
     state0 = MODEL.STATE(
         Rot=np.eye(3),
         v=np.zeros(3),
@@ -184,28 +178,14 @@ manually set the remaining part of the Jacobian.
 
 
     # create the UKF
-    ukf = ukfm.JUKF(state0=state0,
-                    P0=P0,
-                    f=MODEL.f,
-                    h=MODEL.h,
-                    Q=Q[:6, :6],  # reduced
-                    phi=MODEL.phi,
-                    alpha=alpha,
-                    red_phi=MODEL.phi,
-                    red_phi_inv=MODEL.phi_inv,
-                    red_idxs=red_idxs,
-                    up_phi=MODEL.up_phi,
-                    up_idxs=up_idxs,
-                    )
-
+    ukf = ukfm.JUKF(state0=state0, P0=P0, f=MODEL.f, h=MODEL.h, Q=Q[:6, :6],
+                    phi=MODEL.phi, alpha=alpha, red_phi=MODEL.phi,
+                    red_phi_inv=MODEL.phi_inv, red_idxs=red_idxs,
+                    up_phi=MODEL.up_phi, up_idxs=up_idxs)
     # set variables for recording estimates along the full trajectory
     ukf_states = [state0]
     ukf_Ps = np.zeros((N, 15, 15))
     ukf_Ps[0] = P0
-
-    # measurement iteration number
-    k = 1
-
     # the part of the Jacobian that is already known.
     G_const = np.zeros((15, 6))
     G_const[9:] = np.eye(6)
@@ -218,14 +198,15 @@ manually set the remaining part of the Jacobian.
 
 Filtering
 ==============================================================================
-The UKF proceeds as a standard Kalman filter with a simple for loop.
+The UKF proceeds as a standard Kalman filter with a for loop.
 
 
 .. code-block:: default
 
 
+    # measurement iteration number
+    k = 1
     for n in range(1, N):
-
         # propagation
         dt = t[n]-t[n-1]
         ukf.state_propagation(omegas[n-1], dt)
@@ -275,11 +256,9 @@ makes no sense to compare the filter outputs to the same measurement.
 
 Conclusion
 ==============================================================================
-
-This script readily implements an UKF for sensor-fusion of IMU with GNSS. The
-UKF is efficiently implemented, as when some part of the Jacobian are known
-and exact, we can spare the UKF to compute then. Results are satisfying as the
-GNSS we used is sufficiently accurate.
+This script implements an UKF for sensor-fusion of an IMU with GNSS. The UKF
+is efficiently implemented, as some part of the Jacobian are known and not
+computed. Results are satisfying.
 
 You can now:
 
@@ -294,7 +273,7 @@ You can now:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 5 minutes  38.123 seconds)
+   **Total running time of the script:** ( 5 minutes  19.978 seconds)
 
 
 .. _sphx_glr_download_auto_examples_imugnss.py:

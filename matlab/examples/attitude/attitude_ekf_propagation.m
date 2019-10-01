@@ -8,7 +8,7 @@ function [new_state, new_P] = attitude_ekf_propagation(state, P, omega, ...
 % Inputs:
 %    state - state
 %    P - covariance matrix
-%    omega - input, structure
+%    omega - input
 %    dt - integration step
 %    Q - noise covariance matrix
 %
@@ -20,7 +20,6 @@ function [new_state, new_P] = attitude_ekf_propagation(state, P, omega, ...
 new_state = attitude_f(state, omega, zeros(3, 1), dt);
 
 % propagate covariance
-G = zeros(3, 3);
-G(1:3, 1:3) = dt*state.Rot;
+G = dt*state.Rot;
 new_P = P + G*Q*G';
 end

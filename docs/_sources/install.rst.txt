@@ -2,7 +2,6 @@
 
 Installation
 ================================================================================
-
 You can download the source code at
 https://github.com/CAOR-MINES-ParisTech/ukfm.
 
@@ -47,8 +46,7 @@ changes to the code without having to reinstall every time.
 
 Matlab
 --------------------------------------------------------------------------------
-
-The Matlab code has been tested with version R2019a without required any
+The Matlab code has been tested with version R2019a without requiring any
 particular toolbox. To install:
 
 1. Download the repo:
@@ -63,11 +61,8 @@ particular toolbox. To install:
 
 3. You may save this path for your next Matlab sessions (via ``savepath``).
 
-
-
 Documentation
 --------------------------------------------------------------------------------
-
 You need Sphinx to build the HTML documentation.
 
     .. highlight:: bash
@@ -77,4 +72,3 @@ You need Sphinx to build the HTML documentation.
         pip install sphinx
         make html
         open build/html/index.html
-

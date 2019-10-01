@@ -10,7 +10,6 @@
 ********************************************************************************
 Attitude Estimation with an IMU - Example
 ********************************************************************************
-
 Goal of this script:
 
 - applying the UKF for estimating 3D attitude from an IMU.
@@ -18,8 +17,8 @@ Goal of this script:
 *We assume the reader is already familiar with the tutorial.*
 
 Attitude estimation with an Inertial Measurement Unit (IMU). The filter fuses
-measurements coming from gyro, accelerometer and magnetometer. The IMU does not
-have any bias. We reproduce the simulation based on :cite:`kokUsing2017`.
+measurements coming from gyros, accelerometers and magnetometers. The IMU does
+not have any bias. We reproduce the simulation based on :cite:`kokUsing2017`.
 
 Import
 ==============================================================================
@@ -42,8 +41,8 @@ Import
 
 Model and Simulation
 ==============================================================================
-This script uses the ``ATTITUDE`` model class that requires  the sequence time
-and the IMU frequency to create an instance of the model.
+This script uses the :meth:`~ukfm.ATTITUDE` model that requires  the sequence
+time and the IMU frequency.
 
 
 .. code-block:: default
@@ -63,18 +62,17 @@ and the IMU frequency to create an instance of the model.
 
 
 The true trajectory is computed along with noisy inputs after we define the
-noise standard deviation affecting the (accurate) IMU, where the platform is 2
-s stationary and then have constant angular velocity around gravity.
+noise standard deviation affecting the IMU, where the platform is 2 s
+stationary and then has constant angular velocity around gravity.
 
 
 .. code-block:: default
 
 
-    # IMU standard-deviation noise (noise is isotropic)
+    # IMU noise standard deviation (noise is isotropic)
     imu_std = np.array([5/180*np.pi,  # gyro (rad/s)
-                        0.4,          # accelerometer (m/s**2)
+                        0.4,          # accelerometer (m/s^2)
                         0.2])         # magnetometer
-
     # simulate true trajectory and noisy inputs
     states, omegas = model.simu_f(imu_std)
 
@@ -92,7 +90,7 @@ The state and the input contain the following variables:
       states[n].Rot      # 3d orientation (matrix)
       omegas[n].gyro     # robot angular velocities
 
-We compute noisy measurements based on the true state sequence.
+We compute noisy measurements based on the true states.
 
 
 .. code-block:: default
@@ -110,24 +108,23 @@ A measurement ``ys[k]`` contains accelerometer and magnetometer measurements.
 
 Filter Design and Initialization
 ------------------------------------------------------------------------------
-We choose in this example to embed the state in :math:`SO(3)` with left
-multiplication, such that:
+We embed the state in :math:`SO(3)` with left multiplication, such that:
 
-- the retraction :math:`\varphi(.,.)` is the :math:`SO(3)` exponential map for
-  orientation where the state multiplies the uncertainty on the left.
+- the retraction :math:`\varphi(.,.)` is the :math:`SO(3)` exponential
+  where the state multiplies the uncertainty on the left.
 
-- the inverse retraction :math:`\varphi^{-1}(.,.)` is the :math:`SO(3)`
-  logarithm for orientation.
+- the inverse retraction :math:`\varphi^{-1}_.(.)` is the :math:`SO(3)`
+  logarithm.
 
 
 .. code-block:: default
 
 
-    # propagation noise matrix
+    # propagation noise covariance matrix
     Q = imu_std[0]**2*np.eye(3)
-    # measurement noise matrix
+    # measurement noise covariance matrix
     R = block_diag(imu_std[1]**2*np.eye(3), imu_std[2]**2*np.eye(3))
-    # initial error matrix
+    # initial uncertainty matrix
     P0 = np.zeros((3, 3))  # The state is perfectly initialized
     # sigma point parameters
     alpha = np.array([1e-3, 1e-3, 1e-3])
@@ -145,7 +142,6 @@ We initialize the filter with the true state.
 
 
     state0 = model.STATE(Rot=states[0].Rot)
-
     ukf = ukfm.UKF(state0=state0,
                    P0=P0,
                    f=model.f,
@@ -155,7 +151,6 @@ We initialize the filter with the true state.
                    phi=model.phi,
                    phi_inv=model.phi_inv,
                    alpha=alpha)
-
     # set variables for recording estimates along the full trajectory
     ukf_states = [state0]
     ukf_Ps = np.zeros((model.N, 3, 3))
@@ -169,10 +164,11 @@ We initialize the filter with the true state.
 
 Filtering
 ==============================================================================
-The UKF proceeds as a standard Kalman filter with a simple for loop.
+The UKF proceeds as a standard Kalman filter with a for loop.
 
 
 .. code-block:: default
+
 
     for n in range(1, model.N):
         # propagation
@@ -191,11 +187,11 @@ The UKF proceeds as a standard Kalman filter with a simple for loop.
 
 Results
 ------------------------------------------------------------------------------
-We plot the orientation as function of time along with the orientation
-error.
+We plot the orientation as function of time and the orientation error.
 
 
 .. code-block:: default
+
 
     model.plot_results(ukf_states, ukf_Ps, states, omegas)
 
@@ -228,23 +224,17 @@ error.
 
 
 
-We see the true trajectory starts by a small stationary step following
-by constantly turning around the gravity vector (only the yaw is
-increasing). As yaw is not observable with an accelerometer only, it is
-expected that yaw error would be stronger than roll or pitch errors.
+The trajectory starts by a small stationary step following by constantly
+turning around the gravity vector (only the yaw is increasing).
 
-As UKF estimates the covariance of the error, we have plotted the 95%
-confident interval (:math:`3\sigma`). We expect the error keeps behind this
-interval, and in this situation the filter covariance output matches
-especially well the error.
-
-A cruel aspect of these curves is the absence of comparision. Is the filter
-good ? It would be nice to compare it, e.g., to an extended Kalman filter.
+We have plotted the 95% (:math:`3\sigma`) confident interval and see the error
+is mainly below behind this interval: in this situation the filter covariance
+output matches especially well the error behavior.
 
 Conclusion
 ==============================================================================
-We have seen in this script how well works the UKF on parallelizable
-manifolds for estimating orientation from an IMU.
+This script shows how well works the UKF on parallelizable manifolds for
+estimating the orientation of a platform from an IMU.
 
 You can now:
 
@@ -252,13 +242,13 @@ You can now:
 
 - add outliers in acceleration or magnetometer measurements.
 
-- benchmark the UKF with different function errors and compare it to the
+- benchmark the UKF with different retractions and compare it to the
   extended Kalman filter in the Benchmarks section.
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  20.857 seconds)
+   **Total running time of the script:** ( 0 minutes  21.384 seconds)
 
 
 .. _sphx_glr_download_auto_examples_attitude.py:

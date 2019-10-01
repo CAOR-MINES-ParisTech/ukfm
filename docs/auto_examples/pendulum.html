@@ -179,16 +179,15 @@
 <p>The set of all points in the Euclidean space <span class="math notranslate nohighlight">\(\mathbb{R}^{3}\)</span>, that lie on
 the surface of the unit ball about the origin belong to the two-sphere manifold,</p>
 <div class="math notranslate nohighlight">
-\[\mathbb{S}^2 = \left\{ \mathbf{x} \in \mathbb{R}^3 \mid \|\mathbf{x}\|_2 = 1
+\[\mathbb{S}^2 = \left\{ \mathbf{x} \in
+\mathbb{R}^3 \mid \|\mathbf{x}\|_2 = 1
 \right\},\]</div>
-<p>which is a two-dimensional manifold. Many mechanical systems such
-as a spherical pendulum, double pendulum, quadrotor with a cable-suspended load,
-evolve on either <span class="math notranslate nohighlight">\(\mathbb{S}^2\)</span> or products comprising of
-<span class="math notranslate nohighlight">\(\mathbb{S}^2\)</span>.</p>
+<p>which is a two-dimensional manifold. Many mechanical systems such as a spherical
+pendulum, double pendulum, quadrotor with a cable-suspended load, evolve on
+either <span class="math notranslate nohighlight">\(\mathbb{S}^2\)</span> or products comprising of <span class="math notranslate nohighlight">\(\mathbb{S}^2\)</span>.</p>
 <p>In this script, we estimate the state of a system living on the sphere but where
-observations are standard vectors. You can have a text description of the
-spherical pendulum dynamics in <a class="reference internal" href="../bibliography.html#sjobergan2019" id="id1">[SE19]</a>, Section 7, and
-<a class="reference internal" href="../bibliography.html#kotaruvariation2019" id="id2">[KS19]</a>.</p>
+observations are standard vectors. See the description of the spherical pendulum
+dynamics in <a class="reference internal" href="../bibliography.html#sjobergan2019" id="id1">[SE19]</a>, Section 7, and <a class="reference internal" href="../bibliography.html#kotaruvariation2019" id="id2">[KS19]</a>.</p>
 <div class="section" id="import">
 <h2>Import<a class="headerlink" href="#import" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">block_diag</span>
@@ -201,8 +200,8 @@ spherical pendulum dynamics in <a class="reference internal" href="../bibliograp
 </div>
 <div class="section" id="model-and-simulation">
 <h2>Model and Simulation<a class="headerlink" href="#model-and-simulation" title="Permalink to this headline">¶</a></h2>
-<p>This script uses the <code class="docutils literal notranslate"><span class="pre">PENDULUM</span></code> model class that requires  the
-sequence time and the model frequency to create an instance of the model.</p>
+<p>This script uses the <a class="reference internal" href="../model.html#ukfm.PENDULUM" title="ukfm.PENDULUM"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PENDULUM()</span></code></a> model that requires  the sequence
+time and the model frequency.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># sequence time (s)</span>
 <span class="n">T</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="c1"># model frequency (Hz)</span>
@@ -214,11 +213,10 @@ sequence time and the model frequency to create an instance of the model.</p>
 <p>The true trajectory is computed along with empty inputs (the model does not
 require any input) after we define the noise standard deviation affecting the
 dynamic.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># model standard-deviation noise (noise is isotropic)</span>
-<span class="n">model_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>  <span class="c1"># orientation (rad)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># model noise standard deviation (noise is isotropic)</span>
+<span class="n">model_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>    <span class="c1"># orientation (rad)</span>
                       <span class="mi">1</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span>   <span class="c1"># orientation velocity (rad/s)</span>
-
-<span class="c1"># simulate true trajectory and noised input</span>
+<span class="c1"># simulate true states and noisy inputs</span>
 <span class="n">states</span><span class="p">,</span> <span class="n">omegas</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simu_f</span><span class="p">(</span><span class="n">model_std</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -229,8 +227,7 @@ dynamic.</p>
 </pre></div>
 </div>
 <p>The model dynamics is based on the Euler equations of pendulum motion.</p>
-<p>We compute noisy measurements at low frequency based on the true state
-sequence.</p>
+<p>We compute noisy measurements at low frequency based on the true states.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># observation frequency (Hz)</span>
 <span class="n">obs_freq</span> <span class="o">=</span> <span class="mi">20</span>
 <span class="c1"># observation noise standard deviation (m)</span>
@@ -239,36 +236,30 @@ sequence.</p>
 <span class="n">ys</span><span class="p">,</span> <span class="n">one_hot_ys</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simu_h</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">obs_freq</span><span class="p">,</span> <span class="n">obs_std</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>We assume observing only the position of the state only in the
-<span class="math notranslate nohighlight">\(yz\)</span>-plan.</p>
+<p>We assume observing the position of the state only in the <span class="math notranslate nohighlight">\(yz\)</span>-plan.</p>
 <div class="section" id="filter-design-and-initialization">
 <h3>Filter Design and Initialization<a class="headerlink" href="#filter-design-and-initialization" title="Permalink to this headline">¶</a></h3>
-<p>We choose in this example to embed the state in <span class="math notranslate nohighlight">\(SO(3) \times \mathbb{R}
-^3\)</span> with left multiplication, such that:</p>
+<p>We embed the state in <span class="math notranslate nohighlight">\(SO(3) \times \mathbb{R} ^3\)</span> with left
+multiplication, such that:</p>
 <ul class="simple">
-<li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(3)\)</span> exponential map for
+<li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(3)\)</span> exponential for
 orientation where the state multiplies the uncertainty on the left, and the
-standard vector addition for the  velocity.</p></li>
-<li><p>the inverse retraction <span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(3)\)</span>
-logarithm for orientation and the standard vector subtraction for the
-velocity.</p></li>
+vector addition for the velocity.</p></li>
+<li><p>the inverse retraction <span class="math notranslate nohighlight">\(\varphi^{-1}_.(.)\)</span> is the <span class="math notranslate nohighlight">\(SO(3)\)</span>
+logarithm for orientation and the vector subtraction for the velocity.</p></li>
 </ul>
 <p>Remaining parameter setting is standard.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># propagation noise matrix</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># propagation noise covariance matrix</span>
 <span class="n">Q</span> <span class="o">=</span> <span class="n">block_diag</span><span class="p">(</span><span class="n">model_std</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">model_std</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-<span class="c1"># measurement noise matrix</span>
+<span class="c1"># measurement noise covariance matrix</span>
 <span class="n">R</span> <span class="o">=</span> <span class="n">obs_std</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="c1"># initial error matrix</span>
+<span class="c1"># initial uncertainty matrix</span>
 <span class="n">P0</span> <span class="o">=</span> <span class="n">block_diag</span><span class="p">((</span><span class="mi">45</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-
 <span class="c1"># sigma point parameters</span>
 <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">])</span>
-
 <span class="n">state0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span><span class="n">Rot</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">u</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-
 <span class="n">ukf</span> <span class="o">=</span> <span class="n">ukfm</span><span class="o">.</span><span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span> <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
-        <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi</span><span class="p">,</span> <span class="n">phi_inv</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi_inv</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
-
+               <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi</span><span class="p">,</span> <span class="n">phi_inv</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi_inv</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
 <span class="c1"># set variables for recording estimates along the full trajectory</span>
 <span class="n">ukf_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">state0</span><span class="p">]</span>
 <span class="n">ukf_Ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
@@ -279,7 +270,7 @@ velocity.</p></li>
 </div>
 <div class="section" id="filtering">
 <h2>Filtering<a class="headerlink" href="#filtering" title="Permalink to this headline">¶</a></h2>
-<p>The UKF proceeds as a standard Kalman filter with a simple for loop.</p>
+<p>The UKF proceeds as a standard Kalman filter with a for loop.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># measurement iteration number</span>
 <span class="n">k</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
@@ -314,8 +305,8 @@ retrieval</em> proposed in <a class="reference internal" href="../bibliography.h
 <li><img alt="../_images/sphx_glr_pendulum_004.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_pendulum_004.png" />
 </li>
 </ul>
-<p>On the first plot, we observe that even if the state if unaccurately
-initialized, the filter estimates  the depth position (<span class="math notranslate nohighlight">\(x\)</span> axis) of the
+<p>On the first plot, we observe that even if the state is unaccurately
+initialized, the filter estimates the depth position (<span class="math notranslate nohighlight">\(x\)</span> axis) of the
 pendulum whereas only the <span class="math notranslate nohighlight">\(yz\)</span> position of the pendulum is observed.</p>
 <p>The second and third plots show how the filter converges to the true state.
 Finally, the last plot reveals the consistency of the filter, where the
@@ -324,11 +315,11 @@ interval confidence encompasses the error.</p>
 </div>
 <div class="section" id="conclusion">
 <h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
-<p>We have seen in this script how well works the UKF on parallelizable
-manifolds for estimating the position of a spherical pendulum where only two
-components of the pendulum are measured. The filter is accurate, robust to
-strong initial errors, and obtains consistent covariance estimates with the
-method proposed in <a class="reference internal" href="../bibliography.html#brossardcode2019" id="id4">[BBB19]</a>.</p>
+<p>This script shows how well works the UKF on parallelizable manifolds for
+estimating the position of a spherical pendulum where only two components of
+the pendulum are measured. The filter is accurate, robust to strong initial
+errors, and obtains consistent covariance estimates with the method proposed
+in <a class="reference internal" href="../bibliography.html#brossardcode2019" id="id4">[BBB19]</a>.</p>
 <p>You can now:</p>
 <ul class="simple">
 <li><p>address the same problem with another retraction, e.g. with right
@@ -336,7 +327,7 @@ multiplication.</p></li>
 <li><p>modify the measurement with 3D position.</p></li>
 <li><p>consider the mass of the system as unknown and estimate it.</p></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  7.094 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  6.806 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-pendulum-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/d7be76b2e393bd541cc48f9b56acbcc9/pendulum.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">pendulum.py</span></code></a></p>

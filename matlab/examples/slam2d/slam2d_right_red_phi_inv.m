@@ -9,6 +9,7 @@ function [xi] = slam2d_right_red_phi_inv(state, hat_state)
 %
 % Outputs:
 %    xi - uncertainty
+
 l = size(state.p_l, 2);
 chi = [state.Rot state.p state.p_l;
        zeros(l+1, 2) eye(l+1)];

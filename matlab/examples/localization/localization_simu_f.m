@@ -12,8 +12,8 @@ function [states, omegas] = localization_simu_f(T, odo_freq, ...
 %    radius - radius of the trajectory (m)
 %
 % Outputs:
-%    states - true state
-%    omegas - noisy input
+%    states - states
+%    omegas - noisy inputs
 
 % total number of timestamps
 N = T*odo_freq;

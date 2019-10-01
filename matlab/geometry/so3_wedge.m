@@ -4,10 +4,10 @@ function [Phi] = so3_wedge(phi)
 % Syntax:  [Phi] = so3_wedge(phi)
 %
 % Inputs:
-%    phi - vector of length 3
+%    phi - vector
 %
 % Outputs:
-%    Phi - matrix of size 3x3
+%    Phi - matrix
 
 Phi = [0, -phi(3), phi(2);
        phi(3), 0, -phi(1);

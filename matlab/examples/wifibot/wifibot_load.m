@@ -1,8 +1,15 @@
 function [states, omegas, ys, one_hot_ys, t] = wifibot_load(...,
     n_sequence, gps_freq, gps_noise_std)
 
-f_name = pwd + "/matlab/examples/data/wifibot" + ...
+cur_folder = pwd;
+cur_folder = cur_folder(end-5:end);
+if cur_folder == "matlab"
+   f_name = pwd + "/examples/data/wifibot" + ...
     num2str(n_sequence) + ".mat";
+else
+    f_name = pwd + "/matlab/examples/data/wifibot" + ...
+        num2str(n_sequence) + ".mat";
+end
 data = load(f_name);
 states = data.state;
 omegas = data.omega;

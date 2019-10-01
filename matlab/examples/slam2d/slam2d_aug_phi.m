@@ -9,6 +9,7 @@ function [new_state] = slam2d_aug_phi(state, xi)
 %
 % Outputs:
 %    new_state - state
+
 new_state.Rot = state.Rot * so2_exp(xi(1));
 new_state.p = state.p + xi(2:3);
 end

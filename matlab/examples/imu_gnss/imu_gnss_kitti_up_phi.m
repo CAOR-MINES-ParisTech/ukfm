@@ -1,5 +1,5 @@
 function [new_state] = imu_gnss_kitti_up_phi(state, xi)
-%imu_gnss_KITTI_UP_PHI retraction
+%IMU_GNSS_KITTI_UP_PHI retraction
 %
 % Syntax: [new_state] = imu_gnss_kitti_up_phi(state, xi)
 %

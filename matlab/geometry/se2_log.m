@@ -1,13 +1,13 @@
 function [xi] = se2_log(chi)
-%SE2_LOG logarithm map for SE(2)
+%SE2_LOG logarithm
 %
 % Syntax:  [xi] = se2_log(chi)
 %
 % Inputs:
-%    chi - state matrix
+%    chi - matrix
 %
 % Outputs:
-%    xi - vector of length 3
+%    xi - vector
 
 phi = so2_log(chi(1:2, 1:2));
 xi = [phi;

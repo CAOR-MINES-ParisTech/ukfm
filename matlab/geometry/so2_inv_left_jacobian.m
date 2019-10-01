@@ -1,5 +1,5 @@
 function [J] = so2_inv_left_jacobian(phi)
-%SO2_INV_LEFT_JACOBIAN inverse of Jacobian for SO(2)
+%SO2_INV_LEFT_JACOBIAN inverse of Jacobian
 %
 % Syntax:  [J] = so2_inv_left_jacobian(phi)
 %
@@ -7,7 +7,7 @@ function [J] = so2_inv_left_jacobian(phi)
 %    phi - scalar
 %
 % Outputs:
-%    J - Jacobian, matrix of size 2x2
+%    J - Jacobian
 
 TOL = 1e-9;
 

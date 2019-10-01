@@ -1,13 +1,13 @@
 function [chi] = se_k_3_exp(xi)
-%SE_K_3_EXP exponential map for SE_k(3)
+%SE_K_3_EXP exponential
 %
 % Syntax:  [chi] = se_k_3_exp(xi)
 %
 % Inputs:
-%    phi - vector of length 3*(k+1)
+%    phi - vector
 %
 % Outputs:
-%    chi - state matrix
+%    chi - matrix
 
 k = length(xi)/3 - 1;
 Xi = reshape(xi(4:end), 3, k);

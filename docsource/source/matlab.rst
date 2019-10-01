@@ -2,16 +2,13 @@
 
 Matlab
 ================================================================================
-
 We provide the equivalent Matlab code for designing UKF on (parallelizable)
 manifolds, which is wholly independent from the python code.
 
-
 Installation
 --------------------------------------------------------------------------------
-
-The Matlab code has been tested with version R2019a without required particular
-toolbox. To install:
+The Matlab code has been tested with version R2019a without requiring any
+particular toolbox. To install:
 
 1. Download the repo::
 
@@ -24,7 +21,6 @@ toolbox. To install:
 
 Get Started
 --------------------------------------------------------------------------------
-
 Follow the 2D robot localization example (tutorial): in the Matlab prompt
 execute::
 
@@ -32,16 +28,15 @@ execute::
 
 Usage
 --------------------------------------------------------------------------------
-
 In contrast to Python, the code is implemented without class and has only
 functions. 
 
-The file for designed an UKF are given in the ``ukfm`` folder and useful
+The file for designing an UKF are given in the ``ukfm`` folder and useful
 geometry (Lie groups) functions are provided in the ``geometry`` folder.
 
 We provide scripts for reproducing the examples and benchmarks respectively in
-the  ``examples`` and ``benchmarks``. Models functions are organized in suborder
-of example: for e.g. the 2D robot localization model, see in
+the  ``examples`` and ``benchmarks`` folders. Models functions are organized in
+suborder of the example folder: for e.g. the 2D robot localization model, see in
 ``examples/localization``. You can use the Matlab publish tool for better
 rendering.
 
@@ -51,8 +46,7 @@ respectively ``se3_exp`` and ``localization_f``.
 
 Examples
 --------------------------------------------------------------------------------
-
-The unscented Kalman Filter on parallelizable manifolds has been implemented on
+The unscented Kalman filter on parallelizable manifolds has been implemented on
 the following examples, from which you can obtain published scripts:
 
 -  `2D Robot Localization - Tutorial <matlab/main_localization.html>`_
@@ -65,7 +59,6 @@ the following examples, from which you can obtain published scripts:
 
 Benchmarks
 --------------------------------------------------------------------------------
-
 We simulate Monte-Carlo data and benchmark UKFs and EKFs based on different choices of uncertainty representation through accuracy and consistency metrics on the following benchmark:
 
 - `2D Robot Localization <matlab/benchmark_localization.html>`_

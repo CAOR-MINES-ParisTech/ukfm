@@ -6,14 +6,14 @@ function [ys, one_hot_ys] = localization_simu_h(states, T, odo_freq, ...
 %   gps_freq, gps_noise_std)
 %
 % Inputs.
-%    state - state, array of structure
+%    states - states
 %    T - time duration
 %    odo_freq - odometry frequency
 %    gps_freq - GPS frequency
 %    gps_noise_std - GPS noise standard deviation
 %
 % Outputs:
-%    sy - noisy measurement for the sequence, matrix. The k-th measurement
+%    ys - noisy measurement for the sequence, matrix. The k-th measurement
 %    is the k-th column. Do not confuse measurement number and timestamp
 %    one_hot_ys - one hot encoding to know where measurements happen
 

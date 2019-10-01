@@ -172,54 +172,48 @@
 <p>Goals of this script:</p>
 <ul class="simple">
 <li><p>implement different UKFs on the 2D robot localization example.</p></li>
-<li><p>design the Extended Kalman Filter (EKF) and the Invariant Extended
-Kalman Filter (IEKF) <a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id1">[BB17]</a> for the given problem.</p></li>
+<li><p>design the Extended Kalman Filter (EKF) and the Invariant Extended Kalman
+Filter (IEKF) <a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id1">[BB17]</a>.</p></li>
 <li><p>compare the different algorithms with Monte-Carlo simulations.</p></li>
 </ul>
 <p><em>We assume the reader is already familiar with the considered problem described
 in the tutorial.</em></p>
 <p>We previously designed an UKF with a standard uncertainty representation. An
 advantage of the versatility of the UKF is to speed up implementation, tests,
-and comparision UKF with different uncertainty representations. Indeed, for the
-given problem, three different UKFs emerge, defined respectively as:</p>
+and comparision of algorithms with different uncertainty representations.
+Indeed, for the given problem, three different UKFs emerge, defined respectively
+as:</p>
 <ol class="arabic simple">
-<li><p>The state is embedded in <span class="math notranslate nohighlight">\(SO(2) \times \mathbb{R}^2\)</span>, as in the
-example, where:</p>
+<li><p>The state is embedded in <span class="math notranslate nohighlight">\(SO(2) \times \mathbb{R}^2\)</span>, where:</p>
 <ul class="simple">
-<li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(2)\)</span> exponential map
-for orientation and the standard vector addition for robot position.</p></li>
+<li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(2)\)</span> exponential
+for orientation and the vector addition for position.</p></li>
 <li><p>the inverse retraction <span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SO(2)\)</span>
-logarithm for orientation and the standard vector subtraction for
-position.</p></li>
+logarithm for orientation and the vector subtraction for position.</p></li>
 </ul>
 </li>
 <li><p>The state is embedded in <span class="math notranslate nohighlight">\(SE(2)\)</span> with left multiplication, i.e.</p>
 <ul class="simple">
 <li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SE(2)\)</span> exponential,
-where the state multiplies on the left the retraction
+where the state multiplies on the left the uncertainty
 <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
 <li><p>the inverse retraction <span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SE(2)\)</span>
 logarithm.</p></li>
 <li><p>this left UKF on <span class="math notranslate nohighlight">\(SE(2)\)</span> corresponds to the Invariant Extended Kalman
-Filter (IEKF) recommended in <a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id2">[BB17]</a>. We have
-theoretical reason to choose this retraction.</p></li>
+Filter (IEKF) recommended in <a class="reference internal" href="../bibliography.html#barrauinvariant2017" id="id2">[BB17]</a>.</p></li>
 </ul>
 </li>
 <li><p>The state is embedded in <span class="math notranslate nohighlight">\(SE(2)\)</span> with right multiplication, i.e.</p>
 <ul class="simple">
 <li><p>the retraction <span class="math notranslate nohighlight">\(\varphi(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SE(2)\)</span> exponential,
-where the state multiplies on the right the retraction
+where the state multiplies on the right the uncertainty
 <span class="math notranslate nohighlight">\(\boldsymbol{\xi}\)</span>.</p></li>
 <li><p>the inverse retraction <span class="math notranslate nohighlight">\(\varphi^{-1}(.,.)\)</span> is the <span class="math notranslate nohighlight">\(SE(2)\)</span>
 logarithm.</p></li>
-<li><p>we do not dispose of reason to choose this retraction but test it as it is
-so simple.</p></li>
 </ul>
 </li>
 </ol>
-<p>We tests the different filters with the same noise parameter setting and on
-simulation with strong initial heading error. We will see how perform the
-filters compared to extended Kalman filters.</p>
+<p>We tests the filters on simulation with strong initial heading error.</p>
 <div class="section" id="import">
 <h2>Import<a class="headerlink" href="#import" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ukfm</span> <span class="k">import</span> <span class="n">SO2</span><span class="p">,</span> <span class="n">UKF</span><span class="p">,</span> <span class="n">EKF</span>
@@ -230,7 +224,7 @@ filters compared to extended Kalman filters.</p>
 <span class="n">ukfm</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">set_matplotlib_config</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>We compare the different filters on a large number of Monte-Carlo runs.</p>
+<p>We compare the filters on a large number of Monte-Carlo runs.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Monte-Carlo runs</span>
 <span class="n">N_mc</span> <span class="o">=</span> <span class="mi">100</span>
 </pre></div>
@@ -250,12 +244,10 @@ deviation</strong>, while the initial position is known.</p>
 <span class="n">odo_freq</span> <span class="o">=</span> <span class="mi">100</span>
 <span class="c1"># create the model</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">MODEL</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">odo_freq</span><span class="p">)</span>
-
 <span class="c1"># odometry noise standard deviation</span>
 <span class="n">odo_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.01</span><span class="p">,</span>  <span class="c1"># speed (v/m)</span>
                     <span class="mf">0.01</span><span class="p">,</span>  <span class="c1"># speed (v/m)</span>
                     <span class="mi">1</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span>  <span class="c1"># angular speed (rad/s)</span>
-
 <span class="c1"># GPS frequency (Hz)</span>
 <span class="n">gps_freq</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="c1"># GPS noise standard deviation (m)</span>
@@ -263,28 +255,25 @@ deviation</strong>, while the initial position is known.</p>
 <span class="c1"># radius of the circle trajectory (m)</span>
 <span class="n">radius</span> <span class="o">=</span> <span class="mi">5</span>
 <span class="c1"># initial heading error standard deviation</span>
-<span class="n">theta0_std</span> <span class="o">=</span> <span class="mi">45</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+<span class="n">theta0_std</span> <span class="o">=</span> <span class="mi">45</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="filter-design">
 <h2>Filter Design<a class="headerlink" href="#filter-design" title="Permalink to this headline">¶</a></h2>
-<p>Additionally to the three UKFs, we compare them to an Extended Kalman FIlter
-(EKF) and an Invariant EKF (IEKF). The EKF has the same uncertainty
-representation as the UKF with the retraction on <span class="math notranslate nohighlight">\(SO(2) \times
-\mathbb{R}^2\)</span>, whereas the IEKF has the same uncertainty representation as the
-UKF with the left retraction on <span class="math notranslate nohighlight">\(SE(2)\)</span>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># propagation noise matrix</span>
-<span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">odo_std</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-
-<span class="c1"># measurement noise matrix</span>
-<span class="n">R</span> <span class="o">=</span> <span class="n">gps_std</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-
+<p>The UKFs are compared to an Extended Kalman FIlter (EKF) and an Invariant EKF
+(IEKF). The EKF has the same uncertainty representation as the UKF with the
+retraction on <span class="math notranslate nohighlight">\(SO(2) \times \mathbb{R}^2\)</span>, whereas the IEKF has the same
+uncertainty representation as the UKF with the left retraction on
+<span class="math notranslate nohighlight">\(SE(2)\)</span>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># propagation noise covariance matrix</span>
+<span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">odo_std</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="c1"># measurement noise covariance matrix</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">gps_std</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="c1"># initial covariance matrix</span>
 <span class="n">P0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 <span class="c1"># we take into account initial heading error</span>
 <span class="n">P0</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">theta0_std</span> <span class="o">**</span> <span class="mi">2</span>
-
 <span class="c1"># sigma point parameter</span>
 <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">])</span>
 </pre></div>
@@ -311,71 +300,43 @@ evaluation (see Results).</p>
 <div class="section" id="monte-carlo-runs">
 <h2>Monte-Carlo Runs<a class="headerlink" href="#monte-carlo-runs" title="Permalink to this headline">¶</a></h2>
 <p>We run the Monte-Carlo through a for loop.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>We sample for each Monte-Carlo run an initial heading error from the true
-distribution in <span class="math notranslate nohighlight">\(\mathbf{P}_0\)</span>. This is the correct manner to compare
-the filters but requires more  Monte-Carlo samples than a fixed value.</p>
+distribution (<span class="math notranslate nohighlight">\(\mathbf{P}_0\)</span>). This requires many Monte-Carlo
+samples.</p>
+</div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">n_mc</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_mc</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Monte-Carlo iteration(s): &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">n_mc</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">N_mc</span><span class="p">))</span>
     <span class="c1"># simulation true trajectory</span>
     <span class="n">states</span><span class="p">,</span> <span class="n">omegas</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simu_f</span><span class="p">(</span><span class="n">odo_std</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
     <span class="c1"># simulate measurement</span>
     <span class="n">ys</span><span class="p">,</span> <span class="n">one_hot_ys</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simu_h</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">gps_freq</span><span class="p">,</span> <span class="n">gps_std</span><span class="p">)</span>
-
     <span class="c1"># initialize filter with inaccurate state</span>
     <span class="n">state0</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">STATE</span><span class="p">(</span>
         <span class="n">Rot</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Rot</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">SO2</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">theta0_std</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">))),</span>
-        <span class="n">p</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">p</span>
-    <span class="p">)</span>
-
+        <span class="n">p</span><span class="o">=</span><span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
     <span class="c1"># define the filters</span>
-    <span class="n">ukf</span> <span class="o">=</span> <span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span>
-              <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>
-              <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span>
-              <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
-              <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
-              <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
+    <span class="n">ukf</span> <span class="o">=</span> <span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span> <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
               <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi</span><span class="p">,</span>
               <span class="n">phi_inv</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi_inv</span><span class="p">,</span>
               <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
-
-    <span class="n">left_ukf</span> <span class="o">=</span> <span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span>
-                   <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>
-                   <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span>
-                   <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
-                   <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
-                   <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
+    <span class="n">left_ukf</span> <span class="o">=</span> <span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span> <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
                    <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">left_phi</span><span class="p">,</span>
                    <span class="n">phi_inv</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">left_phi_inv</span><span class="p">,</span>
                    <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
-
-    <span class="n">right_ukf</span> <span class="o">=</span> <span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span>
-                    <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>
-                    <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span>
-                    <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
-                    <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
-                    <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
+    <span class="n">right_ukf</span> <span class="o">=</span> <span class="n">UKF</span><span class="p">(</span><span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span> <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
                     <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">right_phi</span><span class="p">,</span>
                     <span class="n">phi_inv</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">right_phi_inv</span><span class="p">,</span>
                     <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
-
-    <span class="n">iekf</span> <span class="o">=</span> <span class="n">EKF</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
-               <span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span>
-               <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>  <span class="c1">#  correct for your situation</span>
+    <span class="n">iekf</span> <span class="o">=</span> <span class="n">EKF</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span> <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
                <span class="n">FG_ana</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">iekf_FG_ana</span><span class="p">,</span>
                <span class="n">H_ana</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">iekf_H_ana</span><span class="p">,</span>
-               <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
-               <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
                <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">left_phi</span><span class="p">)</span>
-
-    <span class="n">ekf</span> <span class="o">=</span> <span class="n">EKF</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
-              <span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span>
-              <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span>
+    <span class="n">ekf</span> <span class="o">=</span> <span class="n">EKF</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">state0</span><span class="o">=</span><span class="n">state0</span><span class="p">,</span> <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
               <span class="n">FG_ana</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">ekf_FG_ana</span><span class="p">,</span>
               <span class="n">H_ana</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">ekf_H_ana</span><span class="p">,</span>
-              <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span>
-              <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span>
               <span class="n">phi</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">phi</span><span class="p">)</span>
-
     <span class="c1"># variables for recording estimates of the Monte-Carlo run</span>
     <span class="n">ukf_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">state0</span><span class="p">]</span>
     <span class="n">left_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">state0</span><span class="p">]</span>
@@ -413,7 +374,6 @@ the filters but requires more  Monte-Carlo samples than a fixed value.</p>
             <span class="n">iekf</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ys</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
             <span class="n">ekf</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ys</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
             <span class="n">k</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span>
-
         <span class="n">ukf_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ukf</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
         <span class="n">left_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">left_ukf</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
         <span class="n">right_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">right_ukf</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
@@ -558,11 +518,10 @@ Monte-Carlo iteration(s): 100/100
 </div>
 <div class="section" id="results">
 <h2>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
-<p>Once simulations are done, we compare the algorithms. Let us first visualize
-the results in term of estimated robot trajectory (for the last run) and the
-errors w.r.t. orientation and position (averaged over Monte-Carlo). As
-simulations have random process, the trajectory plot just gives us an
-indication but not a proof of filter performances.</p>
+<p>We first visualize the robot trajectory (for the last run) and the errors
+w.r.t. orientation and position (averaged over Monte-Carlo). As simulations
+have random process, the trajectory plot just gives us an indication but not a
+proof of performances.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ukf_e</span><span class="p">,</span> <span class="n">left_ukf_e</span><span class="p">,</span> <span class="n">right_ukf_e</span><span class="p">,</span> <span class="n">iekf_e</span><span class="p">,</span> <span class="n">ekf_e</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">benchmark_plot</span><span class="p">(</span>
     <span class="n">ukf_err</span><span class="p">,</span> <span class="n">left_ukf_err</span><span class="p">,</span> <span class="n">right_ukf_err</span><span class="p">,</span> <span class="n">iekf_err</span><span class="p">,</span> <span class="n">ekf_err</span><span class="p">,</span> <span class="n">ps</span><span class="p">,</span> <span class="n">ukf_ps</span><span class="p">,</span>
     <span class="n">left_ukf_ps</span><span class="p">,</span> <span class="n">right_ukf_ps</span><span class="p">,</span> <span class="n">ekf_ps</span><span class="p">,</span> <span class="n">iekf_ps</span><span class="p">)</span>
@@ -576,11 +535,10 @@ indication but not a proof of filter performances.</p>
 <li><img alt="../_images/sphx_glr_localization_003.png" class="sphx-glr-multi-img" src="../_images/sphx_glr_localization_003.png" />
 </li>
 </ul>
-<p>A statement seem obvious, we have two groups of filters: group 1) consists of
-EKF and <span class="math notranslate nohighlight">\(SO(2) \times \mathbb{R}^2\)</span> UKF; and group 2) have IEKF, left
-<span class="math notranslate nohighlight">\(SE(2)\)</span> UKF and right <span class="math notranslate nohighlight">\(SE(2)\)</span> UKF (the curves of these filters are
-superposed). The second group is visibly highly better regarding position
-estimation.</p>
+<p>Two groups of filters emerge: group 1) consists of EKF and <span class="math notranslate nohighlight">\(SO(2) \times
+\mathbb{R}^2\)</span> UKF; and group 2) have IEKF, left <span class="math notranslate nohighlight">\(SE(2)\)</span> UKF and right
+<span class="math notranslate nohighlight">\(SE(2)\)</span> UKF (the curves of these filters are superposed). The second
+group is visibly highly better regarding position estimation.</p>
 <p>More statictical is to compute the results averaged over all the Monte-Carlo.
 Let us compute the Root Mean Squared Error (RMSE) for each method both for the
 orientation and the position.</p>
@@ -589,21 +547,21 @@ orientation and the position.</p>
 </div>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Root Mean Square Error w.r.t. orientation (deg)
-    -SO(2) x R^2 UKF: 14.36
-    -left SE(2) UKF : 13.41
-    -right SE(2) UKF: 13.41
-    -EKF            : 14.37
-    -IEKF           : 13.41
+    -SO(2) x R^2 UKF: 11.98
+    -left SE(2) UKF : 11.35
+    -right SE(2) UKF: 11.35
+    -EKF            : 12.00
+    -IEKF           : 11.35
 
 Root Mean Square Error w.r.t. position (m)
-    -SO(2) x R^2 UKF: 1.04
-    -left SE(2) UKF : 0.47
-    -right SE(2) UKF: 0.47
-    -EKF            : 1.05
-    -IEKF           : 0.47
+    -SO(2) x R^2 UKF: 0.75
+    -left SE(2) UKF : 0.45
+    -right SE(2) UKF: 0.45
+    -EKF            : 0.76
+    -IEKF           : 0.45
 </pre></div>
 </div>
-<p>They confirm the the results on the plot.</p>
+<p>They confirm the results on the plot.</p>
 <p>A consistency metric is the Normalized Estimation Error Squared (NEES).
 Classical criteria used to evaluate the performance of an estimation method,
 like the RMSE, do not inform about consistency as they do not take into
@@ -622,35 +580,29 @@ issue: the actual uncertainty is higher than the computed uncertainty.</p>
 </ul>
 <p class="sphx-glr-script-out">Out:</p>
 <div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Normalized Estimation Error Squared (NEES) w.r.t. orientation
-   -SO(2) x R^2 UKF:  10.06
-   -left SE(2) UKF :  1.18
-   -right SE(2) UKF:  1.18
-   -EKF            :  11.28
-   -IEKF           :  1.26
+   -SO(2) x R^2 UKF:  4.40
+    UKF :  0.94
+   -right SE(2) UKF:  0.94
+   -EKF            :  4.91
+   -IEKF           :  1.00
 
 Normalized Estimation Error Squared (NEES) w.r.t. position
-   -SO(2) x R^2 UKF:  121.15
-   -left SE(2) UKF :  1.00
-   -right SE(2) UKF:  1.02
-   -EKF            :  679.98
-   -IEKF           :  2.03
+   -SO(2) x R^2 UKF:  49.00
+   -left SE(2) UKF :  0.99
+   -right SE(2) UKF:  1.01
+   -EKF            :  275.28
+   -IEKF           :  2.02
 </pre></div>
 </div>
 <p>As the filters are initialized with perfect position and zero covariance
 w.r.t. position, we compute NEES only after 20 s for avoiding numerical issues
 (during the first secondes of the trajectory the covariance matrix
 <span class="math notranslate nohighlight">\(\mathbf{P}_n\)</span> is very low so inverting it leads to insignificantly high
-numbers). Results are clear, IEKF and <span class="math notranslate nohighlight">\(SE(2)\)</span> are the more consistent.
-For the considered example, it seems that the UKFs are slightly less
-optimistic that their EKF counterparts.</p>
-<p><strong>Which filter is the best ?</strong> We expected it is the left UKF as it takes
-advantage of both theory of IEKF uncertainty representation and better
-non-linearity noise incorporation of UKF compared to (I)EKF. Depending on
-which source of error (sensor noise, initial condition) is the most important,
-it can lead to different results. Indeed, in this setting, <strong>left IEKF</strong>,
-<strong>right UKF</strong> and <strong>IEKF</strong> filters obtain similar accurate results, that
-clearly outperform <span class="math notranslate nohighlight">\(SO(2) \times \mathbb{R}^2\)</span> UKF, and one could expect
-encounter situations where the left UKF outperforms the right UKF.</p>
+numbers). Results are clear, the <span class="math notranslate nohighlight">\(SE(2)\)</span> UKF are the more consistent.</p>
+<p><strong>Which filter is the best ?</strong> In this setting, the <strong>left UKF</strong>, the
+<strong>right UKF</strong> and the IEKF filters obtain similar accurate results, that
+clearly outperform <span class="math notranslate nohighlight">\(SO(2) \times \mathbb{R}^2\)</span> UKF, and EKF, whereas the
+two UKFs are the more consistent.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>We have set all the filters with the same “true” noise covariance
@@ -665,18 +617,16 @@ groups of filters emerge: the <span class="math notranslate nohighlight">\(SO(2)
 EKF represent the first group; and the left <span class="math notranslate nohighlight">\(SE(2)\)</span> UKF, the right
 <span class="math notranslate nohighlight">\(SE(2)\)</span> UKF and the IEKF constitute the second group. For the considered
 set of parameters, it is evident that embedded the state in <span class="math notranslate nohighlight">\(SE(2)\)</span> is
-advantageous for state estimation. Choosing then between left UKF, right UKF
-or IEKF has negligible effect (with the considered simulation setting).</p>
+advantageous for state estimation.</p>
 <p>You can now:</p>
 <ul class="simple">
 <li><p>compare the filters in different scenarios. Indeed, UKF and their (I)EKF
 counterparts may obtain different results when noise is e.g. inflated or
-with different initial conditions or trajectory.</p></li>
-<li><p>testing the filters in a slightly different model (e.g. with orientation
+with different initial conditions or different trajectory.</p></li>
+<li><p>test the filters in a slightly different model (e.g. with orientation
 measurement), which is straightforward for the UKFs.</p></li>
-<li><p>address the problem of 3D attitude estimations, see the Examples section.</p></li>
 </ul>
-<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 19 minutes  57.737 seconds)</p>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 20 minutes  8.624 seconds)</p>
 <div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-benchmark-localization-py">
 <div class="sphx-glr-download docutils container">
 <p><a class="reference download internal" download="" href="../_downloads/70500c6eec4804e55fffd3be34094986/localization.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">localization.py</span></code></a></p>

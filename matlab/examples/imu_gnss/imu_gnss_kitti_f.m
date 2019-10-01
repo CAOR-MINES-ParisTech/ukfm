@@ -1,11 +1,11 @@
 function [new_state] = imu_gnss_kitti_f(state, omega, w, dt)
-%imu_gnss_KITTI_F Propagate state
+%IMU_GNSS_KITTI_F Propagate state
 %
 % Syntax:  [new_state] = imu_gnss_kitti_f(state, omega, w, dt)
 %
 % Inputs:
 %    state - state
-%    omega - input,
+%    omega - input
 %    w - input noise
 %    dt - integration step
 %

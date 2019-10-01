@@ -1,6 +1,6 @@
 function [] = inertial_navigation_results_plot(ukf_states, ukf_Ps, ...
     states, dt)
-%INERTIAL_NAVIGATION_RESULTS_PLOT plot
+%INERTIAL_NAVIGATION_RESULTS_PLOT
 %
 % Syntax: [] = inertial_navigation_results_plot(ukf_states, ukf_Ps, ...
 %       states, dt)
@@ -8,7 +8,8 @@ function [] = inertial_navigation_results_plot(ukf_states, ukf_Ps, ...
 set(groot,'defaulttextinterprete','latex');  
 set(groot, 'defaultAxesTickLabelInterprete','latex');  
 set(groot, 'defaultLegendInterprete','latex');
-
+cur_folder = pwd;
+cur_folder = cur_folder(end-5:end);
 % landmarks
 ldk = [[0; 2; 2], [-2; -2; -2], [2; -2; -2]];
 
@@ -24,19 +25,16 @@ ukf_state_table = struct2table(ukf_states);
 ukf_Rots = ukf_state_table.Rot;
 ukf_ps = cell2mat(ukf_state_table.p')';
 
-fig = figure;
+fig1 = figure;
 hold on;
 grid on;
-title('Position')
+title('Horizontal vehicle position')
 xlabel('$x$ (m)')
 ylabel('$y$ (m)')
-zlabel('$z$ (m)')
-scatter3(ldk(1, :), ldk(2, :), ldk(3, :), 'r');
-plot3(ps(:, 1), ps(:, 2), ps(:, 3), 'k');
-plot3(ukf_ps(:, 1), ukf_ps(:, 2), ukf_ps(:, 3), 'b');
-legend('features', 'true trajectory', 'UKF');
-print(fig, 'matlab/examples/html/main_inertial_navigation_01', ...
-    '-dpng', '-r600')
+scatter(ldk(1, :), ldk(2, :), 'r');
+plot(ps(:, 1), ps(:, 2), 'k', 'LineWidth', 1.5);
+plot(ukf_ps(:, 1), ukf_ps(:, 2), 'b');
+legend('landmarks', 'true trajectory', 'UKF');
 
 err_orientation = zeros(N, 1);
 for n = 1:N
@@ -44,33 +42,36 @@ for n = 1:N
 end
 three_sigma_orientation = 3*sqrt(ukf_Ps(:, 1, 1).^2 + ...
     ukf_Ps(:, 2, 2).^2 + ukf_Ps(:, 3, 3).^2);
-fig = figure;
+fig2 = figure;
 hold on;
 grid on;
 title('Attitude error (deg)')
 xlabel('$t$ (s)')
 ylabel('error (deg)')
-plot(t, 180/pi*err_orientation, 'b');
+plot(t, 180/pi*err_orientation, 'b', 'LineWidth', 1.5);
 plot(t, 180/pi*three_sigma_orientation, '--b');
-plot(t, -180/pi*three_sigma_orientation, '--b');
 legend('UKF', '$3\sigma$ UKF');
-print(fig, 'matlab/examples/html/main_inertial_navigation_02', ...
-    '-dpng', '-r600')
 
 err_p = sqrt(sum((ps-ukf_ps).^2, 2));
 three_sigma_p = 3*sqrt(ukf_Ps(:, 7, 7).^2 + ukf_Ps(:, 8, 8).^2 ...
     + ukf_Ps(:, 9, 9).^2);
-fig = figure;
+fig3 = figure;
 hold on;
 grid on;
 title('Position error (m)')
 xlabel('$t$ (s)')
 ylabel('error (m)')
-plot(t, err_p, 'b');
+plot(t, err_p, 'b', 'LineWidth', 1.5);
 plot(t, three_sigma_p, '--b');
-plot(t, -three_sigma_p, '--b');
 legend('UKF', '$3\sigma$ UKF');
-print(fig, 'matlab/examples/html/main_inertial_navigation_03', ...
-    '-dpng', '-r600')
+
+if cur_folder == "matlab"
+    print(fig1, 'examples/html/figures/main_inertial_navigation_01', ...
+        '-dpng', '-r600')
+    print(fig2, 'examples/html/figures/main_inertial_navigation_02', ...
+        '-dpng', '-r600')
+    print(fig3, 'examples/html/figures/main_inertial_navigation_03', ...
+        '-dpng', '-r600')
+end
 end
 

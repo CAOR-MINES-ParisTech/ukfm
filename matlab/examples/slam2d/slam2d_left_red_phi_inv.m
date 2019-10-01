@@ -15,6 +15,5 @@ chi = [state.Rot state.p state.p_l;
        zeros(l+1, 2) eye(l+1)];
 hat_chi = [hat_state.Rot hat_state.p hat_state.p_l;
        zeros(l+1, 2) eye(l+1)];   
-
 xi = se_k_2_log(se_k_2_inv(chi) * hat_chi);
 end

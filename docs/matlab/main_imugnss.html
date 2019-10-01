@@ -1,0 +1,317 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>IMU-GNSS Sensor-Fusion on the KITTI Dataset</title><meta name="generator" content="MATLAB 9.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-09-30"><meta name="DC.source" content="main_imugnss.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>IMU-GNSS Sensor-Fusion on the KITTI Dataset</h1><!--introduction--><p>Goals of this script:</p><div><ul><li>apply the UKF for estimating the 3D pose, velocity and sensor biases of a   vehicle on real data.</li><li>efficiently propagate the filter when one part of the Jacobian is already   known.</li><li>efficiently update the system for GNSS position.</li></ul></div><p><i>We assume the reader is already familiar with the approach described in the tutorial and in the 2D SLAM example.</i></p><p>This script proposes an UKF to estimate the 3D attitude, the velocity, and the position of a rigid body in space from inertial sensors and position measurement.</p><p>We use the KITTI data that can be found in the <a href="`iSAM">repo https://github.com/borglab/gtsam/blob/develop/matlab/gtsam_examples/IMUKittiExampleGNSS.m</a> (examples folder).</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Initialization</a></li><li><a href="#2">Model and Data</a></li><li><a href="#4">Filter Design and Initialization</a></li><li><a href="#8">Filtering</a></li><li><a href="#9">Results</a></li><li><a href="#11">Conclusion</a></li></ul></div><h2 id="1">Initialization</h2><p>Start by cleaning the workspace.</p><pre class="codeinput">clear <span class="string">all</span>;
+close <span class="string">all</span>;
+</pre><h2 id="2">Model and Data</h2><pre class="codeinput"><span class="comment">% observation frequency (Hz)</span>
+gps_freq = 1;
+<span class="comment">% load data</span>
+[omegas, ys, one_hot_ys, t] = imu_gnss_kitti_load(gps_freq);
+<span class="comment">% IMU noise standard deviation (noise is isotropic)</span>
+imu_noise_std = [0.01;    <span class="comment">% gyro (rad/s)</span>
+                0.05;     <span class="comment">% accelerometer (m/s^2)</span>
+                0.000001; <span class="comment">% gyro bias</span>
+                0.0001];  <span class="comment">% accelerometer bias</span>
+<span class="comment">% gps noise standard deviation (m)</span>
+gps_noise_std = 0.05;
+<span class="comment">% total number of timestamps</span>
+N = length(one_hot_ys);
+</pre><p>The state and the input contain the following variables:</p><pre class="language-matlab">states(n).Rot     <span class="comment">% 3d orientation (matrix)</span>
+states(n).v       <span class="comment">% 3d velocity</span>
+states(n).p       <span class="comment">% 3d position</span>
+states(n).b_gyro  <span class="comment">% gyro bias</span>
+states(n).b_acc   <span class="comment">% accelerometer bias</span>
+omega(n).gyro     <span class="comment">% vehicle angular velocities</span>
+omega(n).acc      <span class="comment">% vehicle specific forces</span>
+</pre><p>A measurement ys(:, k) contains GNSS (position) measurement</p><h2 id="4">Filter Design and Initialization</h2><p>We now design the UKF on parallelizable manifolds. This script embeds the state in <span class="MathJax_Preview"><img src="main_imugnss_eq15393208097931868164.png" alt="$SO(3) \times R^{12}$"></span><script type="math/tex">SO(3) \times R^{12}</script>, such that:</p><div><ul><li>the retraction <span class="MathJax_Preview"><img src="main_imugnss_eq17465938644384765962.png" alt="$\varphi(.,.)$"></span><script type="math/tex">\varphi(.,.)</script> is the <span class="MathJax_Preview"><img src="main_imugnss_eq17232210486186811875.png" alt="$SO(3)$"></span><script type="math/tex">SO(3)</script> exponential for orientation,   and the vector addition for the remaining part of the state.</li><li>the inverse retraction <span class="MathJax_Preview"><img src="main_imugnss_eq14481068494169685032.png" alt="$\varphi^{-1}_.(.)$"></span><script type="math/tex">\varphi^{-1}_.(.)</script> is the <span class="MathJax_Preview"><img src="main_imugnss_eq17232210486186811875.png" alt="$SO(3)$"></span><script type="math/tex">SO(3)</script> logarithm for   orientation and the vector subtraction for the remaining part of the state.</li></ul></div><p>Remaining parameter setting is standard.</p><pre class="codeinput"><span class="comment">% propagation noise covariance matrix</span>
+ukf_Q = blkdiag(imu_noise_std(1)^2*eye(3), imu_noise_std(2)^2*eye(3), <span class="keyword">...</span>
+    imu_noise_std(3)^2*eye(3), imu_noise_std(4)^2*eye(3));
+<span class="comment">% measurement noise covariance matrix</span>
+R = gps_noise_std.^2 * eye(3);
+<span class="comment">% initial uncertainty matrix</span>
+ukf_P0 = blkdiag(0.01*eye(3), eye(3), eye(3), 0.001*eye(3), 0.001*eye(3));
+<span class="comment">% sigma point parameters</span>
+ukf_alpha = [1e-3, 1e-3, 1e-3];
+</pre><p>We use the UKF that is able to infer Jacobian to speed up the update step, see the 2D SLAM example.</p><pre class="codeinput"><span class="comment">% define UKF functions</span>
+f = @imu_gnss_kitti_f;
+h = @imu_gnss_kitti_h;
+<span class="comment">% retraction used during update</span>
+up_phi = @imu_gnss_kitti_up_phi;
+phi = @imu_gnss_kitti_phi;
+phi_inv = @imu_gnss_kitti_phi_inv;
+<span class="comment">% reduced weights during propagation</span>
+red_weights = ukf_set_weight(15, 3, ukf_alpha);
+red_idxs = 1:9; <span class="comment">% indices corresponding to the robot state in P</span>
+<span class="comment">% weights during update</span>
+weights = ukf_set_weight(3, 3, ukf_alpha);
+cholQ = chol(ukf_Q);
+up_idxs = 7:9;
+</pre><p>We initialize the state at the origin with zeros biases. The initial covariance is non-null as the state is not perfectly known.</p><pre class="codeinput"><span class="comment">% initial state</span>
+ukf_state.Rot = eye(3);
+ukf_state.v = zeros(3, 1);
+ukf_state.p = ys(:, 2); <span class="comment">% first GPS measurement</span>
+ukf_state.b_gyro = zeros(3, 1);
+ukf_state.b_acc = zeros(3, 1);
+ukf_P = ukf_P0;
+
+<span class="comment">% set variables for recording estimates along the full trajectory</span>
+ukf_states = ukf_state;
+ukf_Ps = zeros(N, 15, 15);
+ukf_Ps(1, :, :) = ukf_P;
+</pre><p>As the noise affecting the dynamic of the biases is trivial (it is the identity), we set our UKF with a reduced propagation noise covariance, and manually set the remaining part of the Jacobian.</p><h2 id="8">Filtering</h2><p>The UKF proceeds as a standard Kalman filter with a for loop.</p><pre class="codeinput"><span class="comment">% measurement iteration number</span>
+k = 2;
+n0 = 100;
+<span class="keyword">for</span> n = n0:N
+    <span class="comment">% propagation</span>
+    dt = t(n) - t(n-1);
+    [ukf_state, ukf_P] = ukf_propagation(ukf_state, ukf_P, omegas(n-1), <span class="keyword">...</span>
+        f, dt, phi, phi_inv, cholQ(1:6, 1:6), red_weights);
+    <span class="comment">% add bias covariance</span>
+    ukf_P(10:15, 10:15) = ukf_P(10:15, 10:15) + ukf_Q(7:12, 7:12)*dt^2;
+    <span class="comment">% update only if a measurement is received</span>
+    <span class="keyword">if</span> one_hot_ys(n) == 1
+       [H, res] = ukf_jacobian_update(ukf_state, ukf_P, ys(:, k), h, <span class="keyword">...</span>
+             up_phi, weights, up_idxs);
+        <span class="comment">% update state and covariance with Kalman update</span>
+        [ukf_state, ukf_P] = kf_update(ukf_state, ukf_P, H, res,  R, phi);
+        k = k + 1;
+    <span class="keyword">end</span>
+    <span class="comment">% save estimates</span>
+    ukf_states(n) = ukf_state;
+    ukf_Ps(n, :, :) = ukf_P;
+<span class="keyword">end</span>
+</pre><h2 id="9">Results</h2><p>We plot the estimated trajectory.</p><pre class="codeinput">imu_gnss_kitti_results_plot(ukf_states, ys);
+</pre><img vspace="5" height="400" hspace="5" src="main_imugnss_01.png" alt=""> <p>Results are coherent with the GNSS. As the GNSS is used in the filter, it makes no sense to compare the filter outputs to the same measurement.</p><h2 id="11">Conclusion</h2><p>This script implements an UKF for sensor-fusion of an IMU with GNSS. The UKF is efficiently implemented, as some part of the Jacobian are known and not computed. Results are satisfying.</p><p>You can now:</p><div><ul><li>increase the difficulties of the example by reduced the GNSS frequency or   adding noise to position measurements.</li><li>implement the UKF with different uncertainty representations, as viewing the   state as an element <span class="MathJax_Preview"><img src="main_imugnss_eq11494579208501209921.png" alt="$\chi \in SE_2(3) \times R^6$"></span><script type="math/tex">\chi \in SE_2(3) \times R^6</script>. We yet provide   corresponding retractions and inverse retractions.</li></ul></div><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2019a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% IMU-GNSS Sensor-Fusion on the KITTI Dataset
+% 
+% Goals of this script:
+% 
+% * apply the UKF for estimating the 3D pose, velocity and sensor biases of a
+%   vehicle on real data.
+% * efficiently propagate the filter when one part of the Jacobian is already
+%   known.
+% * efficiently update the system for GNSS position.
+% 
+% _We assume the reader is already familiar with the approach described in the
+% tutorial and in the 2D SLAM example._
+% 
+% This script proposes an UKF to estimate the 3D attitude, the velocity, and the
+% position of a rigid body in space from inertial sensors and position
+% measurement.
+% 
+% We use the KITTI data that can be found in the <`iSAM repo
+% https://github.com/borglab/gtsam/blob/develop/matlab/gtsam_examples/IMUKittiExampleGNSS.m>
+% (examples folder).
+
+%% Initialization
+% Start by cleaning the workspace.
+
+clear all;
+close all;
+
+%% Model and Data
+
+% observation frequency (Hz)
+gps_freq = 1;
+% load data
+[omegas, ys, one_hot_ys, t] = imu_gnss_kitti_load(gps_freq);
+% IMU noise standard deviation (noise is isotropic)
+imu_noise_std = [0.01;    % gyro (rad/s)
+                0.05;     % accelerometer (m/s^2)
+                0.000001; % gyro bias
+                0.0001];  % accelerometer bias
+% gps noise standard deviation (m)
+gps_noise_std = 0.05;
+% total number of timestamps
+N = length(one_hot_ys);
+
+%%
+% The state and the input contain the following variables:
+%
+%   states(n).Rot     % 3d orientation (matrix)
+%   states(n).v       % 3d velocity
+%   states(n).p       % 3d position
+%   states(n).b_gyro  % gyro bias
+%   states(n).b_acc   % accelerometer bias
+%   omega(n).gyro     % vehicle angular velocities 
+%   omega(n).acc      % vehicle specific forces
+%
+% A measurement ys(:, k) contains GNSS (position) measurement
+
+%% Filter Design and Initialization
+% We now design the UKF on parallelizable manifolds. This script embeds the
+% state in $SO(3) \times R^{12}$, such that:
+%
+% * the retraction $\varphi(.,.)$ is the $SO(3)$ exponential for orientation, 
+%   and the vector addition for the remaining part of the state.
+% * the inverse retraction $\varphi^{-1}_.(.)$ is the $SO(3)$ logarithm for
+%   orientation and the vector subtraction for the remaining part of the state.
+%
+% Remaining parameter setting is standard.
+
+% propagation noise covariance matrix
+ukf_Q = blkdiag(imu_noise_std(1)^2*eye(3), imu_noise_std(2)^2*eye(3), ...
+    imu_noise_std(3)^2*eye(3), imu_noise_std(4)^2*eye(3));
+% measurement noise covariance matrix
+R = gps_noise_std.^2 * eye(3);
+% initial uncertainty matrix
+ukf_P0 = blkdiag(0.01*eye(3), eye(3), eye(3), 0.001*eye(3), 0.001*eye(3));
+% sigma point parameters
+ukf_alpha = [1e-3, 1e-3, 1e-3];
+
+%%
+% We use the UKF that is able to infer Jacobian to speed up the update step, see
+% the 2D SLAM example.
+
+% define UKF functions
+f = @imu_gnss_kitti_f;
+h = @imu_gnss_kitti_h;
+% retraction used during update
+up_phi = @imu_gnss_kitti_up_phi;
+phi = @imu_gnss_kitti_phi;
+phi_inv = @imu_gnss_kitti_phi_inv;
+% reduced weights during propagation
+red_weights = ukf_set_weight(15, 3, ukf_alpha);
+red_idxs = 1:9; % indices corresponding to the robot state in P
+% weights during update
+weights = ukf_set_weight(3, 3, ukf_alpha);
+cholQ = chol(ukf_Q);
+up_idxs = 7:9;
+
+%%
+% We initialize the state at the origin with zeros biases. The initial
+% covariance is non-null as the state is not perfectly known.
+
+% initial state
+ukf_state.Rot = eye(3);
+ukf_state.v = zeros(3, 1);
+ukf_state.p = ys(:, 2); % first GPS measurement
+ukf_state.b_gyro = zeros(3, 1);
+ukf_state.b_acc = zeros(3, 1);
+ukf_P = ukf_P0;
+
+% set variables for recording estimates along the full trajectory
+ukf_states = ukf_state;
+ukf_Ps = zeros(N, 15, 15);
+ukf_Ps(1, :, :) = ukf_P;
+
+%%
+% As the noise affecting the dynamic of the biases is trivial (it is the
+% identity), we set our UKF with a reduced propagation noise covariance, and
+% manually set the remaining part of the Jacobian.
+
+%% Filtering
+% The UKF proceeds as a standard Kalman filter with a for loop.
+
+% measurement iteration number
+k = 2;
+n0 = 100;
+for n = n0:N
+    % propagation
+    dt = t(n) - t(n-1);
+    [ukf_state, ukf_P] = ukf_propagation(ukf_state, ukf_P, omegas(n-1), ...
+        f, dt, phi, phi_inv, cholQ(1:6, 1:6), red_weights);
+    % add bias covariance
+    ukf_P(10:15, 10:15) = ukf_P(10:15, 10:15) + ukf_Q(7:12, 7:12)*dt^2;
+    % update only if a measurement is received
+    if one_hot_ys(n) == 1
+       [H, res] = ukf_jacobian_update(ukf_state, ukf_P, ys(:, k), h, ...
+             up_phi, weights, up_idxs);
+        % update state and covariance with Kalman update
+        [ukf_state, ukf_P] = kf_update(ukf_state, ukf_P, H, res,  R, phi);
+        k = k + 1;
+    end
+    % save estimates
+    ukf_states(n) = ukf_state;
+    ukf_Ps(n, :, :) = ukf_P;
+end
+
+%% Results
+% We plot the estimated trajectory.
+imu_gnss_kitti_results_plot(ukf_states, ys);
+
+%%
+% Results are coherent with the GNSS. As the GNSS is used in the filter, it
+% makes no sense to compare the filter outputs to the same measurement.
+
+%% Conclusion
+% This script implements an UKF for sensor-fusion of an IMU with GNSS. The UKF
+% is efficiently implemented, as some part of the Jacobian are known and not
+% computed. Results are satisfying.
+%
+% You can now:
+%
+% * increase the difficulties of the example by reduced the GNSS frequency or
+%   adding noise to position measurements.
+% * implement the UKF with different uncertainty representations, as viewing the
+%   state as an element $\chi \in SE_2(3) \times R^6$. We yet provide 
+%   corresponding retractions and inverse retractions.
+
+##### SOURCE END #####
+--></body></html>

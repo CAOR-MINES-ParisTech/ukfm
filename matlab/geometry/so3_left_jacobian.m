@@ -1,13 +1,13 @@
 function [J] = so3_left_jacobian(phi)
-%SO3_LEFT_JACOBIAN Jacobian for SO(3)
+%SO3_LEFT_JACOBIAN Jacobian
 %
 % Syntax:  [J] = so3_left_jacobian(phi)
 %
 % Inputs:
-%    phi - vector of length 3
+%    phi - vector
 %
 % Outputs:
-%    J - Jacobian, matrix of size 3x3
+%    J - Jacobian
 
 TOL = 1e-9;
 

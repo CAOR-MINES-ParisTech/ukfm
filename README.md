@@ -58,7 +58,7 @@ parallelizable manifolds has been implemented.
 - 3D Attitude estimation with an Inertial Measurement Unit (IMU) equipped with
   gyros, accelerometers and magnetometers.
 
--  3D Inertial navigation on flat Earth with observations of known landmarks.
+-  3D inertial navigation on flat Earth with observations of known landmarks.
 
 -  2D Simultaneous Localization And Mapping (SLAM).
 

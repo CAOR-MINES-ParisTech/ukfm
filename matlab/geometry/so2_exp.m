@@ -1,5 +1,5 @@
 function [Rot] = so2_exp(phi)
-%SO2_EXP exponential map for SO(2)
+%SO2_EXP exponential
 %
 % Syntax:  [Rot] = so2_exp(phi)
 %

@@ -1,15 +1,13 @@
 Unscented Kalman Filtering on (Parallelizable) Manifolds
 ================================================================================
-
 About
 --------------------------------------------------------------------------------
-
-**UKF-M**, for Unscented Kalman Filtering on (parallelizable) Manifolds, is a
-novel methodology for implementing unscented Kalman filter both  on manifold and
-Lie groups. Beyond *filtering performances*, the main interests of the approach
-are its *versatility*, as the method applies to numerous state estimation
-problems, and its *simplicity of implementation* for practitioners not being
-necessarily familiar with manifolds and Lie groups.
+**UKF-M**, for Unscented Kalman Filtering on (Parallelizable) Manifolds, is a
+novel methodology for implementing unscented Kalman filters both  on manifolds
+and Lie groups. Beyond *filtering performances*, the main advantages of the
+approach are its *versatility*, as the method applies to numerous state
+estimation problems, and its *simplicity of implementation* for practitioners
+which are not necessarily familiar with manifolds and Lie groups.
 
 This repo contains two independent Python and Matlab implementations - we
 recommend Python - for quickly implementing and testing the approach. If you use
@@ -39,20 +37,17 @@ this project for your research, please cite:
    license
    bibliography
 
-
-
 Download
 --------------------------------------------------------------------------------
-The repo contains tutorials, documentation and that can be downloaded from
+The repo contains tutorials, documentation and can be downloaded from
 https://github.com/CAOR-MINES-ParisTech/ukfm.
 
-The paper *A Code for Unscented Kalman Filtering on Manifolds (UKF-M)* related
-to this code is available at this `url 
+The paper *A Code for Unscented Kalman Filtering on Manifolds (UKF-M)*
+related to this code is available at this `url
 <https://cloud.mines-paristech.fr/index.php/s/uUjOhxaKp4v9yJT/download>`_. 
 
 Getting Started
 --------------------------------------------------------------------------------
-
 1. Download the latest source code from `GitHub
 <https://github.com/CAOR-MINES-ParisTech/ukfm>`_ (see :ref:`Installation
 <installation>`).
@@ -60,22 +55,21 @@ Getting Started
 2. Follow  the :ref:`Tutorial <localization_tutorial>` for an introduction to
 the methodology. 
 
-
-The rest of this documentation is build on and for Python usages. For the Matlab
-user, see the referred :ref:`Section <matlab>`.
+The rest of the documentation is build on the Python code. For the Matlab
+user, see :ref:`here <matlab>`.
 
 Examples
 --------------------------------------------------------------------------------
-
 Below is a list of examples from which the unscented Kalman filter on
-parallelizable manifolds has been implemented.
+parallelizable manifolds has been implemented:
 
--  2D robot localization (for introduction on simulated data and on real data).
+-  2D robot localization (both for introduction on simulated data and on real
+   data).
 
 -  3D Attitude estimation with an Inertial Measurement Unit (IMU) equipped with
    gyros, accelerometers and magnetometers.
 
--  3D Inertial navigation on flat Earth with observations of known landmarks.
+-  3D inertial navigation on flat Earth with observations of known landmarks.
 
 -  2D Simultaneous Localization And Mapping (SLAM).
 
@@ -85,18 +79,14 @@ parallelizable manifolds has been implemented.
 
 See more details in the :ref:`examples` Section.
 
-
 Support
 --------------------------------------------------------------------------------
-
 Please, use the `GitHub issue tracker
 <https://github.com/CAOR-MINES-ParisTech/ukfm>`_ for questions, bug reports,
 feature requests/additions, etc.
 
-
 Acknowledgments
 --------------------------------------------------------------------------------
-
 The library was written by `Martin Brossard
 <mailto:martin.brossard@mines-paristech.fr>`_ ^, `Axel Barrau
 <mailto:axel.barrau@safrangroup.com>`_ ^ and `Silvère Bonnabel

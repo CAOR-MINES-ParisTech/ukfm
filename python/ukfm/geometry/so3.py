@@ -4,15 +4,15 @@ import numpy as np
 class SO3:
     """Rotation matrix in :math:`SO(3)`
 
-        .. math::
+    .. math::
 
-            SO(3) &= \\left\\{ \\mathbf{C} \\in \\mathbb{R}^{3 \\times 3} 
-            ~\\middle|~ \\mathbf{C}\\mathbf{C}^T = \\mathbf{1}, \\det
-             \\mathbf{C} = 1 \\right\\} \\\\
-            \\mathfrak{so}(3) &= \\left\\{ \\boldsymbol{\\Phi} = 
-            \\boldsymbol{\\phi}^\\wedge \\in \\mathbb{R}^{3 \\times 3} 
-            ~\\middle|~ \\boldsymbol{\\phi} = \\phi \\mathbf{a} \\in \\mathbb{R}
-            ^3, \\phi = \\Vert \\boldsymbol{\\phi} \\Vert \\right\\}
+        SO(3) &= \\left\\{ \\mathbf{C} \\in \\mathbb{R}^{3 \\times 3} 
+        ~\\middle|~ \\mathbf{C}\\mathbf{C}^T = \\mathbf{1}, \\det
+            \\mathbf{C} = 1 \\right\\} \\\\
+        \\mathfrak{so}(3) &= \\left\\{ \\boldsymbol{\\Phi} = 
+        \\boldsymbol{\\phi}^\\wedge \\in \\mathbb{R}^{3 \\times 3} 
+        ~\\middle|~ \\boldsymbol{\\phi} = \\phi \\mathbf{a} \\in \\mathbb{R}
+        ^3, \\phi = \\Vert \\boldsymbol{\\phi} \\Vert \\right\\}
 
     """
 
@@ -37,19 +37,19 @@ class SO3:
         """Exponential map for :math:`SO(3)`, which computes a transformation 
         from a tangent vector:
 
-                .. math::
+        .. math::
 
-                    \\mathbf{C}(\\boldsymbol{\\phi}) =
-                    \\exp(\\boldsymbol{\\phi}^\wedge) =
-                    \\begin{cases}
-                        \\mathbf{1} + \\boldsymbol{\\phi}^\wedge, 
-                        & \\text{if } \\phi \\text{ is small} \\\\
-                        \\cos \\phi \\mathbf{1} +
-                        (1 - \\cos \\phi) \\mathbf{a}\\mathbf{a}^T +
-                        \\sin \\phi \\mathbf{a}^\\wedge, & \\text{otherwise}
-                    \\end{cases}
+            \\mathbf{C}(\\boldsymbol{\\phi}) =
+            \\exp(\\boldsymbol{\\phi}^\wedge) =
+            \\begin{cases}
+                \\mathbf{1} + \\boldsymbol{\\phi}^\wedge, 
+                & \\text{if } \\phi \\text{ is small} \\\\
+                \\cos \\phi \\mathbf{1} +
+                (1 - \\cos \\phi) \\mathbf{a}\\mathbf{a}^T +
+                \\sin \\phi \\mathbf{a}^\\wedge, & \\text{otherwise}
+            \\end{cases}
 
-            This is the inverse operation to :meth:`~ukfm.SO3.log`.
+        This is the inverse operation to :meth:`~ukfm.SO3.log`.
         """
         angle = np.linalg.norm(phi)
         if angle < cls.TOL:
@@ -66,18 +66,19 @@ class SO3:
     @classmethod
     def inv_left_jacobian(cls, phi):
         """:math:`SO(3)` inverse left Jacobian
-    
-            .. math::
-                \\mathbf{J}^{-1}(\\boldsymbol{\\phi}) =
-                \\begin{cases}
-                    \\mathbf{1} - \\frac{1}{2} \\boldsymbol{\\phi}^\wedge, &
-                        \\text{if } \\phi \\text{ is small} \\\\
-                    \\frac{\\phi}{2} \\cot \\frac{\\phi}{2} \\mathbf{1} +
-                    \\left( 1 - \\frac{\\phi}{2} \\cot \\frac{\\phi}{2} 
-                    \\right) \\mathbf{a}\\mathbf{a}^T -
-                    \\frac{\\phi}{2} \\mathbf{a}^\\wedge, & 
-                    \\text{otherwise}
-                \\end{cases}
+
+        .. math::
+
+            \\mathbf{J}^{-1}(\\boldsymbol{\\phi}) =
+            \\begin{cases}
+                \\mathbf{1} - \\frac{1}{2} \\boldsymbol{\\phi}^\wedge, &
+                    \\text{if } \\phi \\text{ is small} \\\\
+                \\frac{\\phi}{2} \\cot \\frac{\\phi}{2} \\mathbf{1} +
+                \\left( 1 - \\frac{\\phi}{2} \\cot \\frac{\\phi}{2} 
+                \\right) \\mathbf{a}\\mathbf{a}^T -
+                \\frac{\\phi}{2} \\mathbf{a}^\\wedge, & 
+                \\text{otherwise}
+            \\end{cases}
 
         """
         angle = np.linalg.norm(phi)
@@ -97,18 +98,18 @@ class SO3:
     def left_jacobian(cls, phi):
         """:math:`SO(3)` left Jacobian.
 
-                .. math::
+        .. math::
 
-                    \\mathbf{J}(\\boldsymbol{\\phi}) =
-                    \\begin{cases}
-                        \\mathbf{1} + \\frac{1}{2} \\boldsymbol{\\phi}^\wedge, &
-                         \\text{if } \\phi \\text{ is small} \\\\
-                        \\frac{\\sin \\phi}{\\phi} \\mathbf{1} +
-                        \\left(1 - \\frac{\\sin \\phi}{\\phi} \\right) 
-                        \\mathbf{a}\\mathbf{a}^T +
-                        \\frac{1 - \\cos \\phi}{\\phi} \\mathbf{a}^\\wedge, & 
-                        \\text{otherwise}
-                    \\end{cases}
+            \\mathbf{J}(\\boldsymbol{\\phi}) =
+            \\begin{cases}
+                \\mathbf{1} + \\frac{1}{2} \\boldsymbol{\\phi}^\wedge, &
+                    \\text{if } \\phi \\text{ is small} \\\\
+                \\frac{\\sin \\phi}{\\phi} \\mathbf{1} +
+                \\left(1 - \\frac{\\sin \\phi}{\\phi} \\right) 
+                \\mathbf{a}\\mathbf{a}^T +
+                \\frac{1 - \\cos \\phi}{\\phi} \\mathbf{a}^\\wedge, & 
+                \\text{otherwise}
+            \\end{cases}
 
         """
         angle = np.linalg.norm(phi)
@@ -129,20 +130,21 @@ class SO3:
         """Logarithmic map for :math:`SO(3)`, which computes a tangent vector 
         from a transformation:
 
-                .. math::
-                    \\phi &= \\frac{1}{2} 
-                    \\left( \\mathrm{Tr}(\\mathbf{C}) - 1 \\right) \\\\
-                    \\boldsymbol{\\phi}(\\mathbf{C}) &=
-                    \\ln(\\mathbf{C})^\\vee =
-                    \\begin{cases}
-                        \\mathbf{1} - \\boldsymbol{\\phi}^\wedge, 
-                        & \\text{if } \\phi \\text{ is small} \\\\
-                        \\left( \\frac{1}{2} \\frac{\\phi}{\\sin \\phi} 
-                        \\left( \\mathbf{C} - \\mathbf{C}^T \\right) 
-                        \\right)^\\vee, & \\text{otherwise}
-                    \\end{cases}
+        .. math::
 
-            This is the inverse operation to :meth:`~ukfm.SO3.log`.
+            \\phi &= \\frac{1}{2} 
+            \\left( \\mathrm{Tr}(\\mathbf{C}) - 1 \\right) \\\\
+            \\boldsymbol{\\phi}(\\mathbf{C}) &=
+            \\ln(\\mathbf{C})^\\vee =
+            \\begin{cases}
+                \\mathbf{1} - \\boldsymbol{\\phi}^\wedge, 
+                & \\text{if } \\phi \\text{ is small} \\\\
+                \\left( \\frac{1}{2} \\frac{\\phi}{\\sin \\phi} 
+                \\left( \\mathbf{C} - \\mathbf{C}^T \\right) 
+                \\right)^\\vee, & \\text{otherwise}
+            \\end{cases}
+
+        This is the inverse operation to :meth:`~ukfm.SO3.log`.
         """
         cos_angle = 0.5 * np.trace(Rot) - 0.5
         # Clip np.cos(angle) to its proper domain to avoid NaNs from rounding
@@ -162,6 +164,7 @@ class SO3:
     def to_rpy(cls, Rot):
         """Convert a rotation matrix to RPY Euler angles 
         :math:`(\\alpha, \\beta, \\gamma)`."""
+
         pitch = np.arctan2(-Rot[2, 0], np.sqrt(Rot[0, 0]**2 + Rot[1, 0]**2))
 
         if np.linalg.norm(pitch - np.pi/2) < cls.TOL:
@@ -183,11 +186,11 @@ class SO3:
         """:math:`SO(3)` vee operator as defined by 
         :cite:`barfootAssociating2014`.
 
-                .. math::
+        .. math::
 
-                    \\phi = \\boldsymbol{\\Phi}^\\vee
+            \\phi = \\boldsymbol{\\Phi}^\\vee
 
-            This is the inverse operation to :meth:`~ukfm.SO3.wedge`.
+        This is the inverse operation to :meth:`~ukfm.SO3.wedge`.
         """
         phi = np.array([Phi[2, 1], Phi[0, 2], Phi[1, 0]])
         return phi
@@ -197,17 +200,17 @@ class SO3:
         """:math:`SO(3)` wedge operator as defined by 
         :cite:`barfootAssociating2014`.
 
-                .. math::
+        .. math::
 
-                    \\boldsymbol{\\Phi} =
-                    \\boldsymbol{\\phi}^\\wedge =
-                    \\begin{bmatrix}
-                        0 & -\\phi_3 & \\phi_2 \\\\
-                        \\phi_3 & 0 & -\\phi_1 \\\\
-                        -\\phi_2 & \\phi_1 & 0
-                    \\end{bmatrix}
+            \\boldsymbol{\\Phi} =
+            \\boldsymbol{\\phi}^\\wedge =
+            \\begin{bmatrix}
+                0 & -\\phi_3 & \\phi_2 \\\\
+                \\phi_3 & 0 & -\\phi_1 \\\\
+                -\\phi_2 & \\phi_1 & 0
+            \\end{bmatrix}
 
-            This is the inverse operation to :meth:`~ukfm.SO3.vee`.
+        This is the inverse operation to :meth:`~ukfm.SO3.vee`.
         """
         Phi = np.array([[0, -phi[2], phi[1]],
                         [phi[2], 0, -phi[0]],
@@ -219,7 +222,9 @@ class SO3:
         """Form a rotation matrix from RPY Euler angles 
         :math:`(\\alpha, \\beta, \\gamma)`.
 
-        .. math:: \\mathbf{C} = \\mathbf{C}_z(\\gamma) \\mathbf{C}_y(\\beta)
+        .. math:: 
+        
+            \\mathbf{C} = \\mathbf{C}_z(\\gamma) \\mathbf{C}_y(\\beta)
             \\mathbf{C}_x(\\alpha)
 
         """
@@ -230,6 +235,7 @@ class SO3:
         """Form a rotation matrix given an angle in rad about the x-axis.
 
         .. math::
+
             \\mathbf{C}_x(\\phi) = 
             \\begin{bmatrix}
                 1 & 0 & 0 \\\\
@@ -250,6 +256,7 @@ class SO3:
         """Form a rotation matrix given an angle in rad about the y-axis.
 
         .. math::
+
             \\mathbf{C}_y(\\phi) = 
             \\begin{bmatrix}
                 \\cos \\phi & 0 & \\sin \\phi \\\\
@@ -270,6 +277,7 @@ class SO3:
         """Form a rotation matrix given an angle in rad about the z-axis.
 
         .. math::
+        
             \\mathbf{C}_z(\\phi) = 
             \\begin{bmatrix}
                 \\cos \\phi & -\\sin \\phi & 0 \\\\
@@ -284,4 +292,3 @@ class SO3:
         return np.array([[c, -s,  0.],
                          [s,  c,  0.],
                          [0., 0., 1.]])
-

@@ -4,7 +4,7 @@ function [ys] = attitude_simu_h(states, T, imu_freq, imu_noise_std)
 % Syntax: [ys] = attitude_simu_h(states, T, imu_freq, imu_noise_std)
 %
 % Inputs.
-%    states - state
+%    states - states
 %    T - sequence time duration
 %    imu_freq - IMU frequency
 %    imu_noise_std - IMU noise standard deviation

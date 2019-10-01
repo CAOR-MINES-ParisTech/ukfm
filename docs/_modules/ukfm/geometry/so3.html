@@ -152,15 +152,15 @@
 <div class="viewcode-block" id="SO3"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3">[docs]</a><span class="k">class</span> <span class="nc">SO3</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Rotation matrix in :math:`SO(3)`</span>
 
-<span class="sd">        .. math::</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">            SO(3) &amp;= \\left\\{ \\mathbf{C} \\in \\mathbb{R}^{3 \\times 3} </span>
-<span class="sd">            ~\\middle|~ \\mathbf{C}\\mathbf{C}^T = \\mathbf{1}, \\det</span>
-<span class="sd">             \\mathbf{C} = 1 \\right\\} \\\\</span>
-<span class="sd">            \\mathfrak{so}(3) &amp;= \\left\\{ \\boldsymbol{\\Phi} = </span>
-<span class="sd">            \\boldsymbol{\\phi}^\\wedge \\in \\mathbb{R}^{3 \\times 3} </span>
-<span class="sd">            ~\\middle|~ \\boldsymbol{\\phi} = \\phi \\mathbf{a} \\in \\mathbb{R}</span>
-<span class="sd">            ^3, \\phi = \\Vert \\boldsymbol{\\phi} \\Vert \\right\\}</span>
+<span class="sd">        SO(3) &amp;= \\left\\{ \\mathbf{C} \\in \\mathbb{R}^{3 \\times 3} </span>
+<span class="sd">        ~\\middle|~ \\mathbf{C}\\mathbf{C}^T = \\mathbf{1}, \\det</span>
+<span class="sd">            \\mathbf{C} = 1 \\right\\} \\\\</span>
+<span class="sd">        \\mathfrak{so}(3) &amp;= \\left\\{ \\boldsymbol{\\Phi} = </span>
+<span class="sd">        \\boldsymbol{\\phi}^\\wedge \\in \\mathbb{R}^{3 \\times 3} </span>
+<span class="sd">        ~\\middle|~ \\boldsymbol{\\phi} = \\phi \\mathbf{a} \\in \\mathbb{R}</span>
+<span class="sd">        ^3, \\phi = \\Vert \\boldsymbol{\\phi} \\Vert \\right\\}</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -185,19 +185,19 @@
         <span class="sd">&quot;&quot;&quot;Exponential map for :math:`SO(3)`, which computes a transformation </span>
 <span class="sd">        from a tangent vector:</span>
 
-<span class="sd">                .. math::</span>
+<span class="sd">        .. math::</span>
 
-<span class="sd">                    \\mathbf{C}(\\boldsymbol{\\phi}) =</span>
-<span class="sd">                    \\exp(\\boldsymbol{\\phi}^\wedge) =</span>
-<span class="sd">                    \\begin{cases}</span>
-<span class="sd">                        \\mathbf{1} + \\boldsymbol{\\phi}^\wedge, </span>
-<span class="sd">                        &amp; \\text{if } \\phi \\text{ is small} \\\\</span>
-<span class="sd">                        \\cos \\phi \\mathbf{1} +</span>
-<span class="sd">                        (1 - \\cos \\phi) \\mathbf{a}\\mathbf{a}^T +</span>
-<span class="sd">                        \\sin \\phi \\mathbf{a}^\\wedge, &amp; \\text{otherwise}</span>
-<span class="sd">                    \\end{cases}</span>
+<span class="sd">            \\mathbf{C}(\\boldsymbol{\\phi}) =</span>
+<span class="sd">            \\exp(\\boldsymbol{\\phi}^\wedge) =</span>
+<span class="sd">            \\begin{cases}</span>
+<span class="sd">                \\mathbf{1} + \\boldsymbol{\\phi}^\wedge, </span>
+<span class="sd">                &amp; \\text{if } \\phi \\text{ is small} \\\\</span>
+<span class="sd">                \\cos \\phi \\mathbf{1} +</span>
+<span class="sd">                (1 - \\cos \\phi) \\mathbf{a}\\mathbf{a}^T +</span>
+<span class="sd">                \\sin \\phi \\mathbf{a}^\\wedge, &amp; \\text{otherwise}</span>
+<span class="sd">            \\end{cases}</span>
 
-<span class="sd">            This is the inverse operation to :meth:`~ukfm.SO3.log`.</span>
+<span class="sd">        This is the inverse operation to :meth:`~ukfm.SO3.log`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">angle</span> <span class="o">&lt;</span> <span class="bp">cls</span><span class="o">.</span><span class="n">TOL</span><span class="p">:</span>
@@ -214,18 +214,19 @@
 <div class="viewcode-block" id="SO3.inv_left_jacobian"><a class="viewcode-back" href="../../../geometry.html#ukfm.SO3.inv_left_jacobian">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">inv_left_jacobian</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;:math:`SO(3)` inverse left Jacobian</span>
-<span class="sd">    </span>
-<span class="sd">            .. math::</span>
-<span class="sd">                \\mathbf{J}^{-1}(\\boldsymbol{\\phi}) =</span>
-<span class="sd">                \\begin{cases}</span>
-<span class="sd">                    \\mathbf{1} - \\frac{1}{2} \\boldsymbol{\\phi}^\wedge, &amp;</span>
-<span class="sd">                        \\text{if } \\phi \\text{ is small} \\\\</span>
-<span class="sd">                    \\frac{\\phi}{2} \\cot \\frac{\\phi}{2} \\mathbf{1} +</span>
-<span class="sd">                    \\left( 1 - \\frac{\\phi}{2} \\cot \\frac{\\phi}{2} </span>
-<span class="sd">                    \\right) \\mathbf{a}\\mathbf{a}^T -</span>
-<span class="sd">                    \\frac{\\phi}{2} \\mathbf{a}^\\wedge, &amp; </span>
-<span class="sd">                    \\text{otherwise}</span>
-<span class="sd">                \\end{cases}</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \\mathbf{J}^{-1}(\\boldsymbol{\\phi}) =</span>
+<span class="sd">            \\begin{cases}</span>
+<span class="sd">                \\mathbf{1} - \\frac{1}{2} \\boldsymbol{\\phi}^\wedge, &amp;</span>
+<span class="sd">                    \\text{if } \\phi \\text{ is small} \\\\</span>
+<span class="sd">                \\frac{\\phi}{2} \\cot \\frac{\\phi}{2} \\mathbf{1} +</span>
+<span class="sd">                \\left( 1 - \\frac{\\phi}{2} \\cot \\frac{\\phi}{2} </span>
+<span class="sd">                \\right) \\mathbf{a}\\mathbf{a}^T -</span>
+<span class="sd">                \\frac{\\phi}{2} \\mathbf{a}^\\wedge, &amp; </span>
+<span class="sd">                \\text{otherwise}</span>
+<span class="sd">            \\end{cases}</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
@@ -245,18 +246,18 @@
     <span class="k">def</span> <span class="nf">left_jacobian</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;:math:`SO(3)` left Jacobian.</span>
 
-<span class="sd">                .. math::</span>
+<span class="sd">        .. math::</span>
 
-<span class="sd">                    \\mathbf{J}(\\boldsymbol{\\phi}) =</span>
-<span class="sd">                    \\begin{cases}</span>
-<span class="sd">                        \\mathbf{1} + \\frac{1}{2} \\boldsymbol{\\phi}^\wedge, &amp;</span>
-<span class="sd">                         \\text{if } \\phi \\text{ is small} \\\\</span>
-<span class="sd">                        \\frac{\\sin \\phi}{\\phi} \\mathbf{1} +</span>
-<span class="sd">                        \\left(1 - \\frac{\\sin \\phi}{\\phi} \\right) </span>
-<span class="sd">                        \\mathbf{a}\\mathbf{a}^T +</span>
-<span class="sd">                        \\frac{1 - \\cos \\phi}{\\phi} \\mathbf{a}^\\wedge, &amp; </span>
-<span class="sd">                        \\text{otherwise}</span>
-<span class="sd">                    \\end{cases}</span>
+<span class="sd">            \\mathbf{J}(\\boldsymbol{\\phi}) =</span>
+<span class="sd">            \\begin{cases}</span>
+<span class="sd">                \\mathbf{1} + \\frac{1}{2} \\boldsymbol{\\phi}^\wedge, &amp;</span>
+<span class="sd">                    \\text{if } \\phi \\text{ is small} \\\\</span>
+<span class="sd">                \\frac{\\sin \\phi}{\\phi} \\mathbf{1} +</span>
+<span class="sd">                \\left(1 - \\frac{\\sin \\phi}{\\phi} \\right) </span>
+<span class="sd">                \\mathbf{a}\\mathbf{a}^T +</span>
+<span class="sd">                \\frac{1 - \\cos \\phi}{\\phi} \\mathbf{a}^\\wedge, &amp; </span>
+<span class="sd">                \\text{otherwise}</span>
+<span class="sd">            \\end{cases}</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
@@ -277,20 +278,21 @@
         <span class="sd">&quot;&quot;&quot;Logarithmic map for :math:`SO(3)`, which computes a tangent vector </span>
 <span class="sd">        from a transformation:</span>
 
-<span class="sd">                .. math::</span>
-<span class="sd">                    \\phi &amp;= \\frac{1}{2} </span>
-<span class="sd">                    \\left( \\mathrm{Tr}(\\mathbf{C}) - 1 \\right) \\\\</span>
-<span class="sd">                    \\boldsymbol{\\phi}(\\mathbf{C}) &amp;=</span>
-<span class="sd">                    \\ln(\\mathbf{C})^\\vee =</span>
-<span class="sd">                    \\begin{cases}</span>
-<span class="sd">                        \\mathbf{1} - \\boldsymbol{\\phi}^\wedge, </span>
-<span class="sd">                        &amp; \\text{if } \\phi \\text{ is small} \\\\</span>
-<span class="sd">                        \\left( \\frac{1}{2} \\frac{\\phi}{\\sin \\phi} </span>
-<span class="sd">                        \\left( \\mathbf{C} - \\mathbf{C}^T \\right) </span>
-<span class="sd">                        \\right)^\\vee, &amp; \\text{otherwise}</span>
-<span class="sd">                    \\end{cases}</span>
+<span class="sd">        .. math::</span>
 
-<span class="sd">            This is the inverse operation to :meth:`~ukfm.SO3.log`.</span>
+<span class="sd">            \\phi &amp;= \\frac{1}{2} </span>
+<span class="sd">            \\left( \\mathrm{Tr}(\\mathbf{C}) - 1 \\right) \\\\</span>
+<span class="sd">            \\boldsymbol{\\phi}(\\mathbf{C}) &amp;=</span>
+<span class="sd">            \\ln(\\mathbf{C})^\\vee =</span>
+<span class="sd">            \\begin{cases}</span>
+<span class="sd">                \\mathbf{1} - \\boldsymbol{\\phi}^\wedge, </span>
+<span class="sd">                &amp; \\text{if } \\phi \\text{ is small} \\\\</span>
+<span class="sd">                \\left( \\frac{1}{2} \\frac{\\phi}{\\sin \\phi} </span>
+<span class="sd">                \\left( \\mathbf{C} - \\mathbf{C}^T \\right) </span>
+<span class="sd">                \\right)^\\vee, &amp; \\text{otherwise}</span>
+<span class="sd">            \\end{cases}</span>
+
+<span class="sd">        This is the inverse operation to :meth:`~ukfm.SO3.log`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cos_angle</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">Rot</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
         <span class="c1"># Clip np.cos(angle) to its proper domain to avoid NaNs from rounding</span>
@@ -310,6 +312,7 @@
     <span class="k">def</span> <span class="nf">to_rpy</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">Rot</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Convert a rotation matrix to RPY Euler angles </span>
 <span class="sd">        :math:`(\\alpha, \\beta, \\gamma)`.&quot;&quot;&quot;</span>
+
         <span class="n">pitch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="o">-</span><span class="n">Rot</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Rot</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">Rot</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pitch</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">cls</span><span class="o">.</span><span class="n">TOL</span><span class="p">:</span>
@@ -331,11 +334,11 @@
         <span class="sd">&quot;&quot;&quot;:math:`SO(3)` vee operator as defined by </span>
 <span class="sd">        :cite:`barfootAssociating2014`.</span>
 
-<span class="sd">                .. math::</span>
+<span class="sd">        .. math::</span>
 
-<span class="sd">                    \\phi = \\boldsymbol{\\Phi}^\\vee</span>
+<span class="sd">            \\phi = \\boldsymbol{\\Phi}^\\vee</span>
 
-<span class="sd">            This is the inverse operation to :meth:`~ukfm.SO3.wedge`.</span>
+<span class="sd">        This is the inverse operation to :meth:`~ukfm.SO3.wedge`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">Phi</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">Phi</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">Phi</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
         <span class="k">return</span> <span class="n">phi</span></div>
@@ -345,17 +348,17 @@
         <span class="sd">&quot;&quot;&quot;:math:`SO(3)` wedge operator as defined by </span>
 <span class="sd">        :cite:`barfootAssociating2014`.</span>
 
-<span class="sd">                .. math::</span>
+<span class="sd">        .. math::</span>
 
-<span class="sd">                    \\boldsymbol{\\Phi} =</span>
-<span class="sd">                    \\boldsymbol{\\phi}^\\wedge =</span>
-<span class="sd">                    \\begin{bmatrix}</span>
-<span class="sd">                        0 &amp; -\\phi_3 &amp; \\phi_2 \\\\</span>
-<span class="sd">                        \\phi_3 &amp; 0 &amp; -\\phi_1 \\\\</span>
-<span class="sd">                        -\\phi_2 &amp; \\phi_1 &amp; 0</span>
-<span class="sd">                    \\end{bmatrix}</span>
+<span class="sd">            \\boldsymbol{\\Phi} =</span>
+<span class="sd">            \\boldsymbol{\\phi}^\\wedge =</span>
+<span class="sd">            \\begin{bmatrix}</span>
+<span class="sd">                0 &amp; -\\phi_3 &amp; \\phi_2 \\\\</span>
+<span class="sd">                \\phi_3 &amp; 0 &amp; -\\phi_1 \\\\</span>
+<span class="sd">                -\\phi_2 &amp; \\phi_1 &amp; 0</span>
+<span class="sd">            \\end{bmatrix}</span>
 
-<span class="sd">            This is the inverse operation to :meth:`~ukfm.SO3.vee`.</span>
+<span class="sd">        This is the inverse operation to :meth:`~ukfm.SO3.vee`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">Phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">phi</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">phi</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
                         <span class="p">[</span><span class="n">phi</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">phi</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
@@ -367,7 +370,9 @@
         <span class="sd">&quot;&quot;&quot;Form a rotation matrix from RPY Euler angles </span>
 <span class="sd">        :math:`(\\alpha, \\beta, \\gamma)`.</span>
 
-<span class="sd">        .. math:: \\mathbf{C} = \\mathbf{C}_z(\\gamma) \\mathbf{C}_y(\\beta)</span>
+<span class="sd">        .. math:: </span>
+<span class="sd">        </span>
+<span class="sd">            \\mathbf{C} = \\mathbf{C}_z(\\gamma) \\mathbf{C}_y(\\beta)</span>
 <span class="sd">            \\mathbf{C}_x(\\alpha)</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -378,6 +383,7 @@
         <span class="sd">&quot;&quot;&quot;Form a rotation matrix given an angle in rad about the x-axis.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \\mathbf{C}_x(\\phi) = </span>
 <span class="sd">            \\begin{bmatrix}</span>
 <span class="sd">                1 &amp; 0 &amp; 0 \\\\</span>
@@ -398,6 +404,7 @@
         <span class="sd">&quot;&quot;&quot;Form a rotation matrix given an angle in rad about the y-axis.</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \\mathbf{C}_y(\\phi) = </span>
 <span class="sd">            \\begin{bmatrix}</span>
 <span class="sd">                \\cos \\phi &amp; 0 &amp; \\sin \\phi \\\\</span>
@@ -418,6 +425,7 @@
         <span class="sd">&quot;&quot;&quot;Form a rotation matrix given an angle in rad about the z-axis.</span>
 
 <span class="sd">        .. math::</span>
+<span class="sd">        </span>
 <span class="sd">            \\mathbf{C}_z(\\phi) = </span>
 <span class="sd">            \\begin{bmatrix}</span>
 <span class="sd">                \\cos \\phi &amp; -\\sin \\phi &amp; 0 \\\\</span>
@@ -432,7 +440,6 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">],</span>
                          <span class="p">[</span><span class="n">s</span><span class="p">,</span>  <span class="n">c</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">],</span>
                          <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span></div></div>
-
 </pre></div>
 
            </div>

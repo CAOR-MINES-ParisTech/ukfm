@@ -1,13 +1,13 @@
 function [chi_inv] = se_k_3_inv(chi)
-%SE3_INV Inverse for SE_k(3)
+%SE3_INV Inverse
 %
 % Syntax:  [chi_inv] = se_k_3_inv(chi)
 %
 % Inputs:
-%    chi - state matrix
+%    chi - matrix
 %
 % Outputs:
-%    chi_inv - state matrix
+%    chi_inv - matrix
 
 k = length(chi) - 3;
 chi_inv = [chi(1:3, 1:3)' -chi(1:3, 1:3)'*chi(1:3, 4:end);

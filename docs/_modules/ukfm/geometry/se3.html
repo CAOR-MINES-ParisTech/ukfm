@@ -154,6 +154,7 @@
     <span class="sd">&quot;&quot;&quot;Homogeneous transformation matrix in :math:`SE(3)`.</span>
 
 <span class="sd">    .. math::</span>
+
 <span class="sd">        SE(3) &amp;= \\left\\{ \\mathbf{T}=</span>
 <span class="sd">                \\begin{bmatrix}</span>
 <span class="sd">                    \\mathbf{C} &amp; \\mathbf{r} \\\\</span>
@@ -176,6 +177,7 @@
 <span class="sd">        from a tangent vector:</span>
 
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \\mathbf{T}(\\boldsymbol{\\xi}) =</span>
 <span class="sd">            \\exp(\\boldsymbol{\\xi}^\\wedge) =</span>
 <span class="sd">            \\begin{bmatrix}</span>
@@ -195,13 +197,14 @@
     <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">chi</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Inverse map for :math:`SE(3)`.</span>
 
-<span class="sd">                .. math::</span>
-<span class="sd">                    \\mathbf{T}^{-1} =</span>
-<span class="sd">                    \\begin{bmatrix}</span>
-<span class="sd">                        \\mathbf{C}^T  &amp; -\\mathbf{C}^T \\boldsymbol{\\rho} </span>
-<span class="sd">                         \\\\</span>
-<span class="sd">                        \\mathbf{0} ^ T &amp; 1</span>
-<span class="sd">                    \\end{bmatrix}</span>
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \\mathbf{T}^{-1} =</span>
+<span class="sd">            \\begin{bmatrix}</span>
+<span class="sd">                \\mathbf{C}^T  &amp; -\\mathbf{C}^T \\boldsymbol{\\rho} </span>
+<span class="sd">                    \\\\</span>
+<span class="sd">                \\mathbf{0} ^ T &amp; 1</span>
+<span class="sd">            \\end{bmatrix}</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">chi_inv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
@@ -215,6 +218,7 @@
 <span class="sd">        from a transformation:</span>
 
 <span class="sd">        .. math::</span>
+<span class="sd">        </span>
 <span class="sd">            \\boldsymbol{\\xi}(\\mathbf{T}) =</span>
 <span class="sd">            \\ln(\\mathbf{T})^\\vee =</span>
 <span class="sd">            \\begin{bmatrix}</span>

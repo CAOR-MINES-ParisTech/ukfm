@@ -7,11 +7,11 @@ from scipy.linalg import block_diag
 class SLAM2D:
     """
     2D SLAM based on robot odometry and unknown landmark position measurements.
-    You can have a description of the model in the two references
+    See a description of the model in the two references
     :cite:`huangObservability2010` , :cite:`HuangA2013`.
 
     :var T: sequence time (s). 
-    
+
     :var odo_freq: odometry frequency (Hz).
     """
 
@@ -19,19 +19,20 @@ class SLAM2D:
                   [1, 0]])
 
     max_range = 5
-    """maximal range of observation (m)"""
+    """maximal range of observation (m)."""
     min_range = 1
-    """minimal range of observation (m)"""
+    """minimal range of observation (m)."""
     N_ldk = 20
-    """number of landmarks :math:`L`"""
+    """number of landmarks :math:`L`."""
 
     class STATE:
         """State of the system.
-        
-        It represents the orientation and position of the robot along with yet
-        observed landmarks.
+
+        It represents the orientation and the position of the robot along with
+        yet observed landmarks.
 
         .. math::
+
             \\boldsymbol{\\chi} \in \\mathcal{M} = \\left\\{ \\begin{matrix} 
            \\mathbf{C} \in SO(2),
             \\mathbf{p} \in \\mathbb R^2,
@@ -45,6 +46,7 @@ class SLAM2D:
         :ivar p_l: position of the landmark :math:`\mathbf{p}^l_1, \ldots,
               \mathbf{p}^l_L`.
         """
+
         def __init__(self, Rot, p, p_l=np.zeros((2, 0))):
             self.Rot = Rot
             self.p = p
@@ -53,11 +55,12 @@ class SLAM2D:
     class INPUT:
         """Input of the propagation model.
 
-        The input are robot velocities that can be obtained from a differential
-        wheel system.
+        The input are the robot velocities that can be obtained from a
+        differential wheel system.
 
         .. math:: 
-            \\boldsymbol{\\omega} \in \\mathcal{M} = \\left\\{ \\begin{matrix}
+
+            \\boldsymbol{\\omega} \in \\mathcal{U} = \\left\\{ \\begin{matrix}
             \\mathbf{v} \in \\mathbb R,
             \\omega \in \\mathbb R 
             \\end{matrix} \\right\\}
@@ -65,6 +68,7 @@ class SLAM2D:
         :ivar v: robot forward  velocity :math:`v`.
         :ivar gyro: robot orientation velocity :math:`\\omega`.
         """
+
         def __init__(self, v, gyro):
             self.v = v
             self.gyro = gyro
@@ -84,6 +88,7 @@ class SLAM2D:
         """ Propagation function.
 
         .. math::
+
             \\mathbf{C}_{n+1}  &= \\mathbf{C}_{n} \\exp\\left(\\left(\\omega +
             \\mathbf{w}^{(1)} \\right) dt\\right)  \\\\
             \\mathbf{p}_{n+1}  &= \\mathbf{p}_{n} + \\left( \\mathbf{v}_{n} +
@@ -96,7 +101,7 @@ class SLAM2D:
         :var omega: input :math:`\\boldsymbol{\\omega}`.
         :var w: noise :math:`\\mathbf{w}`.
         :var dt: integration step :math:`dt` (s).
-        """           
+        """
         new_state = cls.STATE(
             Rot=state.Rot.dot(SO2.exp((omega.gyro + w[1])*dt)),
             p=state.p + state.Rot.dot(np.hstack([omega.v + w[0], 0]))*dt,
@@ -109,9 +114,9 @@ class SLAM2D:
         """Observation function for 1 landmark.
 
         .. math::
+
             h\\left(\\boldsymbol{\\chi}\\right)  =
             \\mathbf{C}^T \\left( \\mathbf{p} - \\mathbf{p}^l\\right) 
-
 
         :var state: state :math:`\\boldsymbol{\\chi}`.
         """
@@ -121,10 +126,11 @@ class SLAM2D:
     @classmethod
     def z(cls, state, y):
         """Augmentation function. 
-        
+
         Return a vector of the novel part of the state only.
 
         .. math::
+
             z\\left(\\boldsymbol{\\chi}, \mathbf{y}\\right)  =
             \\mathbf{C} \\mathbf{y} + \\mathbf{p}
 
@@ -139,6 +145,7 @@ class SLAM2D:
         """Augmentation function. Return the augmented state.
 
         .. math::
+
             \\boldsymbol{\\chi} \\leftarrow \\left(\\boldsymbol{\\chi},
             z\\left(\\boldsymbol{\\chi}, \mathbf{y}\\right) \\right) 
 
@@ -157,6 +164,7 @@ class SLAM2D:
         """Retraction.
 
         .. math::
+
           \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) =
           \\left( \\begin{matrix}
             \\mathbf{C} \\exp\\left(\\boldsymbol{\\xi}^{(0)}\\right) \\\\
@@ -170,7 +178,7 @@ class SLAM2D:
         \\times \\mathbb R^{2(L+1)}`.
 
         Its corresponding inverse operation (for robot state only) is
-        :meth:`~ukfm.SLAM2D.phi_inv`.
+        :meth:`~ukfm.SLAM2D.red_phi_inv`.
 
         :var state: state :math:`\\boldsymbol{\\chi}`.
         :var xi: state uncertainty :math:`\\boldsymbol{\\xi}`.
@@ -202,6 +210,7 @@ class SLAM2D:
         """Inverse retraction (reduced).
 
         .. math::
+
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}
           \\right) = \\left( \\begin{matrix} \\log\\left(\\mathbf{C}
           \\mathbf{\\hat{C}}^T\\right) \\\\
@@ -214,7 +223,7 @@ class SLAM2D:
 
         :var state: state :math:`\\boldsymbol{\\chi}`. 
 
-        :var hat_state:noise-free state :math:`\\boldsymbol{\hat{\\chi}}`.
+        :var hat_state: noise-free state :math:`\\boldsymbol{\hat{\\chi}}`.
         """
         xi = np.hstack([SO2.log(hat_state.Rot.dot(state.Rot.T)),
                         hat_state.p - state.p])
@@ -222,7 +231,7 @@ class SLAM2D:
 
     @classmethod
     def aug_phi(cls, state, xi):
-        """Retraction used for augmented state.
+        """Retraction used for augmenting state.
 
         The retraction :meth:`~ukfm.SLAM2D.phi` applied on the robot state only.
         """
@@ -234,7 +243,7 @@ class SLAM2D:
 
     @classmethod
     def aug_phi_inv(cls, state, aug_state):
-        """Retraction used for augmented state.
+        """Retraction used for augmenting state.
 
         The inverse retraction :meth:`~ukfm.SLAM2D.phi` applied on the landmark
         only.
@@ -243,7 +252,7 @@ class SLAM2D:
 
     @classmethod
     def up_phi(cls, state, xi):
-        """Retraction used for updated state and infer Jacobian.
+        """Retraction used for updating state and infering Jacobian.
 
         The retraction :meth:`~ukfm.SLAM2D.phi` applied on the robot state and
         one landmark only.
@@ -269,10 +278,11 @@ class SLAM2D:
                \\vdots \\\\
                \\mathbf{p}_L^l + \\mathbf{C} \\mathbf{r}_{1+L} \\\\
           \\end{matrix} \\right)
-        
+
         where
 
         .. math::
+
                 \\mathbf{T} = \\exp\\left(\\boldsymbol{\\xi}\\right) =
                 \\begin{bmatrix}
                 \\mathbf{C}_\\mathbf{T} & \\mathbf{r}_1 & \\cdots &
@@ -285,7 +295,7 @@ class SLAM2D:
 
         :var state: state :math:`\\boldsymbol{\\chi}`.
         :var xi: state uncertainty :math:`\\boldsymbol{\\xi}`.
-        """        
+        """
 
         chi = SEK2.exp(xi)
         new_state = cls.STATE(
@@ -309,14 +319,14 @@ class SLAM2D:
         """Inverse retraction (reduced).
 
         .. math::
+
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}
           \\left(\\boldsymbol{\\chi}\\right) =
           \\log\\left(\\boldsymbol{\\chi}
           \\boldsymbol{\\hat{\\chi}}^{-1}\\right)
 
-
         The robot state is viewed as a element :math:`\\boldsymbol{\chi} \\in
-        SE_(2)`.
+        SE(2)`.
 
         Its corresponding retraction is :meth:`~ukfm.SLAM2D.left_red_phi`.
 
@@ -330,7 +340,7 @@ class SLAM2D:
 
     @classmethod
     def left_aug_phi(cls, state, xi):
-        """Retraction used for augmented state.
+        """Retraction used for augmenting state.
 
         The retraction :meth:`~ukfm.SLAM2D.left_phi` applied on the robot state
         only.
@@ -344,11 +354,10 @@ class SLAM2D:
 
     @classmethod
     def left_aug_phi_inv(cls, state, aug_state):
-        """Retraction used for augmented state.
+        """Retraction used for augmenting state.
 
-        The inverse retraction :meth:`~ukfm.SLAM2D.left_phi` applied on the 
-        landmark
-        only.
+        The inverse retraction :meth:`~ukfm.SLAM2D.left_phi` applied on the
+        landmark only.
         """
         chi = cls.aug_state2chi(state)
         aug_chi = cls.aug_state2chi(aug_state)
@@ -356,7 +365,7 @@ class SLAM2D:
 
     @classmethod
     def left_up_phi(cls, state, xi):
-        """Retraction used for updated state and infer Jacobian.
+        """Retraction used for updating state and infering Jacobian.
 
         The retraction :meth:`~ukfm.SLAM2D.left_phi` applied on the robot state
         and one landmark only.
@@ -369,7 +378,6 @@ class SLAM2D:
         )
         return new_state
 
-    
     @classmethod
     def right_phi(cls, state, xi):
         """Retraction.
@@ -384,10 +392,11 @@ class SLAM2D:
                \\vdots \\\\
                \\mathbf{C}_\\mathbf{T} \\mathbf{p}_L^l + \\mathbf{r}_{1+L} \\\\
           \\end{matrix} \\right)
-        
+
         where
 
         .. math::
+
                 \\mathbf{T} = \\exp\\left(\\boldsymbol{\\xi}\\right) =
                 \\begin{bmatrix}
                 \\mathbf{C}_\\mathbf{T} & \\mathbf{r}_1 & \\cdots &
@@ -424,13 +433,14 @@ class SLAM2D:
         """Inverse retraction (reduced).
 
         .. math::
+
             \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}
             \\left(\\boldsymbol{\\chi}\\right) = 
             \\log\\left(\\boldsymbol{\\hat{\\chi}}^{-1} 
             \\boldsymbol{\\chi}\\right)
 
         The robot state is viewed as a element :math:`\\boldsymbol{\chi} \\in
-        SE_(2)`.
+        SE_{L+1}(2)`.
 
         Its corresponding retraction is :meth:`~ukfm.SLAM2D.right_red_phi`.
 
@@ -444,7 +454,7 @@ class SLAM2D:
 
     @classmethod
     def right_aug_phi(cls, state, xi):
-        """Retraction used for augmented state.
+        """Retraction used for augmenting state.
 
         The retraction :meth:`~ukfm.SLAM2D.right_phi` applied on the robot state
         only.
@@ -458,7 +468,7 @@ class SLAM2D:
 
     @classmethod
     def right_aug_phi_inv(cls, state, aug_state):
-        """Retraction used for augmented state.
+        """Retraction used for augmenting state.
 
         The inverse retraction :meth:`~ukfm.SLAM2D.right_phi` applied on the
         landmark only.
@@ -469,7 +479,7 @@ class SLAM2D:
 
     @classmethod
     def right_up_phi(cls, state, xi):
-        """Retraction used for updated state and infer Jacobian.
+        """Retraction used for updating state and infering Jacobian.
 
         The retraction :meth:`~ukfm.SLAM2D.right_phi` applied on the robot state
         and one landmark only.
@@ -478,7 +488,7 @@ class SLAM2D:
         new_state = cls.STATE(
             Rot=chi[:2, :2].dot(state.Rot),
             p=chi[:2, 2] + chi[:2, :2].dot(state.p),
-            p_l= np.squeeze(chi[:2, 3]) + np.squeeze(chi[:2, :2].dot(state.p_l))
+            p_l=np.squeeze(chi[:2, 3]) + np.squeeze(chi[:2, :2].dot(state.p_l))
         )
         return new_state
 
@@ -522,7 +532,6 @@ class SLAM2D:
         errors[:, 1:] = ps-hat_ps
         return errors
 
-
     def plot_traj(self, states, ldks):
         Rots, ps = self.get_states(states, self.N)
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -552,8 +561,8 @@ class SLAM2D:
 
         ukf3sigma = 3 * np.sqrt(hat_Ps[:, 0, 0])
         fig, ax = plt.subplots(figsize=(9, 6))
-        ax.set(xlabel='$t$ (s)', ylabel='error (deg)', 
-            title='Orientation error (deg)')
+        ax.set(xlabel='$t$ (s)', ylabel='error (deg)',
+               title='Orientation error (deg)')
 
         t = np.linspace(0, self.T, self.N)
         plt.plot(t, 180/np.pi*errors[:, 0], c='blue')
@@ -564,8 +573,8 @@ class SLAM2D:
 
         ukf3sigma = 3 * np.sqrt(hat_Ps[:, 1, 1] + hat_Ps[:, 2, 2])
         fig, ax = plt.subplots(figsize=(9, 6))
-        ax.set(xlabel='$t$ (s)', ylabel='error (m)', title=
-            'Robot position error (m)')
+        ax.set(xlabel='$t$ (s)', ylabel='error (m)',
+               title='Robot position error (m)')
 
         plt.plot(t, errors[:, 1], c='blue')
         plt.plot(t, ukf3sigma, c='blue', linestyle='dashed')
@@ -613,31 +622,33 @@ class SLAM2D:
         # plot orientation nees
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.set(xlabel='$t$ (s)', ylabel='orientation NEES',
-                title='Robot orientation NEES', yscale="log")
+               title='Robot orientation NEES', yscale="log")
 
         plt.plot(t, ukf_nees[:, 0], c='magenta')
         plt.plot(t, left_ukf_nees[:, 0], c='green')
         plt.plot(t, right_ukf_nees[:, 0], c='cyan')
         plt.plot(t, ekf_nees[:, 0], c='red')
         plt.plot(t, iekf_nees[:, 0], c='blue')
-        ax.legend([r'$SO(2) \times \mathbb{R}^{2(1+L)}$ UKF', 
-        r'\textbf{$SE_{1+L}(2)$ UKF (left)}', 
-        r'\textbf{$SE_{1+L}(2)$ UKF (right)}', r'EKF', r'IEKF [BB17]'])
+        ax.legend([r'$SO(2) \times \mathbb{R}^{2(1+L)}$ UKF',
+                   r'\textbf{$SE_{1+L}(2)$ UKF (left)}',
+                   r'\textbf{$SE_{1+L}(2)$ UKF (right)}', r'EKF', 
+                   r'IEKF [BB17]'])
         ax.set_xlim(0, t[-1])
 
         # plot position nees
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.set(xlabel='$t$ (s)', ylabel='position NEES',
-                title='Robot position NEES', yscale="log")
+               title='Robot position NEES', yscale="log")
 
         plt.plot(t, ukf_nees[:, 1], c='magenta')
         plt.plot(t, left_ukf_nees[:, 1], c='green')
         plt.plot(t, right_ukf_nees[:, 1], c='cyan')
         plt.plot(t, ekf_nees[:, 1], c='red')
         plt.plot(t, iekf_nees[:, 1], c='blue')
-        ax.legend([r'$SO(2) \times \mathbb{R}^{2(1+L)}$ UKF', 
-        r'\textbf{$SE_{1+L}(2)$ UKF (left)}', 
-        r'\textbf{$SE_{1+L}(2)$ UKF (right)}', r'EKF', r'IEKF [BB17]'])
+        ax.legend([r'$SO(2) \times \mathbb{R}^{2(1+L)}$ UKF',
+                   r'\textbf{$SE_{1+L}(2)$ UKF (left)}',
+                   r'\textbf{$SE_{1+L}(2)$ UKF (right)}', r'EKF', 
+                   r'IEKF [BB17]'])
         ax.set_xlim(0, t[-1])
 
         def g(x):
@@ -673,7 +684,7 @@ class SLAM2D:
             th = 2 * np.pi * i / self.N_ldk
             [x, y] = pol2cart(rho, th)
             # shift y w/ r since robot starts at (0,0)
-            ldks[i] = np.array([x, y + r]) 
+            ldks[i] = np.array([x, y + r])
 
         w = np.zeros(2)
 
@@ -682,7 +693,7 @@ class SLAM2D:
             Rot=np.eye(2),
             p=np.zeros(2),
             p_l=ldks
-            )]
+        )]
 
         for n in range(1, self.N):
             omega.append(self.INPUT(v, gyro))
@@ -701,20 +712,21 @@ class SLAM2D:
                 p_l = ldks[i]
                 r = np.linalg.norm(p_l - p)
                 if self.max_range > r > self.min_range:
-                    ys[n, i, :2] = Rot.T.dot(p_l-p) + obs_std*np.random.randn(2)
+                    ys[n, i, :2] = Rot.T.dot(
+                        p_l-p) + obs_std*np.random.randn(2)
                     ys[n, i, 2] = i
         return ys
 
-    def benchmark_plot(self, ukf_err, left_ukf_err, right_ukf_err, iekf_err, 
-        ekf_err, ps, ukf_ps, left_ukf_ps, right_ukf_ps, ekf_ps, iekf_ps):
+    def benchmark_plot(self, ukf_err, left_ukf_err, right_ukf_err, iekf_err,
+                       ekf_err, ps, ukf_ps, left_ukf_ps, right_ukf_ps, 
+                       ekf_ps, iekf_ps):
         def rmse(errs):
             err = np.zeros((errs.shape[1], 2))
             err[:, 0] = np.sqrt(np.mean(errs[:, :, 0]**2, axis=0))
-            err[:, 1] = np.sqrt(np.mean(errs[:, :, 1]**2 \
-                        + errs[:, :, 2]**2, axis=0))
+            err[:, 1] = np.sqrt(np.mean(errs[:, :, 1]**2
+                                        + errs[:, :, 2]**2, axis=0))
             return err
 
-        
         ukf_err = rmse(ukf_err)
         left_ukf_err = rmse(left_ukf_err)
         right_ukf_err = rmse(right_ukf_err)
@@ -726,8 +738,8 @@ class SLAM2D:
 
         # plot position
         fig, ax = plt.subplots(figsize=(12, 6))
-        ax.set(xlabel='$y$ (m)', ylabel='$x$ (m)', 
-            title='Robot position for a Monte-Carlo run')
+        ax.set(xlabel='$y$ (m)', ylabel='$x$ (m)',
+               title='Robot position for a Monte-Carlo run')
         plt.plot(ps[:, 0], ps[:, 1], linewidth=2, c='black')
         plt.plot(ukf_ps[:, 0], ukf_ps[:, 1], c='magenta')
         plt.plot(left_ukf_ps[:, 0], left_ukf_ps[:, 1], c='green')
@@ -735,14 +747,15 @@ class SLAM2D:
         plt.plot(ekf_ps[:, 0], ekf_ps[:, 1], c='red')
         plt.plot(iekf_ps[:, 0], iekf_ps[:, 1], c='blue')
         ax.axis('equal')
-        ax.legend([r'true position', r'$SO(2) \times \mathbb{R}^{2(1+L)}$ UKF', 
-        r'\textbf{$SE_{1+L}(2)$ UKF (left)}', 
-        r'\textbf{$SE_{1+L}(2)$ UKF (right)}', r'EKF', r'IEKF [BB17]'])
+        ax.legend([r'true position', r'$SO(2) \times \mathbb{R}^{2(1+L)}$ UKF',
+                   r'\textbf{$SE_{1+L}(2)$ UKF (left)}',
+                   r'\textbf{$SE_{1+L}(2)$ UKF (right)}', r'EKF', 
+                   r'IEKF [BB17]'])
 
         # plot attitude error
         fig, ax = plt.subplots(figsize=(12, 6))
-        ax.set(xlabel='$t$ (s)', ylabel='error (deg)', 
-            title='Robot orientation error (deg)')
+        ax.set(xlabel='$t$ (s)', ylabel='error (deg)',
+               title='Robot orientation error (deg)')
 
         # error
         plt.plot(t, 180/np.pi*ukf_err[:, 0], c='magenta')
@@ -750,16 +763,16 @@ class SLAM2D:
         plt.plot(t, 180/np.pi*right_ukf_err[:, 0], c='cyan')
         plt.plot(t, 180/np.pi*ekf_err[:, 0], c='red')
         plt.plot(t, 180/np.pi*iekf_err[:, 0], c='blue')
-        ax.legend([r'$SO(2) \times \mathbb{R}^{2(1+L)}$ UKF', 
-        r'\textbf{$SE_{1+L}(2)$ UKF (left)}', 
-        r'\textbf{$SE_{1+L}(2)$ UKF (right)}', r'EKF', r'IEKF [BB17]'])
+        ax.legend([r'$SO(2) \times \mathbb{R}^{2(1+L)}$ UKF',
+                   r'\textbf{$SE_{1+L}(2)$ UKF (left)}',
+                   r'\textbf{$SE_{1+L}(2)$ UKF (right)}', r'EKF', r'IEKF [BB17]'])
         ax.set_ylim(bottom=0)
         ax.set_xlim(0, t[-1])
 
         # plot position error
         fig, ax = plt.subplots(figsize=(12, 6))
-        ax.set(xlabel='$t$ (s)', ylabel='error (m)', 
-            title='Robot position error (m)')
+        ax.set(xlabel='$t$ (s)', ylabel='error (m)',
+               title='Robot position error (m)')
 
         # error
         plt.plot(t, ukf_err[:, 1], c='magenta')
@@ -767,16 +780,17 @@ class SLAM2D:
         plt.plot(t, right_ukf_err[:, 1], c='cyan')
         plt.plot(t, ekf_err[:, 1], c='red')
         plt.plot(t, iekf_err[:, 1], c='blue')
-        ax.legend([r'$SO(2) \times \mathbb{R}^{2(1+L)}$ UKF', 
-        r'\textbf{$SE_{1+L}(2)$ UKF (left)}', 
-        r'\textbf{$SE_{1+L}(2)$ UKF (right)}', r'EKF', r'IEKF [BB17]'])
+        ax.legend([r'$SO(2) \times \mathbb{R}^{2(1+L)}$ UKF',
+                   r'\textbf{$SE_{1+L}(2)$ UKF (left)}',
+                   r'\textbf{$SE_{1+L}(2)$ UKF (right)}', r'EKF', 
+                   r'IEKF [BB17]'])
         ax.set_ylim(bottom=0)
         ax.set_xlim(0, t[-1])
         return ukf_err, left_ukf_err, right_ukf_err, iekf_err, ekf_err
 
     @staticmethod
-    def benchmark_print(ukf_err, left_ukf_err, right_ukf_err, iekf_err, 
-        ekf_err):
+    def benchmark_print(ukf_err, left_ukf_err, right_ukf_err, iekf_err,
+                        ekf_err):
         def rmse(errs):
             return np.sqrt(np.mean(errs**2))
         ukf_err_p = '{:.2f}'.format(rmse(ukf_err[:, 1]))
@@ -787,7 +801,8 @@ class SLAM2D:
 
         ukf_err_rot = '{:.2f}'.format(180/np.pi*rmse(ukf_err[:, 0]))
         left_ukf_err_rot = '{:.2f}'.format(180/np.pi*rmse(left_ukf_err[:, 0]))
-        right_ukf_err_rot = '{:.2f}'.format(180/np.pi*rmse(right_ukf_err[:, 0]))
+        right_ukf_err_rot = '{:.2f}'.format(
+            180/np.pi*rmse(right_ukf_err[:, 0]))
         ekf_err_rot = '{:.2f}'.format(180/np.pi*rmse(ekf_err[:, 0]))
         iekf_err_rot = '{:.2f}'.format(180/np.pi*rmse(iekf_err[:, 0]))
 
@@ -809,8 +824,9 @@ class SLAM2D:
 
 
 class EKF:
-    def __init__(self, state0, P0, f, h, Q, phi, 
-        jacobian_propagation=None, H_num=None, aug=None, z=None, aug_z=None):
+    def __init__(self, state0, P0, f, h, Q, phi,
+                 jacobian_propagation=None, H_num=None, aug=None, 
+                 z=None, aug_z=None):
         self.state = state0
         self.P = P0
         self.f = f
@@ -833,10 +849,10 @@ class EKF:
         #  for augmenting state
         self.z = z
         self.aug_z = aug_z
-        self.aug=aug
+        self.aug = aug
 
         self.J = np.array([[0, -1],
-                      [1, 0]])
+                           [1, 0]])
 
     def propagation(self, omega, dt):
         self.state_propagation(omega, dt)
@@ -917,16 +933,16 @@ class EKF:
         G[1:3, 0] = self.state.Rot.dot(np.array([1, 0]))*dt
         G[0, 1] = dt
 
-        p_temp = -self.J.dot(np.hstack([np.expand_dims(self.state.p, 1), 
-            self.state.p_l.T]))
+        p_temp = -self.J.dot(np.hstack([np.expand_dims(self.state.p, 1),
+                                        self.state.p_l.T]))
         G[1:, 1] = np.reshape(p_temp, -1, order='F') * dt
         return F, G
 
     def ekf_augment(self, y, aug_idxs, R):
         self.state.p_l = np.squeeze(self.state.p_l)
         HR = np.zeros((2, 3))
-        HR[:2, 0] = -self.state.Rot.T.dot(self.J.dot((self.state.p_l - \
-            self.state.p)))
+        HR[:2, 0] = -self.state.Rot.T.dot(self.J.dot((self.state.p_l -
+                                                      self.state.p)))
         HR[:2, 1:3] = -self.state.Rot.T
         H = np.zeros((2, self.P.shape[0]))
         H[:, aug_idxs] = HR

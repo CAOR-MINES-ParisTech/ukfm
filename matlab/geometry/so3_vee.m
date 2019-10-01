@@ -4,10 +4,10 @@ function [phi] = so3_vee(Phi)
 % Syntax:  [phi] = so3_vee(Phi)
 %
 % Inputs:
-%    phi - vector of length 3
+%    phi - vector
 %
 % Outputs:
-%    Phi - matrix of size 3x3
+%    Phi - matrix
 
 phi = [Phi(3, 2);
        Phi(1, 3);

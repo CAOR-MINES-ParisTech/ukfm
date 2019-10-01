@@ -1,13 +1,13 @@
 function [xi] = se3_log(chi)
-%SE3_LOG logarithm map for SE(3)
+%SE3_LOG logarithm
 %
 % Syntax:  [xi] = se3_log(chi)
 %
 % Inputs:
-%    chi - state matrix
+%    chi - matrix
 %
 % Outputs:
-%    xi - vector of length 6
+%    xi - vector
 
 phi = so3_log(chi(1:3, 1:3));
 xi = [phi;

@@ -1,5 +1,5 @@
 function [phi] = so2_log(Rot)
-%SO2_LOG logarithm map for SO(2)
+%SO2_LOG logarithm
 %
 % Syntax:  [phi] = so2_log(Rot)
 %

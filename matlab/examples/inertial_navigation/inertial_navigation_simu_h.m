@@ -6,7 +6,7 @@ function [ys, one_hot_ys] = inertial_navigation_simu_h(states, T, ...
 %     imu_freq, obs_freq, obs_noise_std)
 %
 % Inputs.
-%    states - state, array of structures
+%    states - states
 %    T - sequence time duration
 %    imu_freq - IMU frequency
 %    obs_freq - observation frequency

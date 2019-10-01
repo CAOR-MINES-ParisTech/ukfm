@@ -7,7 +7,8 @@ function [rpy] = so3_to_rpy(Rot)
 %    Rot - rotation matrix
 %
 % Outputs:
-%    rpy - roll, pitch, yaw vector
+%    rpy - roll, pitch, yaw
+
 TOL = 1e-9;
 
 pitch = atan2(-Rot(3, 1), sqrt(Rot(1, 1)^2 + Rot(2, 1)^2));

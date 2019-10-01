@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 
 class ATTITUDE:
     """3D attitude estimation from an IMU equipped with gyro, accelerometer and 
-    magnetometer. You can have a text description in :cite:`kokUsing2017`, 
-    Section IV.
+    magnetometer. See text description in :cite:`kokUsing2017`, Section IV.
 
     :arg T: sequence time (s).
     :arg imu_freq: IMU frequency (Hz).
@@ -20,9 +19,10 @@ class ATTITUDE:
     class STATE:
         """State of the system.
 
-        It represents the orientation of a platform.
+        It represents the orientation of the platform.
 
         .. math::
+
             \\boldsymbol{\\chi} \in \\mathcal{M} = \\left\\{ 
            \\mathbf{C} \in SO(3) \\right\\}
 
@@ -39,7 +39,8 @@ class ATTITUDE:
         (IMU).
 
         .. math:: 
-            \\boldsymbol{\\omega} \in \\mathcal{M} = \\left\\{ 
+
+            \\boldsymbol{\\omega} \in \\mathcal{U} = \\left\\{ 
             \\mathbf{u} \in \\mathbb R^3 \\right\\}
 
         :ivar gyro: 3D gyro :math:`\mathbf{u}`.
@@ -63,6 +64,7 @@ class ATTITUDE:
         """ Propagation function.
 
         .. math::
+
             \\mathbf{C}_{n+1}  = \\mathbf{C}_{n} 
             \\exp\\left(\\left(\\mathbf{u} + \\mathbf{w} \\right) 
             dt \\right)
@@ -82,11 +84,11 @@ class ATTITUDE:
         """ Observation function.
 
         .. math::
+
             h\\left(\\boldsymbol{\\chi}\\right)  = \\begin{bmatrix} 
             \\mathbf{C}^T \\mathbf{g} \\\\
             \\mathbf{C}^T \\mathbf{b}
             \\end{bmatrix}
-
 
         :var state: state :math:`\\boldsymbol{\\chi}`.
         """
@@ -102,7 +104,6 @@ class ATTITUDE:
 
           \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) = 
             \\mathbf{C} \\exp\\left(\\boldsymbol{\\xi}\\right)
-
 
         The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)`
         with left multiplication.
@@ -122,12 +123,13 @@ class ATTITUDE:
         """Inverse retraction.
 
         .. math::
+
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}
           \\right) = \\log\\left(
             \\boldsymbol{\chi}^{-1} \\boldsymbol{\\hat{\\chi}} \\right)
 
         The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)`
-         with left multiplication.
+        with left multiplication.
 
         Its corresponding retraction is :meth:`~ukfm.ATTITUDE.phi`.
 
@@ -145,7 +147,6 @@ class ATTITUDE:
 
           \\varphi\\left(\\boldsymbol{\\chi}, \\boldsymbol{\\xi}\\right) = 
             \\exp\\left(\\boldsymbol{\\xi}\\right) \\mathbf{C} 
-
 
         The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)` 
         with right multiplication.
@@ -166,12 +167,13 @@ class ATTITUDE:
         """Inverse retraction.
 
         .. math::
+
           \\varphi^{-1}_{\\boldsymbol{\\hat{\\chi}}}\\left(\\boldsymbol{\\chi}
           \\right) = \\log\\left(
             \\boldsymbol{\\hat{\\chi}}\\boldsymbol{\chi}^{-1} \\right)
 
         The state is viewed as a element :math:`\\boldsymbol{\chi} \\in SO(3)` 
-        with left multiplication.
+        with right multiplication.
 
         Its corresponding retraction is :meth:`~ukfm.ATTITUDE.right_phi`.
 
@@ -189,8 +191,8 @@ class ATTITUDE:
 
     @classmethod
     def ekf_H_ana(cls, state):
-        H = -np.vstack([-state.Rot.T.dot(SO3.wedge(cls.g)),
-                        -state.Rot.T.dot(SO3.wedge(cls.b))])
+        H = np.vstack([state.Rot.T.dot(SO3.wedge(cls.g)),
+                       state.Rot.T.dot(SO3.wedge(cls.b))])
         return H
 
     def simu_f(self, imu_std):
@@ -251,28 +253,30 @@ class ATTITUDE:
         ax.set_xlim(0, t[-1]) 
 
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.set(xlabel='$t$ (s)', ylabel='Roll error (deg)', title='Roll error')
+        ax.set(xlabel='$t$ (s)', ylabel='Roll error (deg)', 
+            title='Roll error  (deg)')
         plt.plot(t, 180/np.pi*errors[:, 0], c='blue')
         plt.plot(t, 180/np.pi*ukf3sigma[0, :],   c='blue', linestyle='dashed')
         plt.plot(t, -180/np.pi*ukf3sigma[0, :],  c='blue', linestyle='dashed')
-        ax.legend([r'UKF error', r'$3\sigma$ UKF'])
+        ax.legend([r'UKF', r'$3\sigma$ UKF'])
         ax.set_xlim(0, t[-1])
 
         fig, ax = plt.subplots(figsize=(9, 6))
         ax.set(xlabel='$t$ (s)', ylabel='Pitch error (deg)', 
-        title='Pitch error')
+        title='Pitch error  (deg)')
         plt.plot(t, 180/np.pi*errors[:, 1], c='blue')
         plt.plot(t, 180/np.pi*ukf3sigma[1, :],   c='blue', linestyle='dashed')
         plt.plot(t, -180/np.pi*ukf3sigma[1, :],  c='blue', linestyle='dashed')
-        ax.legend([r'UKF error', r'$3\sigma$ UKF'])
+        ax.legend([r'UKF', r'$3\sigma$ UKF'])
         ax.set_xlim(0, t[-1]) 
 
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.set(xlabel='$t$ (s)', ylabel='Yaw error (deg)', title='Yaw error')
+        ax.set(xlabel='$t$ (s)', ylabel='Yaw error (deg)', 
+            title='Yaw error  (deg)')
         plt.plot(t, 180/np.pi*errors[:, 2], c='blue')
         plt.plot(t, 180/np.pi*ukf3sigma[2, :],   c='blue', linestyle='dashed')
         plt.plot(t, -180/np.pi*ukf3sigma[2, :],  c='blue', linestyle='dashed')
-        ax.legend([r'UKF error', r'$3\sigma$ UKF'])
+        ax.legend([r'UKF', r'$3\sigma$ UKF'])
         ax.set_xlim(0, t[-1]) 
 
     @classmethod

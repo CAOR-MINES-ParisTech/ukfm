@@ -1,13 +1,13 @@
 function [J] = so3_inv_left_jacobian(phi)
-%SO3_INV_LEFT_JACOBIAN inverse of Jacobian for SO(3)
+%SO3_INV_LEFT_JACOBIAN inverse of Jacobian
 %
 % Syntax:  [J] = so3_inv_left_jacobian(phi)
 %
 % Inputs:
-%    phi - vector of length 3
+%    phi - vector
 %
 % Outputs:
-%    J - Jacobian, matrix of size 3x3
+%    J - Jacobian
 
 TOL = 1e-9;
 
