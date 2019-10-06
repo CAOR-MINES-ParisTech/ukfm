@@ -24,8 +24,7 @@ this project for your research, please please cite:
 Documentation
 --------------------------------------------------------------------------------
 
-The documentation is available at [https://caor-mines-paristech.github.io/ukfm/]
-(https://caor-mines-paristech.github.io/ukfm/).
+The documentation is available at [https://caor-mines-paristech.github.io/ukfm/](https://caor-mines-paristech.github.io/ukfm/).
 
 The paper *A Code for Unscented Kalman Filtering on Manifolds (UKF-M)* related
 to this code is available at  this [url]
