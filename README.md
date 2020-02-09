@@ -14,10 +14,12 @@ This repo contains two independent Python and Matlab implementations - we
 recommend Python - for quickly implementing and testing the approach. If you use
 this project for your research, please please cite:
 
-    @article{brossard2019Code,
+    @inproceedings{brossard2020Code,
         author={Martin Brossard and Axel Barrau and Silvère Bonnabel},
         title={{A Code for Unscented Kalman Filtering on Manifolds (UKF-M)}},
-        year={2019},
+        booktitle={2020 International Conference on Robotics and Automation (ICRA)},
+        year={2020},
+        organization={IEEE}
     }
 
 
