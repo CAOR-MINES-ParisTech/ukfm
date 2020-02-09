@@ -81,7 +81,7 @@ Brossard](mailto:martin.brossard@mines-paristech.fr)^, [Axel
 Barrau](mailto:axel.barrau@safrangroup.com)^ and [Silvère
 Bonnabel](mailto:silvere.bonnabel@mines-paristech.fr)^.
 
-*[MINES ParisTech](http://www.mines-paristech.eu/), PSL Research University,
+^[MINES ParisTech](http://www.mines-paristech.eu/), PSL Research University,
 Centre for Robotics, 60 Boulevard Saint-Michel, 75006 Paris, France.
 
 
