@@ -40,8 +40,8 @@ err_orientation = zeros(N, 1);
 for n = 1:N
     err_orientation(n) = norm(so3_log(Rots{n}' * ukf_Rots{n}));
 end
-three_sigma_orientation = 3*sqrt(ukf_Ps(:, 1, 1).^2 + ...
-    ukf_Ps(:, 2, 2).^2 + ukf_Ps(:, 3, 3).^2);
+three_sigma_orientation = 3*sqrt(ukf_Ps(:, 1, 1) + ...
+    ukf_Ps(:, 2, 2) + ukf_Ps(:, 3, 3));
 fig2 = figure;
 hold on;
 grid on;
@@ -53,8 +53,8 @@ plot(t, 180/pi*three_sigma_orientation, '--b');
 legend('UKF', '$3\sigma$ UKF');
 
 err_p = sqrt(sum((ps-ukf_ps).^2, 2));
-three_sigma_p = 3*sqrt(ukf_Ps(:, 7, 7).^2 + ukf_Ps(:, 8, 8).^2 ...
-    + ukf_Ps(:, 9, 9).^2);
+three_sigma_p = 3*sqrt(ukf_Ps(:, 7, 7) + ukf_Ps(:, 8, 8) ...
+    + ukf_Ps(:, 9, 9));
 fig3 = figure;
 hold on;
 grid on;
