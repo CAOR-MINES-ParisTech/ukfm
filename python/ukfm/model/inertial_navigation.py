@@ -445,8 +445,7 @@ class INERTIAL_NAVIGATION:
         ax.legend([r'true trajectory', r'UKF', r'features'])
 
         ukf3sigma = 3 * \
-            np.sqrt(hat_P[:, 0, 0] ** 2 + hat_P[:, 1, 1]
-                    ** 2 + hat_P[:, 2, 2] ** 2)
+            np.sqrt(hat_P[:, 0, 0] + hat_P[:, 1, 1] + hat_P[:, 2, 2])
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.set(xlabel='$t$ (s)', ylabel='error (deg)',
                title='Attitude error (deg)')
@@ -457,8 +456,7 @@ class INERTIAL_NAVIGATION:
         ax.set_xlim(0, t[-1])
 
         ukf3sigma = 3 * \
-            np.sqrt(hat_P[:, 6, 6] ** 2 + hat_P[:, 7, 7]
-                    ** 2 + hat_P[:, 8, 8] ** 2)
+            np.sqrt(hat_P[:, 6, 6]+ hat_P[:, 7, 7] + hat_P[:, 8, 8])
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.set(xlabel='$t$ (s)', ylabel='error (m)',
                title="Position error (m)")
